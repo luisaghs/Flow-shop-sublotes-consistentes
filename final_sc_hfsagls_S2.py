@@ -166,6 +166,7 @@ GA_PARAMS = {
     'sin_mejora'   : 50,    # Parar tras 50 generaciones sin mejora (artículo)
     'prob_cruce'   : 0.90,  # Probabilidad de cruce
     'tipo_cruce'   : 'C1',  # 'C1' = un punto, 'C2' = dos puntos (artículo)
+    'alfa_cruce'   : (0.25, 0.75),  # Rango de α del cruce aritmético (nivel 1)
     'prob_mutacion': 0.50,  # Probabilidad de mutación por individuo
     'prob_mut_pos' : 0.30,  # Prob. de swap de posiciones en una etapa (nivel 2)
     'prob_mut_maq' : 0.30,  # Prob. de reasignar la máquina de un sublote (nivel 3)
@@ -767,26 +768,21 @@ def seleccion_torneo(poblacion: List[dict], tam: int) -> dict:
     return min(random.sample(poblacion, tam), key=fitness)
 
 
-def _ajustar_props(ref: List[float], otro: List[float], k: int) -> List[float]:
+def _cruce_proporciones(a: List[float], b: List[float]
+                        ) -> Tuple[List[float], List[float]]:
     """
-    Genera una lista de k proporciones mezclando 'ref' y 'otro'.
-    Si las longitudes no coinciden, adapta con truncado o extensión.
-    """
-    def adaptar(lst, k_obj):
-        if len(lst) == k_obj:
-            return lst[:]
-        elif len(lst) > k_obj:
-            r = lst[:k_obj]
-        else:
-            r = lst + [lst[-1]] * (k_obj - len(lst))
-        t = sum(r)
-        return [x / t for x in r] if t > 0 else _dirichlet(k_obj)
+    Cruce aritmético del nivel 1 para un lote (a y b tienen B elementos).
 
-    base = adaptar(ref, k)
-    alt  = adaptar(otro, k)
-    mezc = [(a + b) / 2.0 for a, b in zip(base, alt)]
-    t = sum(mezc)
-    return [x / t for x in mezc] if t > 0 else _dirichlet(k)
+    Con α ~ U(GA_PARAMS['alfa_cruce']):
+        hijo 1 = α·a + (1−α)·b
+        hijo 2 = (1−α)·a + α·b
+    Los hijos son complementarios y distintos entre sí, y la suma de
+    proporciones de cada hijo sigue siendo 1.
+    """
+    alfa = random.uniform(*GA_PARAMS['alfa_cruce'])
+    h1 = [alfa * x + (1 - alfa) * y for x, y in zip(a, b)]
+    h2 = [(1 - alfa) * x + alfa * y for x, y in zip(a, b)]
+    return h1, h2
 
 
 def _puntos_cruce() -> List[int]:
@@ -810,7 +806,8 @@ def cruce(p1: dict, p2: dict) -> Tuple[dict, dict]:
     Cruce sobre los tres niveles del cromosoma.
 
     Nivel 1 (tamaños consistentes): el número de sublotes es fijo (S2); por
-            lote se mezclan las proporciones de los dos padres.
+            lote se aplica un cruce aritmético con α aleatorio, que da dos
+            hijos distintos (ver _cruce_proporciones).
     Niveles 2 y 3: cruce de uno (C1) o dos puntos (C2) por etapas, como en
             el artículo; luego se reparan para que sean coherentes con el
             nivel 1 del hijo.
@@ -822,10 +819,8 @@ def cruce(p1: dict, p2: dict) -> Tuple[dict, dict]:
 
     # 1. Nivel 1 — independiente por lote
     for j in TRABAJOS:
-        h1['proporciones'][j] = _ajustar_props(
-            p1['proporciones'][j], p2['proporciones'][j], h1['k'][j])
-        h2['proporciones'][j] = _ajustar_props(
-            p2['proporciones'][j], p1['proporciones'][j], h2['k'][j])
+        h1['proporciones'][j], h2['proporciones'][j] = _cruce_proporciones(
+            p1['proporciones'][j], p2['proporciones'][j])
 
     # 2. Niveles 2 y 3 — por bloques de etapas
     del_padre = set(_puntos_cruce())

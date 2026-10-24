@@ -37,3 +37,15 @@ fechas de entrega son las **Horas disponibles** de cada trabajo.
   además de mutaciones sobre el número y el tamaño de los sublotes.
 * Objetivo: ΣTi (tardanza total) con desempate por Cmax, o Cmax
   (`FUNCION_OBJETIVO`).
+
+## Versión escenario 2 (`final_sc_hfsagls_S2.py`)
+
+* Número fijo de sublotes por lote (`NUM_SUBLOTES`, B = 10) con tamaños
+  variables y consistentes; posiciones iniciales aleatorias.
+* Cruce del nivel 1 (tamaños): aritmético con α ~ U(0,25; 0,75) por lote
+  (`GA_PARAMS['alfa_cruce']`). Los dos hijos son complementarios y distintos:
+  hijo 1 = α·p1 + (1−α)·p2, hijo 2 = (1−α)·p1 + α·p2.
+
+```bash
+python final_sc_hfsagls_S2.py BD_HFS.xlsx
+```
