@@ -8,314 +8,270 @@
 \usepackage{array}
 \usepackage[margin=2.3cm]{geometry}
 \usepackage[hidelinks]{hyperref}
+\setlength{\parskip}{4pt}
 
-\newcommand{\J}{\mathcal{J}}
-\newcommand{\Sg}{\mathcal{S}}
-\newcommand{\N}{\mathcal{N}}
-\newcommand{\M}{\mathcal{M}}
-\newcommand{\E}{\mathcal{E}}
-\DeclareMathOperator*{\lexmin}{lex\,min}
+\newcommand{\J}{J}
+\newcommand{\Sg}{E}
+\newcommand{\N}{L}
+\newcommand{\M}{M}
+\newcommand{\enpalabras}[1]{\par\noindent\emph{En palabras:} #1\par}
 
 \title{Modelo matemático\\[2pt]
-\large Flow shop híbrido con sublotes consistentes para la producción de guantes industriales}
+\large Programación de la producción de guantes con sublotes}
 \date{}
 
 \begin{document}
 \maketitle
 
-\section{Descripción y supuestos}
+\section{El problema}
 
-Un conjunto de órdenes de trabajo debe pasar, en el mismo orden, por cuatro
-etapas (troquelado, ensamble, costura y volteado), cada una con máquinas
-paralelas no relacionadas. Cada orden se divide en un número fijo de sublotes
-de tamaño variable que conservan su tamaño en todas las etapas
-(\emph{sublotes consistentes}). Se busca minimizar la tardanza total y, como
-criterio secundario, el makespan.
+La planta recibe órdenes de trabajo. Cada orden pasa, en este orden, por
+cuatro etapas: \textbf{troquelado, ensamble, costura y volteado}. En cada etapa
+hay varias máquinas que trabajan en paralelo, y no todas tienen la misma
+velocidad.
 
+Para no esperar a que toda la orden termine una etapa, cada orden se divide en
+\textbf{sublotes} (partes más pequeñas). Cada sublote pasa a la siguiente etapa
+apenas termina la actual. Un sublote tiene \textbf{el mismo tamaño en todas las
+etapas}; por eso se llaman \emph{sublotes consistentes}.
+
+\textbf{Objetivo:} que las órdenes se atrasen lo menos posible (menor tardanza
+total). Si dos programaciones tienen la misma tardanza, se prefiere la que
+termina antes todo el trabajo (menor \emph{makespan}).
+
+\subsection*{Supuestos}
 \begin{enumerate}
-  \item Todas las máquinas están disponibles desde $t=0$. El tiempo se mide en
-        horas hábiles del calendario laboral (sin noches, domingos ni festivos).
-  \item Cada máquina procesa un sublote a la vez y no hay interrupciones.
-  \item Cada sublote se procesa en una sola máquina por etapa. Sublotes de la
-        misma orden pueden procesarse a la vez en máquinas distintas.
-  \item Un sublote puede iniciar la etapa $s+1$ en cuanto termina la etapa $s$
-        (transferencia inmediata, sin tiempo de transporte y con almacenamiento
-        intermedio ilimitado).
-  \item En troquelado hay un alistamiento cada vez que cambia la referencia en
-        una máquina y antes del primer sublote de cada máquina. El alistamiento
-        no depende del sublote y puede hacerse mientras la máquina espera
-        su llegada.
-  \item El tiempo de proceso es proporcional al tamaño del sublote.
+  \item El tiempo se mide en horas hábiles (sin noches, domingos ni festivos).
+        Todas las máquinas están libres al inicio.
+  \item Una máquina hace un solo sublote a la vez y no se interrumpe.
+  \item Un sublote se hace en una sola máquina por etapa. Dos sublotes de la
+        misma orden sí pueden estar en máquinas distintas al mismo tiempo.
+  \item Un sublote puede entrar a la siguiente etapa apenas sale de la
+        anterior (no hay tiempo de transporte ni límite de espacio entre etapas).
+  \item Cualquier máquina de una etapa puede hacer cualquier referencia
+        (así está en la base de datos), aunque con tiempos distintos.
+  \item En troquelado hay un \textbf{alistamiento} de 4,98 min cuando la
+        máquina cambia de referencia y antes de su primer sublote. Se puede
+        hacer mientras la máquina espera que llegue el sublote.
+  \item El tiempo de un sublote es proporcional a su tamaño.
 \end{enumerate}
 
-\section{Conjuntos e índices}
+\section{Notación}
 
+\subsection*{Conjuntos}
 \begin{center}
-\begin{tabular}{>{$}l<{$} p{12cm}}
+\begin{tabular}{>{$}l<{$} p{12.5cm}}
 \toprule
-j, j' \in \J & Órdenes de trabajo. \\
-\Sg = \{1,\dots,|\Sg|\} & Etapas, en el orden de la ruta ($s=1$: troquelado). \\
-\M_s & Máquinas de la etapa $s$. \\
-\E_{js} \subseteq \M_s & Máquinas de la etapa $s$ que procesan la referencia de la orden $j$. \\
-b \in \{1,\dots,B_j\} & Sublotes de la orden $j$. \\
-\N = \{(j,b)\} & Conjunto de todos los sublotes; se escribe $i=(j,b)$, $i'=(j',b')$. \\
-\N_{sm} & Sublotes que pueden ir a la máquina $m$ de la etapa $s$:
-          $\{(j,b)\in\N : m\in\E_{js}\}$. \\
-0 & Sublote ficticio que representa el inicio de la secuencia de una máquina. \\
+j \in \J & Órdenes de trabajo. \\
+s \in \Sg & Etapas: $s=1$ troquelado, $2$ ensamble, $3$ costura, $4$ volteado. La última es $|\Sg|$. \\
+m \in \M_s & Máquinas de la etapa $s$. \\
+b = 1,\dots,B & Sublotes de cada orden ($B = 10$). \\
+i \in \N & Todos los sublotes. Cada sublote es una pareja $i=(j,b)$: el sublote $b$ de la orden $j$. \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-\section{Parámetros}
-
+\subsection*{Datos}
 \begin{center}
 \begin{tabular}{>{$}l<{$} p{12.5cm}}
 \toprule
 Q_j & Cantidad de la orden $j$ [docenas]. \\
-\rho_j & Referencia (código de producto) de la orden $j$. \\
-r_j & Liberación de la orden $j$ [h hábiles]: horas acumuladas al final del día anterior a la fecha de liberación. \\
-d_j & Fecha de entrega de la orden $j$ [h hábiles]: horas acumuladas al final del día de entrega. \\
-\tau_{\rho m} & Tiempo estándar de la referencia $\rho$ en la máquina $m$ [min/docena]. \\
-a_{jm} & Tiempo de proceso por docena de la orden $j$ en la máquina $m$ [h/docena]:
-         $a_{jm} = \tau_{\rho_j m} / 60$. \\
-g & Granularidad de los tamaños [docenas] ($g=1$: docenas completas). \\
-q^{\min} & Tamaño mínimo de sublote [docenas] ($q^{\min}=1$). \\
-u^{\min} & Tamaño mínimo de sublote en unidades de $g$:
-           $u^{\min} = \lceil q^{\min}/g \rceil$. \\
-\bar B & Número de sublotes deseado por orden ($\bar B = 10$). \\
-B_j & Número de sublotes de la orden $j$:
-      $B_j = \max\bigl\{1,\ \min\{\bar B,\ \lfloor Q_j/(g\,u^{\min}) \rfloor\}\bigr\}$. \\
-\sigma_s & Alistamiento por cambio de referencia en la etapa $s$ [h]
-           ($\sigma_1 = 4{,}98/60$; $\sigma_s=0$ para $s\ge 2$). \\
-\sigma_{ii's} & Alistamiento si $i$ precede inmediatamente a $i'$ en una máquina de la etapa $s$:
-                $\sigma_{ii's} = \sigma_s$ si $\rho_j \neq \rho_{j'}$ y $0$ si no;
-                $\sigma_{0i's} = \sigma_s$ (montaje inicial). \\
-H & Constante grande (cota del horizonte), p.\,ej.
-    $H = \max_j r_j + \sum_{s}\sum_{j} Q_j \max_{m\in\E_{js}} a_{jm} + |\N|\,\sigma_1$. \\
+r_j & Hora en que la orden $j$ puede empezar (liberación) [h]. \\
+d_j & Hora de entrega de la orden $j$ [h]. \\
+a_{jm} & Horas que tarda la máquina $m$ en hacer una docena de la orden $j$
+         ($=$ min por docena $\div$ 60). \\
+\sigma_{ii'} & Alistamiento en troquelado si el sublote $i'$ va justo después de $i$ en
+               la misma máquina: $4{,}98/60$ h si son de referencias distintas y $0$ si
+               son de la misma referencia. \\
+\sigma_{0} & Alistamiento antes del primer sublote de una máquina de troquelado ($4{,}98/60$ h). \\
+H & Un número muy grande (por ejemplo, la suma de todos los tiempos). \\
 \bottomrule
 \end{tabular}
 \end{center}
+En las etapas 2, 3 y 4 no hay alistamiento ($\sigma = 0$).
 
-\section{Variables de decisión}
-
+\subsection*{Variables (lo que el modelo decide)}
 \begin{center}
 \begin{tabular}{>{$}l<{$} p{12.5cm}}
 \toprule
-x_{jb} \ge 0 & Tamaño del sublote $b$ de la orden $j$ [docenas], igual en todas las etapas. \\
-u_{jb} \in \mathbb{Z}_{\ge 0} & Tamaño del sublote en unidades de $g$ docenas (con $g=1$, $x_{jb}=u_{jb}$ es un número entero de docenas). \\
-y_{ism} \in \{0,1\} & 1 si el sublote $i$ se procesa en la máquina $m$ de la etapa $s$. \\
-z_{ii'sm} \in \{0,1\} & 1 si el sublote $i$ precede inmediatamente al sublote $i'$ en la máquina $m$ de la etapa $s$
-                        ($i=0$: $i'$ es el primero de la máquina). \\
-w_{ism} \ge 0 & Linealización de $x_{jb}\,y_{ism}$ (docenas del sublote $i$ procesadas en $m$). \\
-S_{is},\ C_{is} \ge 0 & Inicio y terminación del sublote $i$ en la etapa $s$ [h]. \\
-C_j \ge 0 & Terminación de la orden $j$ (último sublote en la última etapa). \\
-T_j \ge 0 & Tardanza de la orden $j$. \\
-C_{\max} \ge 0 & Makespan. \\
+x_{jb} & Tamaño del sublote $b$ de la orden $j$ [docenas, número entero]. \\
+y_{ism} & Vale 1 si el sublote $i$ se hace en la máquina $m$ de la etapa $s$; si no, 0. \\
+z_{ii'sm} & Vale 1 si en la máquina $m$ de la etapa $s$ el sublote $i'$ va
+            \emph{justo después} de $i$; si no, 0. Si $i=0$, quiere decir que
+            $i'$ es el primero de la máquina. \\
+w_{ism} & Docenas del sublote $i$ que hace la máquina $m$ en la etapa $s$
+          (vale $x_{jb}$ si se usa esa máquina y 0 si no). \\
+S_{is},\ C_{is} & Hora de inicio y hora de fin del sublote $i$ en la etapa $s$. \\
+C_j & Hora en que termina la orden $j$ (cuando sale su último sublote de volteado). \\
+T_j & Tardanza de la orden $j$: horas de atraso (0 si llega a tiempo). \\
+C_{\max} & Makespan: hora en que termina la última orden. \\
 \bottomrule
 \end{tabular}
 \end{center}
 
 \section{Función objetivo}
-
-Objetivo lexicográfico: primero la tardanza total y, entre soluciones con la
-misma tardanza, el menor makespan:
 \begin{equation}
-  \lexmin\ \Bigl(\ \sum_{j\in\J} T_j\ ,\ C_{\max}\Bigr)
+  \text{Minimizar}\quad \sum_{j\in\J} T_j
+  \qquad\text{y, si hay empate,}\qquad \text{minimizar}\quad C_{\max}
   \label{eq:obj}
 \end{equation}
-En un solucionador se puede usar el equivalente
-$\min \sum_j T_j + \varepsilon\, C_{\max}$ con $\varepsilon>0$ suficientemente pequeño.
+\enpalabras{primero, que la suma de los atrasos sea lo más pequeña posible;
+después, terminar todo lo antes posible.}
 
 \section{Restricciones}
 
-\paragraph{Tamaño de los sublotes (sublotes consistentes).}
+\paragraph{1. Tamaño de los sublotes.}
 \begin{align}
-  \sum_{b=1}^{B_j} x_{jb} &= Q_j
-    && \forall j\in\J \label{eq:suma}\\
-  x_{jb} &= g\,u_{jb}
-    && \forall j\in\J,\ b=1,\dots,B_j \label{eq:gran}\\
-  u_{jb} &\ge u^{\min}
-    && \forall j\in\J,\ b=1,\dots,B_j \label{eq:min}
+  \sum_{b=1}^{B} x_{jb} &= Q_j && \text{para cada orden } j \label{eq:suma}\\
+  x_{jb} &\ge 1 && \text{para cada sublote} \label{eq:min}
 \end{align}
-Como $x_{jb}$ no lleva índice de etapa, el sublote tiene el mismo tamaño en
-todas las etapas. Si $Q_j$ no es múltiplo de $g$, el residuo
-$Q_j - g\lfloor Q_j/g\rfloor$ se suma al último sublote.
+\enpalabras{los sublotes de una orden suman la cantidad pedida, y cada sublote
+tiene al menos una docena. Como $x_{jb}$ no depende de la etapa, el sublote
+tiene el mismo tamaño en todas las etapas.}
 
-\paragraph{Asignación de máquinas.}
+\paragraph{2. Cada sublote va a una máquina por etapa.}
 \begin{align}
-  \sum_{m\in\E_{js}} y_{ism} &= 1
-    && \forall i=(j,b)\in\N,\ s\in\Sg \label{eq:asig}
+  \sum_{m\in\M_s} y_{ism} &= 1 && \text{para cada sublote } i \text{ y etapa } s \label{eq:asig}
 \end{align}
 
-\paragraph{Linealización del tiempo de proceso.}
-El tiempo de proceso del sublote $i$ en la etapa $s$ es
-$p_{is} = \sum_{m\in\E_{js}} a_{jm}\, x_{jb}\, y_{ism}$, que es bilineal.
-Con $w_{ism} = x_{jb}\, y_{ism}$:
+\paragraph{3. Cantidad que hace cada máquina.}
 \begin{align}
-  w_{ism} &\le Q_j\, y_{ism}
-    && \forall i=(j,b)\in\N,\ s\in\Sg,\ m\in\E_{js} \label{eq:w1}\\
-  w_{ism} &\le x_{jb}
-    && \forall i=(j,b)\in\N,\ s\in\Sg,\ m\in\E_{js} \label{eq:w2}\\
-  w_{ism} &\ge x_{jb} - Q_j\,(1-y_{ism})
-    && \forall i=(j,b)\in\N,\ s\in\Sg,\ m\in\E_{js} \label{eq:w3}
+  w_{ism} &\le Q_j\, y_{ism} \label{eq:w1}\\
+  w_{ism} &\le x_{jb} \label{eq:w2}\\
+  w_{ism} &\ge x_{jb} - Q_j\,(1-y_{ism}) && \text{para cada sublote } i=(j,b),\ \text{etapa } s,\ \text{máquina } m \label{eq:w3}
 \end{align}
+\enpalabras{si el sublote va a la máquina $m$ ($y=1$), entonces $w = x$; si no
+va ($y=0$), entonces $w = 0$. Se hace así porque multiplicar dos variables
+($x \cdot y$) no está permitido en un modelo lineal.}
 
-\paragraph{Tiempos de terminación.}
+\paragraph{4. Hora de fin de cada sublote.}
 \begin{align}
-  C_{is} &= S_{is} + \sum_{m\in\E_{js}} a_{jm}\, w_{ism}
-    && \forall i=(j,b)\in\N,\ s\in\Sg \label{eq:fin}
+  C_{is} &= S_{is} + \sum_{m\in\M_s} a_{jm}\, w_{ism} && \text{para cada sublote } i \text{ y etapa } s \label{eq:fin}
 \end{align}
+\enpalabras{fin = inicio + tiempo de proceso en la máquina elegida.}
 
-\paragraph{Liberación y precedencia entre etapas.}
+\paragraph{5. Orden de las etapas.}
 \begin{align}
-  S_{i1} &\ge r_j
-    && \forall i=(j,b)\in\N \label{eq:rel}\\
-  S_{i,s+1} &\ge C_{is}
-    && \forall i\in\N,\ s=1,\dots,|\Sg|-1 \label{eq:prec}
+  S_{i1} &\ge r_j && \text{para cada sublote } i=(j,b) \label{eq:rel}\\
+  S_{i,s+1} &\ge C_{is} && \text{para cada sublote } i \text{ y etapa } s < |\Sg| \label{eq:prec}
 \end{align}
-La restricción \eqref{eq:prec} se aplica a cada sublote por separado: el
-sublote $b$ pasa a la etapa siguiente sin esperar a los demás sublotes de su
-orden.
+\enpalabras{un sublote no empieza troquelado antes de que se libere su orden,
+y no empieza una etapa hasta terminar la anterior. Cada sublote avanza por su
+cuenta, sin esperar a los demás sublotes de su orden.}
 
-\paragraph{Secuencia en cada máquina.}
-Cada sublote asignado a una máquina tiene exactamente un antecesor inmediato
-(otro sublote o el inicio ficticio $0$) y a lo sumo un sucesor; cada máquina
-tiene a lo sumo un primer sublote:
+\paragraph{6. Secuencia en cada máquina.}
 \begin{align}
-  \sum_{\substack{i\in\{0\}\cup\N_{sm}\\ i\neq i'}} z_{ii'sm} &= y_{i'sm}
-    && \forall s\in\Sg,\ m\in\M_s,\ i'\in\N_{sm} \label{eq:ant}\\
-  \sum_{\substack{i'\in\N_{sm}\\ i'\neq i}} z_{ii'sm} &\le y_{ism}
-    && \forall s\in\Sg,\ m\in\M_s,\ i\in\N_{sm} \label{eq:suc}\\
-  \sum_{i'\in\N_{sm}} z_{0i'sm} &\le 1
-    && \forall s\in\Sg,\ m\in\M_s \label{eq:primero}
+  \sum_{i \in \{0\}\cup\N,\ i\neq i'} z_{ii'sm} &= y_{i'sm} && \text{para cada } s,\ m,\ i' \label{eq:ant}\\
+  \sum_{i' \in \N,\ i'\neq i} z_{ii'sm} &\le y_{ism} && \text{para cada } s,\ m,\ i \label{eq:suc}\\
+  \sum_{i' \in \N} z_{0i'sm} &\le 1 && \text{para cada } s,\ m \label{eq:primero}
 \end{align}
+\enpalabras{en cada máquina los sublotes forman una fila: cada sublote tiene
+uno justo antes (otro sublote o el inicio de la máquina) y como máximo uno
+justo después, y cada máquina tiene como máximo un primer sublote.}
 
-\paragraph{No solapamiento y alistamientos.}
+\paragraph{7. Sin choques en las máquinas y alistamientos.}
 \begin{align}
-  S_{i's} &\ge C_{is} + \sigma_{ii's} - H\,(1 - z_{ii'sm})
-    && \forall s\in\Sg,\ m\in\M_s,\ i,i'\in\N_{sm},\ i\neq i' \label{eq:disy}\\
-  S_{i's} &\ge \sigma_{0i's}\, z_{0i'sm}
-    && \forall s\in\Sg,\ m\in\M_s,\ i'\in\N_{sm} \label{eq:setup0}
+  S_{i's} &\ge C_{is} + \sigma_{ii'} - H\,(1 - z_{ii'sm}) && \text{para cada } s,\ m,\ i \neq i' \label{eq:disy}\\
+  S_{i'1} &\ge \sigma_{0}\, z_{0i'1m} && \text{para cada } m \in \M_1,\ i' \label{eq:setup0}
 \end{align}
-Si $i$ precede inmediatamente a $i'$, el sublote $i'$ empieza después de que
-termina $i$ más el alistamiento por cambio de referencia. El alistamiento se
-cuenta desde que la máquina queda libre, por lo que se superpone con la espera
-del sublote: el inicio efectivo es
-$\max\{C_{is} + \sigma_{ii's},\ \text{llegada de } i'\}$, que resulta de combinar
-\eqref{eq:disy} con \eqref{eq:rel}--\eqref{eq:prec}. Como todo sublote tiene
-tamaño positivo (por \eqref{eq:min}), \eqref{eq:disy} impide ciclos en la
-secuencia.
+\enpalabras{si $i'$ va justo después de $i$ en una máquina, $i'$ empieza
+cuando termina $i$ más el alistamiento (si cambia la referencia). Si $i'$ no va
+después de $i$, el término con $H$ desactiva la restricción. El primer sublote
+de cada máquina de troquelado espera su alistamiento inicial. Como el
+alistamiento se cuenta desde que la máquina queda libre, se puede hacer
+mientras el sublote todavía no ha llegado.}
 
-\paragraph{Terminación, tardanza y makespan.}
+\paragraph{8. Fin de la orden, atraso y makespan.}
 \begin{align}
-  C_j &\ge C_{(j,b),|\Sg|}
-    && \forall j\in\J,\ b=1,\dots,B_j \label{eq:cj}\\
-  T_j &\ge C_j - d_j
-    && \forall j\in\J \label{eq:tj}\\
-  C_{\max} &\ge C_j
-    && \forall j\in\J \label{eq:cmax}
+  C_j &\ge C_{(j,b),|\Sg|} && \text{para cada sublote } b \text{ de la orden } j \label{eq:cj}\\
+  T_j &\ge C_j - d_j,\qquad T_j \ge 0 && \text{para cada orden } j \label{eq:tj}\\
+  C_{\max} &\ge C_j && \text{para cada orden } j \label{eq:cmax}
 \end{align}
+\enpalabras{la orden termina cuando sale de volteado su último sublote; el
+atraso es lo que pasa de la fecha de entrega (o cero si llega a tiempo); el
+makespan es el fin de la última orden.}
 
-\paragraph{Dominio de las variables.}
-\begin{align}
-  & u_{jb} \in \mathbb{Z}_{\ge 0};\quad
-    y_{ism},\, z_{ii'sm} \in \{0,1\};\quad
-    x_{jb},\, w_{ism},\, S_{is},\, C_{is},\, C_j,\, T_j,\, C_{\max} \ge 0 \label{eq:dom}
-\end{align}
-
-\paragraph{Conversión a fechas.}
-Si $\Phi(\delta)$ son las horas hábiles acumuladas al final del día $\delta$,
-la fecha en que termina la orden $j$ es
-$\min\{\delta : \Phi(\delta) \ge C_j\}$.
-
-\section{Resolución con el algoritmo genético}
-
-Con 10 órdenes de 10 sublotes ($|\N| = 100$) y 36 máquinas, el modelo tiene del
-orden de $\sum_s |\M_s|\,|\N|^2 \approx 3{,}6\times 10^5$ variables binarias
-$z_{ii'sm}$, por lo que se resuelve con un algoritmo genético cuyo
-decodificador construye soluciones factibles de
-\eqref{eq:suma}--\eqref{eq:dom}.
-
-\paragraph{Cromosoma.} $\Omega = (\pi, \Lambda)$, donde
-\begin{itemize}
-  \item Nivel 1: $\pi_j = (\pi_{j1},\dots,\pi_{jB_j})$, con $\pi_{jb} > 0$ y
-        $\sum_b \pi_{jb} = 1$: proporciones de los tamaños de los sublotes de la orden $j$.
-  \item Nivel 2: $\Lambda_s$, una permutación de $\N$ para cada etapa $s$:
-        prioridad de los sublotes en la etapa.
-\end{itemize}
-
-\paragraph{Decodificación del nivel 1 (tamaños).}
-Con $U_j = \lfloor Q_j/g \rfloor$ y $L_j = U_j - B_j u^{\min}$ unidades libres,
+\paragraph{9. Tipo de variables.}
 \[
-  u_{jb} = u^{\min} + \lfloor \pi_{jb} L_j \rfloor + \delta_{jb},
-  \qquad x_{jb} = g\,u_{jb},
+  x_{jb} \text{ enteros};\quad y_{ism},\ z_{ii'sm} \in \{0,1\};\quad
+  w_{ism},\ S_{is},\ C_{is},\ C_j,\ T_j,\ C_{\max} \ge 0 .
 \]
-donde $\delta_{jb}\in\{0,1\}$ reparte las
-$L_j - \sum_b \lfloor \pi_{jb} L_j \rfloor$ unidades restantes entre los sublotes con
-mayor parte fraccionaria (método del mayor residuo). Así se cumplen
-\eqref{eq:suma}--\eqref{eq:min}.
 
-\paragraph{Decodificación del nivel 2 (programación).}
-Para cada etapa $s = 1,\dots,|\Sg|$ y cada sublote $i=(j,b)$ en el orden de $\Lambda_s$:
+\paragraph{Horas y fechas.} Las horas se cuentan sobre el calendario laboral.
+Para pasar una hora a fecha se busca el primer día en que las horas hábiles
+acumuladas alcanzan ese valor.
+
+\section{Cómo se resuelve: algoritmo genético}
+
+El modelo exacto es muy grande para esta planta (100 sublotes y 36 máquinas
+dan cerca de 360\,000 variables $z$), así que se usa un \textbf{algoritmo
+genético}. Este busca buenas soluciones probando muchas programaciones y
+combinando las mejores. Todas las soluciones que construye cumplen las
+restricciones de arriba, aunque no se garantiza que sean la mejor posible.
+
+\paragraph{Cómo se representa una solución.} Cada solución tiene dos partes:
 \begin{enumerate}
-  \item Instante de llegada: $e_{is} = r_j$ si $s=1$, o $e_{is} = C_{i,s-1}$ si $s\ge 2$.
-  \item Para cada $m \in \E_{js}$, con $p_{ism} = a_{jm}\, x_{jb}$:
-    \begin{itemize}
-      \item Etapa 1 (con alistamiento): si $F_m$ es el fin del último sublote
-            programado en $m$ y $\rho^{\text{últ}}_m$ su referencia,
-            $S_{ism} = \max\{F_m + \sigma_1\,\mathbb{1}[\rho^{\text{últ}}_m \neq \rho_j],\ e_{is}\}$
-            (para la primera asignación de $m$: $F_m = 0$ y se cobra $\sigma_1$).
-      \item Etapas $s\ge 2$: $S_{ism}$ es el primer instante $\ge e_{is}$ en
-            que $m$ tiene un hueco libre de duración $p_{ism}$.
-    \end{itemize}
-  \item Se elige la máquina con menor terminación (regla ECT):
-        $m^* = \arg\min_{m\in\E_{js}} \{S_{ism} + p_{ism}\}$, y se fija
-        $C_{is} = S_{ism^*} + p_{ism^*}$.
+  \item \textbf{Tamaños:} para cada orden, qué porcentaje de la cantidad va en
+        cada sublote. Por ejemplo, 12\,\%, 8\,\%, 10\,\%\dots{} (suman 100\,\%).
+        Esos porcentajes se pasan a docenas enteras de modo que cada sublote
+        tenga al menos una docena y la suma sea exacta.
+  \item \textbf{Prioridades:} para cada etapa, una lista con el orden en que
+        se programan los sublotes.
 \end{enumerate}
-Luego $C_j = \max_b C_{(j,b),|\Sg|}$, $T_j = \max\{0, C_j - d_j\}$ y la aptitud
-es el par $\bigl(\sum_j T_j,\ C_{\max}\bigr)$, comparado lexicográficamente.
 
-\paragraph{Operadores.}
+\paragraph{Cómo se arma la programación.} Etapa por etapa, y dentro de cada
+etapa en el orden de la lista:
+\begin{enumerate}
+  \item El sublote está listo cuando se libera su orden (troquelado) o
+        cuando termina la etapa anterior.
+  \item Se prueba en cada máquina de la etapa:
+    \begin{itemize}
+      \item En troquelado se pone después del último sublote de la máquina,
+            sumando el alistamiento si cambia la referencia.
+      \item En las otras etapas se pone en el primer espacio libre en que quepa.
+    \end{itemize}
+  \item Se elige la máquina donde \textbf{termina más temprano}.
+\end{enumerate}
+Al final se calcula la tardanza total y el makespan de esa programación.
+
+\paragraph{Cómo evoluciona.}
 \begin{itemize}
-  \item Población inicial aleatoria: $\pi_j$ con distribución de Dirichlet$(1,\dots,1)$
-        y $\Lambda_s$ permutaciones aleatorias. Un individuo se reemplaza por
-        la mejor regla de despacho (FIFO, EDD, SPT, LPT, MST, CR) con sublotes iguales.
-  \item Selección por torneo de tamaño 3 y elitismo de un individuo.
-  \item Cruce (probabilidad $0{,}90$):
+  \item \textbf{Población inicial:} 150 soluciones al azar. Una de ellas se
+        cambia por la mejor regla de despacho (FIFO, EDD, SPT, LPT, MST o CR)
+        con sublotes iguales.
+  \item \textbf{Selección:} se toman 3 soluciones al azar y gana la mejor. La
+        mejor de cada generación pasa siempre a la siguiente.
+  \item \textbf{Cruce} (90\,\% de las veces), que mezcla dos soluciones padre:
     \begin{itemize}
-      \item Nivel 1 (aritmético): para cada orden, con $\lambda \sim U(0,1)$,
-            $\pi_j^{h_1} = \lambda\pi_j^{p_1} + (1-\lambda)\pi_j^{p_2}$ y
-            $\pi_j^{h_2} = (1-\lambda)\pi_j^{p_1} + \lambda\pi_j^{p_2}$.
-      \item Nivel 2 (cruce de orden, OX): en cada etapa, el hijo conserva un
-            tramo aleatorio de $\Lambda_s^{p_1}$ en las mismas posiciones y
-            completa el resto en el orden de $\Lambda_s^{p_2}$ (y al revés para el otro hijo).
+      \item Tamaños: se toma un número $\lambda$ al azar entre 0 y 1. Un hijo
+            recibe $\lambda$ del padre 1 y $1-\lambda$ del padre 2; el otro hijo, al revés.
+      \item Prioridades: el hijo copia un tramo de la lista de un padre y
+            completa el resto en el orden en que aparecen en la lista del otro padre.
     \end{itemize}
-  \item Mutación (probabilidad $0{,}50$ por hijo):
+  \item \textbf{Mutación} (50\,\% de los hijos), que hace cambios pequeños:
     \begin{itemize}
-      \item Nivel 2: con probabilidad $0{,}30$, intercambio de dos sublotes en $\Lambda_s$ de una etapa al azar.
-      \item Nivel 1: para cada orden, con probabilidad $0{,}40$,
-            $\pi_{jb} \leftarrow \max\{10^{-9},\ \pi_{jb} + \mathcal{N}(0,\,0{,}15^2)\}$
-            para un sublote $b$ al azar, seguido de normalización.
+      \item Con 30\,\% de probabilidad, intercambia dos sublotes en la lista de una etapa.
+      \item En cada orden, con 40\,\% de probabilidad, sube o baja un poco el
+            porcentaje de un sublote.
     \end{itemize}
-  \item Parada: 50 generaciones sin mejora o 1000 generaciones. Población: 150.
+  \item \textbf{Parada:} cuando pasan 50 generaciones sin mejorar, o al llegar a 1000.
 \end{itemize}
 
-\section{Instancia (BD\_HFS.xlsx)}
+\section{Datos y resultados (BD\_HFS.xlsx)}
 
 \begin{center}
 \begin{tabular}{lr}
 \toprule
-Órdenes $|\J|$ & 10 \\
-Etapas y máquinas & Troquelado (4), Ensamble (15), Costura (9), Volteado (8) \\
-Sublotes por orden $B_j$ & 10 \\
-Unidad de cantidad & docenas \\
-Granularidad $g$ / tamaño mínimo $q^{\min}$ & 1 docena / 1 docena ($u^{\min}=1$) \\
-Alistamiento en troquelado $\sigma_1$ & 4,98 min \\
-Liberaciones $r_j$ & 0 a 119 h hábiles \\
-Fechas de entrega $d_j$ & 400 a 672 h hábiles \\
+Órdenes & 10 \\
+Máquinas por etapa & Troquelado 4, Ensamble 15, Costura 9, Volteado 8 \\
+Sublotes por orden & 10 \\
+Tamaño de los sublotes & docenas enteras, mínimo 1 docena \\
+Alistamiento en troquelado & 4,98 min \\
+Liberación de las órdenes & entre 0 y 119 h \\
+Entrega de las órdenes & entre 400 y 672 h \\
 \midrule
-Mejor regla de despacho (EDD) & $\sum T_j = 145{,}00$ h, \ $C_{\max} = 817{,}00$ h \\
-Algoritmo genético (semilla 42) & $\sum T_j = 0$ h, \ $C_{\max} = 647{,}33$ h \\
+Mejor regla de despacho (EDD) & atraso total 145,00 h; makespan 817,00 h \\
+Algoritmo genético & atraso total 0 h; makespan 647,33 h \\
 \bottomrule
 \end{tabular}
 \end{center}
