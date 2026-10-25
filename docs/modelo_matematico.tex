@@ -71,16 +71,17 @@ b \in \{1,\dots,B_j\} & Sublotes de la orden $j$. \\
 \begin{center}
 \begin{tabular}{>{$}l<{$} p{12.5cm}}
 \toprule
-Q_j & Cantidad de la orden $j$ [pares]. \\
+Q_j & Cantidad de la orden $j$ [docenas]. \\
 \rho_j & Referencia (código de producto) de la orden $j$. \\
 r_j & Liberación de la orden $j$ [h hábiles]: horas acumuladas al final del día anterior a la fecha de liberación. \\
 d_j & Fecha de entrega de la orden $j$ [h hábiles]: horas acumuladas al final del día de entrega. \\
 \tau_{\rho m} & Tiempo estándar de la referencia $\rho$ en la máquina $m$ [min/docena]. \\
-a_{jm} & Tiempo de proceso por par de la orden $j$ en la máquina $m$ [h/par]:
-         $a_{jm} = \tau_{\rho_j m} / (12\cdot 60)$. \\
-g & Granularidad de los tamaños [pares] (media docena: $g=6$). \\
+a_{jm} & Tiempo de proceso por docena de la orden $j$ en la máquina $m$ [h/docena]:
+         $a_{jm} = \tau_{\rho_j m} / 60$. \\
+g & Granularidad de los tamaños [docenas] ($g=1$: docenas completas). \\
+q^{\min} & Tamaño mínimo de sublote [docenas] ($q^{\min}=1$). \\
 u^{\min} & Tamaño mínimo de sublote en unidades de $g$:
-           $u^{\min} = \lceil 12\, q^{\min}/g \rceil$, con $q^{\min}$ en docenas. \\
+           $u^{\min} = \lceil q^{\min}/g \rceil$. \\
 \bar B & Número de sublotes deseado por orden ($\bar B = 10$). \\
 B_j & Número de sublotes de la orden $j$:
       $B_j = \max\bigl\{1,\ \min\{\bar B,\ \lfloor Q_j/(g\,u^{\min}) \rfloor\}\bigr\}$. \\
@@ -100,12 +101,12 @@ H & Constante grande (cota del horizonte), p.\,ej.
 \begin{center}
 \begin{tabular}{>{$}l<{$} p{12.5cm}}
 \toprule
-x_{jb} \in \mathbb{Z}_{\ge 0} & Tamaño del sublote $b$ de la orden $j$ [pares], igual en todas las etapas. \\
-u_{jb} \in \mathbb{Z}_{\ge 0} & Tamaño del sublote en unidades de $g$ pares. \\
+x_{jb} \ge 0 & Tamaño del sublote $b$ de la orden $j$ [docenas], igual en todas las etapas. \\
+u_{jb} \in \mathbb{Z}_{\ge 0} & Tamaño del sublote en unidades de $g$ docenas (con $g=1$, $x_{jb}=u_{jb}$ es un número entero de docenas). \\
 y_{ism} \in \{0,1\} & 1 si el sublote $i$ se procesa en la máquina $m$ de la etapa $s$. \\
 z_{ii'sm} \in \{0,1\} & 1 si el sublote $i$ precede inmediatamente al sublote $i'$ en la máquina $m$ de la etapa $s$
                         ($i=0$: $i'$ es el primero de la máquina). \\
-w_{ism} \ge 0 & Linealización de $x_{jb}\,y_{ism}$ (pares del sublote $i$ procesados en $m$). \\
+w_{ism} \ge 0 & Linealización de $x_{jb}\,y_{ism}$ (docenas del sublote $i$ procesadas en $m$). \\
 S_{is},\ C_{is} \ge 0 & Inicio y terminación del sublote $i$ en la etapa $s$ [h]. \\
 C_j \ge 0 & Terminación de la orden $j$ (último sublote en la última etapa). \\
 T_j \ge 0 & Tardanza de la orden $j$. \\
@@ -217,9 +218,9 @@ secuencia.
 
 \paragraph{Dominio de las variables.}
 \begin{align}
-  & x_{jb},\, u_{jb} \in \mathbb{Z}_{\ge 0};\quad
+  & u_{jb} \in \mathbb{Z}_{\ge 0};\quad
     y_{ism},\, z_{ii'sm} \in \{0,1\};\quad
-    w_{ism},\, S_{is},\, C_{is},\, C_j,\, T_j,\, C_{\max} \ge 0 \label{eq:dom}
+    x_{jb},\, w_{ism},\, S_{is},\, C_{is},\, C_j,\, T_j,\, C_{\max} \ge 0 \label{eq:dom}
 \end{align}
 
 \paragraph{Conversión a fechas.}
@@ -307,13 +308,14 @@ es el par $\bigl(\sum_j T_j,\ C_{\max}\bigr)$, comparado lexicográficamente.
 Órdenes $|\J|$ & 10 \\
 Etapas y máquinas & Troquelado (4), Ensamble (15), Costura (9), Volteado (8) \\
 Sublotes por orden $B_j$ & 10 \\
-Granularidad $g$ / tamaño mínimo & 6 pares / 6 pares ($u^{\min}=1$) \\
+Unidad de cantidad & docenas \\
+Granularidad $g$ / tamaño mínimo $q^{\min}$ & 1 docena / 1 docena ($u^{\min}=1$) \\
 Alistamiento en troquelado $\sigma_1$ & 4,98 min \\
 Liberaciones $r_j$ & 0 a 119 h hábiles \\
 Fechas de entrega $d_j$ & 400 a 672 h hábiles \\
 \midrule
-Mejor regla de despacho (EDD) & $\sum T_j = 145{,}16$ h, \ $C_{\max} = 817{,}16$ h \\
-Algoritmo genético (semilla 42) & $\sum T_j = 0$ h, \ $C_{\max} = 642{,}70$ h \\
+Mejor regla de despacho (EDD) & $\sum T_j = 145{,}00$ h, \ $C_{\max} = 817{,}00$ h \\
+Algoritmo genético (semilla 42) & $\sum T_j = 0$ h, \ $C_{\max} = 647{,}33$ h \\
 \bottomrule
 \end{tabular}
 \end{center}

@@ -12,7 +12,7 @@ con máquinas paralelas; en troquelado, cada cambio de referencia en una
 máquina exige un alistamiento.
 
 Lot streaming: cada orden se divide en un número fijo de sublotes de tamaño
-variable, que conservan su tamaño en todas las etapas (sublotes consistentes,
+variable (en docenas), que conservan su tamaño en todas las etapas (sublotes consistentes,
 escenario 2 de Gürsoy Yılmaz y Yılmaz, 2022). Cada sublote pasa a la etapa
 siguiente en cuanto termina la actual.
 
@@ -25,7 +25,7 @@ tiempo de terminación (ECT).
 Datos de entrada: libro de Excel BD_HFS.xlsx con las hojas
   "Tiempo de procesamiento": Codigo producto | Maquina | Etapa | min x docena
   "Trabajos"               : Orden de trabajo | Codigo Producto | Cantidad
-                             (pares) | r_j | Fechas de entrega | d_j horas
+                             (docenas) | r_j | Fechas de entrega | d_j horas
   "Disponibilidad"         : calendario laboral (horas acumuladas por día)
 
 Uso:  python final_sc_hfsagls.py [ruta/BD_HFS.xlsx]
@@ -53,7 +53,7 @@ RUTA_EXCEL = "BD_HFS.xlsx"
 
 TRABAJOS: List[str] = []                        # ['J01', 'J02', ...]
 PRODUCTO: Dict[str, str] = {}                   # orden → referencia
-DEMANDA: Dict[str, int] = {}                    # orden → cantidad [pares]
+DEMANDA: Dict[str, float] = {}                  # orden → cantidad [docenas]
 RELEASE: Dict[str, float] = {}                  # orden → liberación r_j [h]
 DUE_DATE: Dict[str, float] = {}                 # orden → entrega d_j [h]
 FECHA_ENTREGA: Dict[str, object] = {}           # orden → fecha calendario
@@ -78,8 +78,8 @@ CALENDARIO: List[Tuple[object, float]] = []
 
 NUM_SUBLOTES = 10               # sublotes por orden (se reduce solo si la orden
                                 # no alcanza para 10 sublotes del tamaño mínimo)
-MIN_DOCENAS_POR_SUBLOTE = 0.5   # tamaño mínimo de sublote [docenas]
-GRANULARIDAD_PARES = 6          # los tamaños son múltiplos de 6 pares (media docena)
+GRANULARIDAD_DOCENAS = 1.0      # los tamaños son múltiplos de 1 docena (0.5 = media docena)
+MIN_DOCENAS_POR_SUBLOTE = 1.0   # tamaño mínimo de sublote [docenas]
 
 # Alistamiento por cambio de referencia [min]. Se aplica también al primer
 # sublote de cada máquina (montaje inicial) y puede ejecutarse mientras la
@@ -287,10 +287,11 @@ def cargar_datos(ruta: str = RUTA_EXCEL) -> None:
         TRABAJOS.append(j)
         PRODUCTO[j] = str(fila[c_prodj]).strip()
 
-        if c_pares is not None and pd.notna(fila[c_pares]):
-            DEMANDA[j] = int(round(float(fila[c_pares])))
+        # Cantidad en docenas (si el libro la trae en pares, se convierte)
+        if c_doc is not None and pd.notna(fila[c_doc]):
+            DEMANDA[j] = float(fila[c_doc])
         else:
-            DEMANDA[j] = int(round(float(fila[c_doc]) * 12))
+            DEMANDA[j] = float(fila[c_pares]) / 12.0
 
         # Fecha de entrega d_j [h hábiles]
         if c_horas is not None and pd.notna(fila[c_horas]):
@@ -331,11 +332,6 @@ def cargar_datos(ruta: str = RUTA_EXCEL) -> None:
 # 5. TIEMPOS
 # ---------------------------------------------------------------------------
 
-def docenas(pares: float) -> float:
-    """Pares → docenas."""
-    return pares / 12.0
-
-
 def tiempo_horas(trabajo: str, maquina: str, cant_docenas: float) -> float:
     """Tiempo de proceso [h] = (min/docena) × docenas / 60."""
     return (TIEMPO_MIN_DOCENA[(PRODUCTO[trabajo], maquina)] * cant_docenas) / 60.0
@@ -349,8 +345,7 @@ def elegibles(trabajo: str, etapa: int) -> List[str]:
 def tiempo_lote_etapa(trabajo: str, etapa: int) -> float:
     """Tiempo [h] de la orden completa en la máquina más rápida de la etapa
     (se usa para ordenar las reglas SPT, LPT, MST y CR)."""
-    doc = docenas(DEMANDA[trabajo])
-    return min(tiempo_horas(trabajo, m, doc) for m in elegibles(trabajo, etapa))
+    return min(tiempo_horas(trabajo, m, DEMANDA[trabajo]) for m in elegibles(trabajo, etapa))
 
 # ---------------------------------------------------------------------------
 # 6. REPRESENTACIÓN DE LA SOLUCIÓN
@@ -366,14 +361,19 @@ def tiempo_lote_etapa(trabajo: str, etapa: int) -> float:
 # ---------------------------------------------------------------------------
 
 def _min_unidades() -> int:
-    """Tamaño mínimo de sublote en unidades de GRANULARIDAD_PARES."""
-    return max(1, math.ceil(MIN_DOCENAS_POR_SUBLOTE * 12 / GRANULARIDAD_PARES))
+    """Tamaño mínimo de sublote en unidades de GRANULARIDAD_DOCENAS."""
+    return max(1, math.ceil(MIN_DOCENAS_POR_SUBLOTE / GRANULARIDAD_DOCENAS - 1e-9))
+
+
+def _unidades(trabajo: str) -> int:
+    """Unidades de GRANULARIDAD_DOCENAS completas que caben en la orden."""
+    return int(math.floor(DEMANDA[trabajo] / GRANULARIDAD_DOCENAS + 1e-9))
 
 
 def num_sublotes(trabajo: str) -> int:
     """B_j: NUM_SUBLOTES, o menos si la orden no alcanza para ese número de
     sublotes del tamaño mínimo."""
-    por_volumen = (DEMANDA[trabajo] // GRANULARIDAD_PARES) // _min_unidades()
+    por_volumen = _unidades(trabajo) // _min_unidades()
     return max(1, min(NUM_SUBLOTES, por_volumen))
 
 
@@ -386,20 +386,20 @@ def _dirichlet(k: int) -> List[float]:
     return [p / total2 for p in props]
 
 
-def props_a_pares(trabajo: str, props: List[float]) -> List[int]:
+def props_a_docenas(trabajo: str, props: List[float]) -> List[float]:
     """
-    Convierte las proporciones del nivel 1 en tamaños de sublote [pares]:
-    múltiplos de GRANULARIDAD_PARES, con el mínimo MIN_DOCENAS_POR_SUBLOTE y
+    Convierte las proporciones del nivel 1 en tamaños de sublote [docenas]:
+    múltiplos de GRANULARIDAD_DOCENAS, con el mínimo MIN_DOCENAS_POR_SUBLOTE y
     suma igual a la cantidad de la orden (método del mayor residuo).
     """
     total    = DEMANDA[trabajo]
     k        = len(props)
-    unidades = total // GRANULARIDAD_PARES
-    residuo  = total - unidades * GRANULARIDAD_PARES
+    unidades = _unidades(trabajo)
+    residuo  = total - unidades * GRANULARIDAD_DOCENAS
     min_u    = _min_unidades()
 
     if k == 1 or unidades < k * min_u:
-        tam = [0] * k
+        tam = [0.0] * k
         tam[0] = total
         return tam
 
@@ -411,14 +411,9 @@ def props_a_pares(trabajo: str, props: List[float]) -> List[int]:
     for i in orden[:faltan]:
         base[i] += 1
 
-    tam = [(min_u + u) * GRANULARIDAD_PARES for u in base]
+    tam = [(min_u + u) * GRANULARIDAD_DOCENAS for u in base]
     tam[-1] += residuo
     return tam
-
-
-def props_a_docenas(trabajo: str, props: List[float]) -> List[float]:
-    """Tamaños de sublote en docenas."""
-    return [docenas(p) for p in props_a_pares(trabajo, props)]
 
 
 def _sublotes(k: Dict[str, int]) -> List[Tuple[str, int]]:
@@ -791,12 +786,12 @@ def imprimir_trabajos():
     print(SEP)
     print("  ÓRDENES DE TRABAJO")
     print(SEP)
-    print(f"  {'Orden':>6} | {'Ref.':>6} | {'Pares':>7} | {'Docenas':>8} | "
+    print(f"  {'Orden':>6} | {'Ref.':>6} | {'Docenas':>8} | "
           f"{'rj (h)':>7} | {'dj (h)':>7} | {'Entrega':>10} | {'Sublotes':>8}")
     print(SEP2)
     for j in TRABAJOS:
-        print(f"  {j:>6} | {PRODUCTO[j]:>6} | {DEMANDA[j]:>7} | "
-              f"{docenas(DEMANDA[j]):>8.2f} | {RELEASE[j]:>7.1f} | "
+        print(f"  {j:>6} | {PRODUCTO[j]:>6} | {DEMANDA[j]:>8.2f} | "
+              f"{RELEASE[j]:>7.1f} | "
               f"{DUE_DATE[j]:>7.1f} | {_fmt_fecha(FECHA_ENTREGA[j]):>10} | "
               f"{num_sublotes(j):>8}")
     print()
@@ -825,11 +820,11 @@ def imprimir_solucion(individuo: dict):
     print("  MEJOR SOLUCIÓN DEL ALGORITMO GENÉTICO")
     print(SEP)
     print("\n  Tamaños de los sublotes (iguales en todas las etapas):")
-    print(f"  {'Orden':>6} | {'Sublote':>7} | {'Pares':>7} | {'Docenas':>8}")
-    print("  " + "-" * 38)
+    print(f"  {'Orden':>6} | {'Sublote':>7} | {'Docenas':>8}")
+    print("  " + "-" * 28)
     for j in TRABAJOS:
-        for b, pb in enumerate(props_a_pares(j, individuo['proporciones'][j]), start=1):
-            print(f"  {j if b == 1 else '':>6} | {b:>7} | {pb:>7} | {docenas(pb):>8.2f}")
+        for b, db in enumerate(props_a_docenas(j, individuo['proporciones'][j]), start=1):
+            print(f"  {j if b == 1 else '':>6} | {b:>7} | {db:>8.2f}")
 
     print(f"\n  {'Orden':>6} | {'dj (h)':>7} | {'Cj (h)':>9} | {'Tj (h)':>8} | "
           f"{'Ej (h)':>8} | {'Entrega':>10} | {'Fin':>10}")

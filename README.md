@@ -28,7 +28,7 @@ Las etapas se toman en el orden en que aparecen en la hoja de tiempos.
 ## Modelo
 
 * **Sublotes consistentes**: cada orden se divide en 10 sublotes de tamaño
-  variable (múltiplos de media docena), y cada sublote mantiene su tamaño en
+  variable (docenas completas), y cada sublote mantiene su tamaño en
   todas las etapas. Un sublote pasa a la etapa siguiente en cuanto termina.
 * Cromosoma de dos niveles: (1) proporciones de los tamaños de sublote de
   cada orden, (2) secuencia de los sublotes en cada etapa. La máquina la
