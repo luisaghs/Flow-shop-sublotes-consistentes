@@ -1,0 +1,29 @@
+  Datos cargados desde: /root/.claude/uploads/d99e466a-538d-59ce-9926-6932ba470cd4/72029ef0-BD_HFS.xlsx
+    Órdenes: 10 | Etapas: Troquelado (4 máq.), Ensamble (15 máq.), Costura (9 máq.), Volteado (8 máq.)
+
+
+=== Instancia I2: 5 órdenes, B̄ = 1, máquinas por etapa 2-3-2-1 ===
+  Datos cargados desde: /home/user/Flow-shop-sublotes-consistentes/fase2/salida_validacion/I2.xlsx
+    Órdenes: 5 | Etapas: Troquelado (2 máq.), Ensamble (3 máq.), Costura (2 máq.), Volteado (1 máq.)
+
+  Mejor regla (SPT): ΣTj = 37.6353 | Cmax = 22.8913
+    AG semilla  1: ΣTj = 34.3738 | Cmax = 21.7937 | 1.1 s
+    AG semilla  2: ΣTj = 34.3738 | Cmax = 21.7937 | 1.1 s
+    AG semilla  3: ΣTj = 34.3738 | Cmax = 21.7937 | 1.2 s
+    AG semilla  4: ΣTj = 34.9167 | Cmax = 22.6793 | 1.0 s
+    AG semilla  5: ΣTj = 34.3738 | Cmax = 21.7937 | 1.1 s
+    AG semilla  6: ΣTj = 34.3738 | Cmax = 21.7937 | 1.4 s
+    AG semilla  7: ΣTj = 34.3738 | Cmax = 21.7937 | 0.9 s
+    AG semilla  8: ΣTj = 34.3738 | Cmax = 21.7937 | 1.1 s
+    AG semilla  9: ΣTj = 34.3738 | Cmax = 21.7937 | 1.1 s
+    AG semilla 10: ΣTj = 34.3738 | Cmax = 21.7937 | 1.0 s
+    MILP fase 1 (ΣTj): 10.7 s | fase 2 (Cmax): 9.9 s
+  MILP F1 antecesor inmediato (documento): ΣTj = 34.3738 | Cmax = 21.7937 | Óptimo | 20.6 s | 240 binarias | violaciones = 0
+    MILP fase 1 (ΣTj): 3.5 s | fase 2 (Cmax): 0.6 s
+  MILP F2 precedencia general: ΣTj = 34.3738 | Cmax = 21.7937 | Óptimo | 4.1 s | 80 binarias | violaciones = 0
+  Solución MILP en el decodificador del AG: ΣTj = 34.3738 | Cmax = 21.7937
+
+Instancia  Órdenes  B̄  Sublotes Máquinas  F1 binarias    F1 ΣTj   F1 Cmax F1 estado  F1 s  F1 violaciones  F2 binarias    F2 ΣTj   F2 Cmax F2 estado  F2 s  F2 violaciones  ΣTj óptima demostrada  (ΣTj, Cmax) óptimo demostrado  Decod. ΣTj  Decod. Cmax Regla  Regla ΣTj  Regla Cmax  AG mejor ΣTj  AG mejor Cmax  AG prom ΣTj  AG prom Cmax AG ≤ MILP en ΣTj AG ≤ MILP en (ΣTj, Cmax)  AG s prom
+       I2        5   1         5  2-3-2-1          240 34.373833 21.793667    Óptimo  20.6               0           80 34.373833 21.793667    Óptimo   4.1               0                   True                           True   34.373833    21.793667   SPT  37.635333   22.891333     34.373833      21.793667    34.428117     21.882233             9/10                     9/10        1.1
+
+Resultados guardados en /home/user/Flow-shop-sublotes-consistentes/fase2/salida_validacion/resultados_validacion_I2.csv

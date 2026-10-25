@@ -37,3 +37,21 @@ fechas de entrega son las **Horas disponibles** de cada trabajo.
   además de mutaciones sobre el número y el tamaño de los sublotes.
 * Objetivo: ΣTi (tardanza total) con desempate por Cmax, o Cmax
   (`FUNCION_OBJETIVO`).
+
+## Fase 2: guía metodológica y validación
+
+| Archivo | Contenido |
+|---|---|
+| `docs/fase2_guia_metodologica.md` | Estructura propuesta para la Fase 2, correcciones al MILP, diseño del AG, calibración |
+| `docs/fase2_validacion_milp.md` | Validación del MILP con 9 instancias pequeñas frente al AG (procedimiento, formulación y resultados) |
+| `fase2/verificar_factibilidad.py` | Comprueba que las programaciones del decodificador cumplen las restricciones del MILP |
+| `fase2/validacion_milp.py` | Resuelve el MILP con HiGHS (dos formulaciones), lo verifica y lo compara con el AG |
+| `fase2/salida_validacion/` | Instancias (`I*.xlsx`), registros, programaciones óptimas, tablas y Gantt |
+
+```bash
+pip install pulp highspy pandas openpyxl matplotlib
+cd fase2
+python verificar_factibilidad.py ruta/final_sc_hfsagls_S2_4.py ruta/BD_HFS.xlsx
+python validacion_milp.py ruta/final_sc_hfsagls_S2_4.py ruta/BD_HFS.xlsx [I1,I2,...]
+python validacion_milp.py resumen
+```

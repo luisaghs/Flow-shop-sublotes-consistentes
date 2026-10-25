@@ -187,12 +187,11 @@ el jurado: ¿cómo saben que el modelo hace lo que dicen?
    alistamientos en troquelado. Resultado de la prueba: **0 violaciones en 200
    cromosomas aleatorios** y en las programaciones de las reglas de despacho.
    Esto demuestra que las soluciones del AG son factibles para el MILP.
-2. **Validación del MILP con una instancia reducida.** Programar el MILP (por
-   ejemplo con PuLP o Pyomo y el solver libre HiGHS o CBC) para una instancia
-   pequeña: 3 o 4 órdenes, 2 o 3 sublotes, 1 o 2 máquinas por etapa. Resolverla
-   de forma óptima y correr el AG sobre la misma instancia. Reportar la brecha
-   entre el AG y el óptimo. Así se valida el modelo y se mide la calidad del AG,
-   que en la instancia real no tiene óptimo conocido.
+2. **Validación del MILP con instancias reducidas (hecha).** El MILP está
+   programado en `fase2/validacion_milp.py` (PuLP + HiGHS) y se resolvió para
+   cinco instancias pequeñas con los tiempos reales. Se comparó con el AG sobre
+   las mismas instancias. Procedimiento, formulación corregida y resultados en
+   [`docs/fase2_validacion_milp.md`](fase2_validacion_milp.md).
 3. **Traza manual.** Calcular a mano los tiempos de 2 o 3 sublotes de un Gantt y
    compararlos con la salida del programa.
 4. **Curva de convergencia** de la mejor ΣT_j y del promedio de la población por

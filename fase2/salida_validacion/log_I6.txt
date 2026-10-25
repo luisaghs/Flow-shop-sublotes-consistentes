@@ -1,0 +1,29 @@
+  Datos cargados desde: /root/.claude/uploads/d99e466a-538d-59ce-9926-6932ba470cd4/72029ef0-BD_HFS.xlsx
+    Órdenes: 10 | Etapas: Troquelado (4 máq.), Ensamble (15 máq.), Costura (9 máq.), Volteado (8 máq.)
+
+
+=== Instancia I6: 4 órdenes, B̄ = 2, máquinas por etapa 2-3-2-1 ===
+  Datos cargados desde: /home/user/Flow-shop-sublotes-consistentes/fase2/salida_validacion/I6.xlsx
+    Órdenes: 4 | Etapas: Troquelado (2 máq.), Ensamble (3 máq.), Costura (2 máq.), Volteado (1 máq.)
+
+  Mejor regla (EDD): ΣTj = 6.6817 | Cmax = 14.5325
+    AG semilla  1: ΣTj = 5.9275 | Cmax = 13.9418 | 1.8 s
+    AG semilla  2: ΣTj = 5.9275 | Cmax = 13.9418 | 2.0 s
+    AG semilla  3: ΣTj = 5.9275 | Cmax = 13.9418 | 2.0 s
+    AG semilla  4: ΣTj = 5.9275 | Cmax = 13.9418 | 1.7 s
+    AG semilla  5: ΣTj = 6.4160 | Cmax = 14.6370 | 3.8 s
+    AG semilla  6: ΣTj = 6.3602 | Cmax = 14.5812 | 2.1 s
+    AG semilla  7: ΣTj = 5.9275 | Cmax = 13.9418 | 1.8 s
+    AG semilla  8: ΣTj = 5.9275 | Cmax = 13.9418 | 2.1 s
+    AG semilla  9: ΣTj = 5.9275 | Cmax = 13.9418 | 2.0 s
+    AG semilla 10: ΣTj = 6.5350 | Cmax = 14.7560 | 2.0 s
+    MILP fase 1 (ΣTj): 600.0 s | fase 2 (Cmax): 600.0 s
+  MILP F1 antecesor inmediato (documento): ΣTj = 6.3790 | Cmax = 13.9833 | Límite de tiempo: ΣTj cota inferior 0.803; Cmax cota inferior 11.213 | 1200.0 s | 576 binarias | violaciones = 0
+    MILP fase 1 (ΣTj): 600.0 s | fase 2 (Cmax): 207.1 s
+  MILP F2 precedencia general: ΣTj = 5.9275 | Cmax = 13.9418 | Límite de tiempo: ΣTj cota inferior 3.277; Cmax óptimo | 807.1 s | 176 binarias | violaciones = 0
+  Solución MILP en el decodificador del AG: ΣTj = 5.9275 | Cmax = 13.9418
+
+Instancia  Órdenes  B̄  Sublotes Máquinas  F1 binarias  F1 ΣTj   F1 Cmax                                                            F1 estado   F1 s  F1 violaciones  F2 binarias  F2 ΣTj   F2 Cmax                                              F2 estado  F2 s  F2 violaciones  ΣTj óptima demostrada  (ΣTj, Cmax) óptimo demostrado  Decod. ΣTj  Decod. Cmax Regla  Regla ΣTj  Regla Cmax  AG mejor ΣTj  AG mejor Cmax  AG prom ΣTj  AG prom Cmax AG ≤ MILP en ΣTj AG ≤ MILP en (ΣTj, Cmax)  AG s prom
+       I6        4   2         8  2-3-2-1          576   6.379 13.983333 Límite de tiempo: ΣTj cota inferior 0.803; Cmax cota inferior 11.213 1200.0               0          176  5.9275 13.941833 Límite de tiempo: ΣTj cota inferior 3.277; Cmax óptimo 807.1               0                  False                          False      5.9275    13.941833   EDD   6.681667     14.5325        5.9275      13.941833     6.080367       14.1567             7/10                     7/10        2.1
+
+Resultados guardados en /home/user/Flow-shop-sublotes-consistentes/fase2/salida_validacion/resultados_validacion_I6.csv

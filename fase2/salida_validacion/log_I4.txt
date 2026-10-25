@@ -1,0 +1,29 @@
+  Datos cargados desde: /root/.claude/uploads/d99e466a-538d-59ce-9926-6932ba470cd4/72029ef0-BD_HFS.xlsx
+    Órdenes: 10 | Etapas: Troquelado (4 máq.), Ensamble (15 máq.), Costura (9 máq.), Volteado (8 máq.)
+
+
+=== Instancia I4: 3 órdenes, B̄ = 2, máquinas por etapa 2-3-2-1 ===
+  Datos cargados desde: /home/user/Flow-shop-sublotes-consistentes/fase2/salida_validacion/I4.xlsx
+    Órdenes: 3 | Etapas: Troquelado (2 máq.), Ensamble (3 máq.), Costura (2 máq.), Volteado (1 máq.)
+
+  Mejor regla (EDD): ΣTj = 4.1492 | Cmax = 12.2457
+    AG semilla  1: ΣTj = 3.8612 | Cmax = 12.0822 | 1.3 s
+    AG semilla  2: ΣTj = 3.8612 | Cmax = 12.0822 | 1.1 s
+    AG semilla  3: ΣTj = 3.8612 | Cmax = 12.0822 | 1.2 s
+    AG semilla  4: ΣTj = 3.8612 | Cmax = 12.0822 | 1.3 s
+    AG semilla  5: ΣTj = 3.8612 | Cmax = 12.0822 | 1.2 s
+    AG semilla  6: ΣTj = 3.8612 | Cmax = 12.0822 | 1.2 s
+    AG semilla  7: ΣTj = 3.8612 | Cmax = 12.0822 | 1.3 s
+    AG semilla  8: ΣTj = 3.8612 | Cmax = 12.0822 | 1.2 s
+    AG semilla  9: ΣTj = 3.8612 | Cmax = 12.0822 | 1.2 s
+    AG semilla 10: ΣTj = 3.8612 | Cmax = 12.0822 | 1.5 s
+    MILP fase 1 (ΣTj): 92.9 s | fase 2 (Cmax): 74.7 s
+  MILP F1 antecesor inmediato (documento): ΣTj = 3.8612 | Cmax = 12.0822 | Óptimo | 167.7 s | 336 binarias | violaciones = 0
+    MILP fase 1 (ΣTj): 43.6 s | fase 2 (Cmax): 16.3 s
+  MILP F2 precedencia general: ΣTj = 3.8612 | Cmax = 12.0822 | Óptimo | 60.0 s | 108 binarias | violaciones = 0
+  Solución MILP en el decodificador del AG: ΣTj = 3.9857 | Cmax = 12.0822
+
+Instancia  Órdenes  B̄  Sublotes Máquinas  F1 binarias   F1 ΣTj   F1 Cmax F1 estado  F1 s  F1 violaciones  F2 binarias   F2 ΣTj   F2 Cmax F2 estado  F2 s  F2 violaciones  ΣTj óptima demostrada  (ΣTj, Cmax) óptimo demostrado  Decod. ΣTj  Decod. Cmax Regla  Regla ΣTj  Regla Cmax  AG mejor ΣTj  AG mejor Cmax  AG prom ΣTj  AG prom Cmax AG ≤ MILP en ΣTj AG ≤ MILP en (ΣTj, Cmax)  AG s prom
+       I4        3   2         6  2-3-2-1          336 3.861167 12.082167    Óptimo 167.7               0          108 3.861167 12.082167    Óptimo  60.0               0                   True                           True    3.985667    12.082167   EDD   4.149167   12.245667      3.861167      12.082167     3.861167     12.082167            10/10                    10/10        1.3
+
+Resultados guardados en /home/user/Flow-shop-sublotes-consistentes/fase2/salida_validacion/resultados_validacion_I4.csv

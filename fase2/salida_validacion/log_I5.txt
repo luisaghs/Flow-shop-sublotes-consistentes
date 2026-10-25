@@ -1,0 +1,29 @@
+  Datos cargados desde: /root/.claude/uploads/d99e466a-538d-59ce-9926-6932ba470cd4/72029ef0-BD_HFS.xlsx
+    Órdenes: 10 | Etapas: Troquelado (4 máq.), Ensamble (15 máq.), Costura (9 máq.), Volteado (8 máq.)
+
+
+=== Instancia I5: 4 órdenes, B̄ = 2, máquinas por etapa 2-2-1-1 ===
+  Datos cargados desde: /home/user/Flow-shop-sublotes-consistentes/fase2/salida_validacion/I5.xlsx
+    Órdenes: 4 | Etapas: Troquelado (2 máq.), Ensamble (2 máq.), Costura (1 máq.), Volteado (1 máq.)
+
+  Mejor regla (EDD): ΣTj = 3.3253 | Cmax = 21.2578
+    AG semilla  1: ΣTj = 1.1128 | Cmax = 20.1582 | 2.5 s
+    AG semilla  2: ΣTj = 1.1260 | Cmax = 20.1582 | 1.9 s
+    AG semilla  3: ΣTj = 1.1128 | Cmax = 20.1582 | 2.2 s
+    AG semilla  4: ΣTj = 2.0508 | Cmax = 20.6272 | 1.9 s
+    AG semilla  5: ΣTj = 1.1128 | Cmax = 20.1582 | 2.6 s
+    AG semilla  6: ΣTj = 1.1128 | Cmax = 20.1582 | 3.3 s
+    AG semilla  7: ΣTj = 1.1128 | Cmax = 20.1582 | 1.9 s
+    AG semilla  8: ΣTj = 1.1128 | Cmax = 20.1582 | 2.8 s
+    AG semilla  9: ΣTj = 1.5057 | Cmax = 20.0968 | 1.9 s
+    AG semilla 10: ΣTj = 1.1128 | Cmax = 20.1582 | 1.9 s
+    MILP fase 1 (ΣTj): 600.0 s | fase 2 (Cmax): 543.9 s
+  MILP F1 antecesor inmediato (documento): ΣTj = 1.1128 | Cmax = 20.1582 | Límite de tiempo: ΣTj cota inferior 0.000; Cmax óptimo | 1143.9 s | 432 binarias | violaciones = 0
+    MILP fase 1 (ΣTj): 27.0 s | fase 2 (Cmax): 7.2 s
+  MILP F2 precedencia general: ΣTj = 1.1128 | Cmax = 20.1582 | Óptimo | 34.1 s | 160 binarias | violaciones = 0
+  Solución MILP en el decodificador del AG: ΣTj = 1.7622 | Cmax = 20.4828
+
+Instancia  Órdenes  B̄  Sublotes Máquinas  F1 binarias   F1 ΣTj   F1 Cmax                                              F1 estado   F1 s  F1 violaciones  F2 binarias   F2 ΣTj   F2 Cmax F2 estado  F2 s  F2 violaciones  ΣTj óptima demostrada  (ΣTj, Cmax) óptimo demostrado  Decod. ΣTj  Decod. Cmax Regla  Regla ΣTj  Regla Cmax  AG mejor ΣTj  AG mejor Cmax  AG prom ΣTj  AG prom Cmax AG ≤ MILP en ΣTj AG ≤ MILP en (ΣTj, Cmax)  AG s prom
+       I5        4   2         8  2-2-1-1          432 1.112833 20.158167 Límite de tiempo: ΣTj cota inferior 0.000; Cmax óptimo 1143.9               0          160 1.112833 20.158167    Óptimo  34.1               0                   True                           True    1.762167    20.482833   EDD   3.325333   21.257833      1.112833      20.158167     1.247233     20.198933             7/10                     7/10        2.3
+
+Resultados guardados en /home/user/Flow-shop-sublotes-consistentes/fase2/salida_validacion/resultados_validacion_I5.csv
