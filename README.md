@@ -40,3 +40,9 @@ Las etapas se toman en el orden en que aparecen en la hoja de tiempos.
   (OX) dentro de cada etapa en las secuencias. Mutación por intercambio de
   dos sublotes y perturbación normal de los tamaños.
 * Objetivo: ΣTj (tardanza total) con desempate por Cmax.
+
+## Modelo matemático
+
+La formulación (programación entera mixta) y la descripción del algoritmo
+genético están en [`docs/modelo_matematico.pdf`](docs/modelo_matematico.pdf)
+(fuente LaTeX: `docs/modelo_matematico.tex`).
