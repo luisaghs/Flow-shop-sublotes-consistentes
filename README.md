@@ -50,7 +50,8 @@ fechas de entrega son las **Horas disponibles** de cada trabajo.
 | `docs/fase2_calibracion.md` | Calibración de los parámetros del AG (diseño factorial, ampliación, criterio de parada) |
 | `fase2/calibracion_ag.py` | Corre los experimentos de calibración en paralelo y genera ANOVA, figuras e informe |
 | `fase2/salida_calibracion/` | Corridas, resúmenes, ANOVA, figuras e `informe_calibracion.md` |
-| `docs/Trabajo_de_Grado_con_Fase_2.docx` | Borrador del trabajo de grado con la Fase 2 completa redactada |
+| `docs/Trabajo_de_Grado_con_Fase_2_sintetizada.docx` | Borrador con la Fase 2 sintetizada (≈ 13 páginas) e incluye el pseudocódigo del AG |
+| `docs/Trabajo_de_Grado_con_Fase_2.docx` | Borrador con la Fase 2 en versión extensa (≈ 23 páginas) |
 | `docs/fase2_referencias.md` | Referencias nuevas citadas en la Fase 2 (verificar antes de usar) |
 | `docs/fase2_docx/` | Generador del documento (`generar_fase2.py`) y utilidades |
 | `fase2/solucion_final.py`, `fase2/salida_solucion/` | 10 réplicas del AG calibrado y la mejor programación (tablas, Gantt, convergencia) |
@@ -72,4 +73,5 @@ Para volver a generar la Fase 2 dentro del borrador (por ejemplo, tras nuevas co
 pip install python-docx   # además de pandoc instalado en el sistema
 python fase2/solucion_final.py ruta/final_sc_hfsagls_S2_4.py ruta/BD_HFS.xlsx 10
 python docs/fase2_docx/generar_fase2.py borrador.docx salida.docx ruta/final_sc_hfsagls_S2_4.py ruta/BD_HFS.xlsx
+python docs/fase2_docx/generar_fase2_sintesis.py borrador.docx salida.docx ruta/final_sc_hfsagls_S2_4.py ruta/BD_HFS.xlsx
 ```

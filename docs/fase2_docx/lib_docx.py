@@ -225,6 +225,12 @@ class Escritor:
                 c.vertical_alignment = docx.enum.table.WD_ALIGN_VERTICAL.CENTER
                 par = c.paragraphs[0]; par.alignment = al[alineacion[k]]
                 self._runs(par, str(texto), tam=tam, negrita=(i - 1) in negrita_filas)
+        # Las tablas cortas no se parten entre páginas
+        if len(filas) <= 15:
+            for fila in t.rows[:-1]:
+                for c in fila.cells:
+                    for par in c.paragraphs:
+                        par.paragraph_format.keep_with_next = True
         # La fila de encabezado se repite si la tabla cambia de página
         trPr = t.rows[0]._tr.get_or_add_trPr()
         h = OxmlElement('w:tblHeader'); trPr.append(h)
@@ -270,14 +276,17 @@ class Escritor:
         p.add_run().add_picture(ruta, width=Cm(ancho_cm))
         return self.figura_n
 
-    def codigo(self, titulo, lineas):
-        """Pseudocódigo en un recuadro con líneas superior e inferior."""
+    def codigo(self, titulo, lineas, mono=False):
+        """Pseudocódigo en un recuadro con líneas superior e inferior.
+        mono=True: fuente Consolas y sangría con los espacios iniciales."""
         reiniciar = self.primer_figura if (self.figura_n == 0 and self.primer_figura) else None
         self._rotulo('Figura', titulo, reiniciar)
         t = self.d.add_table(rows=1, cols=1)
         t.style = self.d.styles['Table Grid']
         self._tabla_base(t, [ANCHO_TEXTO])
         c = t.rows[0].cells[0]
+        trPr = t.rows[0]._tr.get_or_add_trPr()
+        trPr.append(OxmlElement('w:cantSplit'))    # el pseudocódigo no se parte entre páginas
         primero = True
         for ln in lineas:
             par = c.paragraphs[0] if primero else c.add_paragraph()
@@ -285,6 +294,18 @@ class Escritor:
             par.alignment = WD_ALIGN_PARAGRAPH.LEFT
             par.paragraph_format.space_after = Pt(0)
             par.paragraph_format.line_spacing = 1.0
+            if mono:
+                ini = len(ln) - len(ln.lstrip(' '))
+                inicio = len(par.runs)
+                if ini:
+                    par.add_run('\u00a0' * ini)          # espacios no separables
+                self._runs(par, ln.strip(), tam=9)
+                for r in par.runs[inicio:]:
+                    r.font.name = 'Consolas'
+                    r.font.size = Pt(9)
+                    rf = r._r.get_or_add_rPr().get_or_add_rFonts()
+                    rf.set(qn('w:hAnsi'), 'Consolas'); rf.set(qn('w:cs'), 'Consolas')
+                continue
             sangria = len(ln) - len(ln.lstrip(' '))
             par.paragraph_format.left_indent = Cm(0.45 * (sangria // 2))
             self._runs(par, ln.strip(), tam=10)
@@ -448,7 +469,7 @@ def escribir(escritor, bloques):
         elif tipo == 'figura':
             escritor.figura(*args[:3])
         elif tipo == 'codigo':
-            escritor.codigo(*args[:2])
+            escritor.codigo(*args[:2], mono=len(args) > 3 and args[3] == 'mono')
         elif tipo == 'vacio':
             escritor.d.add_paragraph()
         else:
