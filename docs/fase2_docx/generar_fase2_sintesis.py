@@ -141,16 +141,7 @@ def algoritmo():
             '   con prob. 0,30: elegir una etapa s e intercambiar dos sublotes de O(s)',
             '   para cada orden j, con prob. 0,40: sumar N(0; 0,15) a una proporción',
             '      de π(j) y normalizar',
-            '**Decodificar(c)**',
-            '   convertir π en docenas enteras (método del mayor residuo)',
-            '   para s = 1 hasta 4, para cada sublote (j, b) en el orden O(s):',
-            '      listo ← r(j) si s = 1; si no, terminación de (j, b) en la etapa s − 1',
-            '      para cada máquina m de la etapa s:',
-            '         troquelado: inicio ← máx(libre(m) + alistamiento, listo)',
-            '         otras etapas: inicio ← primer hueco libre de m desde listo',
-            '         fin(m) ← inicio + a(j,m)·x(j,b)',
-            '      asignar (j, b) a la máquina con menor fin(m)       ▹ regla ECT',
-            '   C(j) ← máx_b fin(j, b);  T(j) ← máx(0, C(j) − d(j));  calcular ΣT y Cmax'],
+            '**Decodificar(c)**: construye la programación del cromosoma (Figura {F:decod})'],
          'pseudo', 'mono'),
         ('h4', 'Representación de la solución'),
         ('p', r'El cromosoma tiene dos niveles. En el nivel 1, cada orden $j$ tiene un vector de '
@@ -188,8 +179,35 @@ def algoritmo():
               'último de la máquina y se suma el alistamiento si cambia la referencia; en las demás '
               'etapas ocupa el primer intervalo libre. El sublote se asigna a la máquina en la que '
               'termina primero. La programación resultante cumple por construcción todas las '
-              'restricciones del modelo. La aptitud de un cromosoma es el par (ΣT_j, C_max) de su '
-              'programación, comparado de forma lexicográfica.'),
+              'restricciones del modelo. La Figura {F:decod} presenta el procedimiento. La aptitud '
+              'de un cromosoma es el par (ΣT_j, C_max) de su programación, comparado de forma '
+              'lexicográfica.'),
+        ('codigo', 'Pseudocódigo del procedimiento de decodificación', [
+            '**Procedimiento Decodificar(c)**',
+            'Entrada: cromosoma c = (π, O1, O2, O3, O4) y datos de la instancia',
+            'Salida:  máquina, inicio y fin de cada sublote; ΣT y Cmax',
+            ' 1  para cada orden j: x(j,·) ← docenas a partir de π(j)        ▹ ecuación (17)',
+            ' 2  para cada sublote (j, b): listo(j, b) ← r(j)',
+            ' 3  para cada máquina m: agenda(m) ← vacía; libre(m) ← 0; ref(m) ← ninguna',
+            ' 4  para s = 1 hasta 4 hacer',
+            ' 5     para cada sublote (j, b) en el orden O(s) hacer',
+            ' 6        para cada máquina m de la etapa s hacer',
+            ' 7           t ← a(j,m) · x(j,b)                         ▹ tiempo de proceso',
+            ' 8           si s = 1 entonces                                ▹ troquelado',
+            ' 9              α ← σ si ref(m) = ninguna o ref(m) ≠ p(j); si no α ← 0',
+            '10              inicio(m) ← máx(libre(m) + α, listo(j, b))',
+            '11           si no',
+            '12              inicio(m) ← primer hueco de agenda(m) de duración t',
+            '                             que empiece en o después de listo(j, b)',
+            '13           fin(m) ← inicio(m) + t',
+            '14        m′ ← máquina con menor fin(m); si hay empate, la de menor índice',
+            '                                                             ▹ regla ECT',
+            '15        registrar (j, b) en agenda(m′) entre inicio(m′) y fin(m′)',
+            '16        si s = 1 entonces libre(m′) ← fin(m′); ref(m′) ← p(j)',
+            '17        listo(j, b) ← fin(m′)               ▹ disponible para la etapa s + 1',
+            '18  para cada orden j: C(j) ← máx_b listo(j, b); T(j) ← máx(0, C(j) − d(j))',
+            '19  devolver la programación, ΣT = Σ_j T(j) y Cmax = máx_j C(j)'],
+         'decod', 'mono'),
         ('h4', 'Población inicial'),
         ('p', 'La población tiene 150 cromosomas: 149 aleatorios y uno construido con la mejor de seis '
               'reglas de despacho aplicadas con sublotes iguales y la misma secuencia de órdenes en '
