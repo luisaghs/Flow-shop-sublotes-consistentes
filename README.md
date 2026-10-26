@@ -47,11 +47,17 @@ fechas de entrega son las **Horas disponibles** de cada trabajo.
 | `fase2/verificar_factibilidad.py` | Comprueba que las programaciones del decodificador cumplen las restricciones del MILP |
 | `fase2/validacion_milp.py` | Resuelve el MILP con HiGHS (dos formulaciones), lo verifica y lo compara con el AG |
 | `fase2/salida_validacion/` | Instancias (`I*.xlsx`), registros, programaciones óptimas, tablas y Gantt |
+| `docs/fase2_calibracion.md` | Calibración de los parámetros del AG (diseño factorial, ampliación, criterio de parada) |
+| `fase2/calibracion_ag.py` | Corre los experimentos de calibración en paralelo y genera ANOVA, figuras e informe |
+| `fase2/salida_calibracion/` | Corridas, resúmenes, ANOVA, figuras e `informe_calibracion.md` |
 
 ```bash
-pip install pulp highspy pandas openpyxl matplotlib
+pip install pulp highspy pandas openpyxl matplotlib scipy
 cd fase2
 python verificar_factibilidad.py ruta/final_sc_hfsagls_S2_4.py ruta/BD_HFS.xlsx
 python validacion_milp.py ruta/final_sc_hfsagls_S2_4.py ruta/BD_HFS.xlsx [I1,I2,...]
 python validacion_milp.py resumen
+python calibracion_ag.py diseno ruta/final_sc_hfsagls_S2_4.py ruta/BD_HFS.xlsx
+python calibracion_ag.py ampliacion ruta/final_sc_hfsagls_S2_4.py ruta/BD_HFS.xlsx
+python calibracion_ag.py parada ruta/final_sc_hfsagls_S2_4.py ruta/BD_HFS.xlsx
 ```

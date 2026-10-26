@@ -235,8 +235,11 @@ Con 40 sublotes una regla simple como EDD ya elimina la tardanza. Por eso:
 
 ### 2.8 Calibración de parámetros del AG
 
-El código dice que los parámetros están "calibrados", pero el documento no muestra
-cómo. Propuesta:
+**Hecha:** procedimiento, resultados y texto sugerido en
+[`docs/fase2_calibracion.md`](fase2_calibracion.md) (script
+`fase2/calibracion_ag.py`). Se confirmó la configuración del código (población
+150, cruce 0,9, mutación 0,5) y se recomienda subir la parada a 100 generaciones
+sin mejora. La propuesta original era:
 
 - **Diseño factorial**, por ejemplo 3 factores × 3 niveles = 27 combinaciones:
   población (50, 100, 150), probabilidad de cruce (0,7; 0,8; 0,9) y probabilidad
