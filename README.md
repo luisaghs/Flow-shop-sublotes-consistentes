@@ -50,6 +50,9 @@ fechas de entrega son las **Horas disponibles** de cada trabajo.
 | `docs/fase2_calibracion.md` | Calibración de los parámetros del AG (diseño factorial, ampliación, criterio de parada) |
 | `fase2/calibracion_ag.py` | Corre los experimentos de calibración en paralelo y genera ANOVA, figuras e informe |
 | `fase2/salida_calibracion/` | Corridas, resúmenes, ANOVA, figuras e `informe_calibracion.md` |
+| `fase2/salida_calibracion/anova_calibracion_excel.xlsx` | ANOVA de la calibración calculado con fórmulas de Excel |
+| `fase2/verificar_reproduccion.py` | Repite corridas de la calibración y comprueba que dan los mismos resultados |
+| `docs/guia_apropiacion_calibracion.md` | Cómo entender, reproducir y declarar la calibración |
 | `docs/Trabajo_de_Grado_con_Fase_2_sintetizada.docx` | Borrador con la Fase 2 sintetizada (≈ 13 páginas) e incluye el pseudocódigo del AG |
 | `docs/Trabajo_de_Grado_con_Fase_2.docx` | Borrador con la Fase 2 en versión extensa (≈ 23 páginas) |
 | `docs/fase2_referencias.md` | Referencias nuevas citadas en la Fase 2 (verificar antes de usar) |
