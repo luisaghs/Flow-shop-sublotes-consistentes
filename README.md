@@ -4,6 +4,8 @@ Programación de un Hybrid Flow Shop para la producción de guantes industriales
 con **sublotes consistentes** (escenario 2 de Gürsoy Yılmaz & Yılmaz, 2022,
 *Computers & Industrial Engineering* 173, 108745) y un algoritmo genético.
 
+**¿Confundido con tantos archivos? Empiece por [`MAPA_DEL_PROYECTO.md`](MAPA_DEL_PROYECTO.md):** qué es cada archivo, qué anexar y qué semillas se usaron.
+
 ## Versión final del modelo
 
 **`final_sc_hfsagls_S2_4.py`** es el modelo final (algoritmo genético) y
