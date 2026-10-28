@@ -71,16 +71,16 @@ de modo que **con la misma semilla se obtiene exactamente el mismo resultado**.
 | Calibración: ampliación del rango | 4.2.4 | **1001 a 1005** | Las mismas, para comparar con la configuración actual |
 | Calibración: criterio de parada | 4.2.4 | **1101 a 1110** | 10 réplicas por criterio |
 | Programación obtenida (10 réplicas) | 4.2.5 | **1201 a 1210** | **La programación propuesta es la de la semilla 1206** |
-| Valor por defecto del modelo | — | 42 | Si se ejecuta `final_sc_hfsagls_S2_4.py` sin cambios |
+| Valor por defecto del modelo | — | **1206** | Al ejecutar `final_sc_hfsagls_S2_4.py` se obtiene la programación propuesta |
 
 **Importante:**
 
 - Las semillas de la solución final (1201–1210) son distintas de las de la calibración,
   así que la programación propuesta no se obtuvo con las mismas corridas usadas para
   ajustar los parámetros.
-- Para obtener exactamente la programación del documento, cambien en
-  `final_sc_hfsagls_S2_4.py` la línea `'semilla': 42` por `'semilla': 1206` y ejecútenlo.
-  Con 42 se obtiene otra programación, también sin tardanza, pero no la del documento.
+- El modelo ya trae la semilla 1206: al ejecutar `python final_sc_hfsagls_S2_4.py` se
+  obtiene exactamente la programación del documento (ΣTj = 0 h, Cmax = 630,17 h).
+  Para obtener otra réplica, cambien el valor de `'semilla'` en `GA_PARAMS`.
 - Las corridas exploratorias de las guías (`docs/fase3_guia_metodologica.md`) usaron
   otras semillas (1 y 2) y no forman parte del documento.
 

@@ -104,7 +104,8 @@ GA_PARAMS = {
     'prob_mut_prop': 0.40,  # probabilidad de perturbar los tamaños de una orden (nivel 1)
     'desv_mut_prop': 0.15,  # desviación de la perturbación de tamaños
     'tam_torneo'   : 3,     # tamaño del torneo
-    'semilla'      : 42,    # semilla aleatoria (None = distinta en cada corrida)
+    'semilla'      : 1206,  # semilla de la programación propuesta en la Fase 2
+                            # (réplicas finales: 1201–1210; None = distinta en cada corrida)
 }
 
 # ---------------------------------------------------------------------------
