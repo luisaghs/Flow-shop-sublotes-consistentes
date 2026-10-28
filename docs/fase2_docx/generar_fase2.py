@@ -533,29 +533,30 @@ def bloque_validacion():
                'óptimo: una cota del horizonte obtenida de la mejor regla de despacho, la ruptura '
                r'de simetría $x_{jb}\ge x_{j,b+1}$ entre los sublotes de una orden y la desigualdad '
                r'válida $C_{is}\ge S_{is}+\min_m a_{jm}x_{jb}$. Sobre las mismas instancias se '
-               'corrió el algoritmo genético, sin modificaciones, con 10 semillas distintas. La '
+               'corrió el algoritmo genético, con los parámetros calibrados en la sección 4.2.6, con '
+               '10 semillas distintas. La '
                'Tabla {T:validacion} presenta los resultados.'),
          ('tabla', 'Resultados de la validación: modelo exacto frente al algoritmo genético',
           ['Inst.', 'Sub-lotes', 'F1: ΣT_j / C_max (s)', 'F2: ΣT_j / C_max (s)', 'EDD ΣT_j',
            'AG mejor ΣT_j / C_max', 'AG prom. ΣT_j', 'AG ≤ MILP', 'AG (s)'], [
               ['I1', '4', '28,190 / 19,836 · óptimo (1)', '28,190 / 19,836 · óptimo (2)', '30,439',
-               '28,190 / 19,836', '28,306', '7/10', '0,9'],
+               '28,190 / 19,836', '28,306', '7/10', '3,4'],
               ['I2', '5', '34,374 / 21,794 · óptimo (21)', '34,374 / 21,794 · óptimo (4)', '37,635',
-               '34,374 / 21,794', '34,428', '9/10', '1,1'],
+               '34,374 / 21,794', '34,428', '9/10', '3,7'],
               ['I3', '6', '0,955 / 15,955 · óptimo (121)', '0,955 / 15,955 · óptimo (4)', '2,067',
-               '0,955 / 15,955', '1,169', '4/10', '1,4'],
+               '0,955 / 15,955', '1,169', '4/10', '4,5'],
               ['I4', '6', '3,861 / 12,082 · óptimo (168)', '3,861 / 12,082 · óptimo (60)', '4,149',
-               '3,861 / 12,082', '3,861', '10/10', '1,3'],
+               '3,861 / 12,082', '3,861', '10/10', '4,3'],
               ['I5', '8', '1,113 / 20,158 · límite (1.144)', '1,113 / 20,158 · óptimo (34)', '3,325',
-               '1,113 / 20,158', '1,247', '7/10', '2,3'],
+               '1,113 / 20,158', '1,247', '7/10', '6,9'],
               ['I6', '8', '6,379 / 13,983 · límite (1.200)', '5,928 / 13,942 · límite (807)', '6,682',
-               '5,928 / 13,942', '6,080', '7/10', '2,1'],
+               '5,928 / 13,942', '6,020', '8/10', '6,6'],
               ['I7', '9', '0,000 / 14,747 · límite (723)', '0,000 / 14,399 · óptimo (587)', '0,404',
-               '0,000 / 14,496', '0,000', '10/10', '2,9'],
+               '0,000 / 14,496', '0,000', '10/10', '7,9'],
               ['I8', '12', 'sin solución (600)', '3,142 / 12,780 · límite (1.200)', '2,341',
-               '1,214 / 12,114', '1,336', '10/10', '3,8'],
+               '1,214 / 12,114', '1,336', '10/10', '9,9'],
               ['I9', '15', 'sin solución (600)', '8,077 / 15,847 · límite (1.200)', '2,666',
-               '1,214 / 13,857', '1,468', '10/10', '4,0']],
+               '1,214 / 13,857', '1,457', '10/10', '11,3']],
           {'etiqueta': 'validacion', 'anchos': [560, 640, 1760, 1760, 720, 1340, 740, 700, 618],
            'alineacion': ['l'] + ['c'] * 8, 'tam': 8}),
          ('p', 'ΣT_j y C_max se expresan en horas; entre paréntesis, el tiempo de cómputo en '
@@ -593,7 +594,7 @@ def bloque_validacion():
              '**El método exacto no escala, mientras que el algoritmo genético sí.** F1 demostró la '
              'optimalidad solo hasta 6 sublotes y no encontró soluciones factibles con 12 y 15 '
              'sublotes en 10 minutos. En las instancias medianas, el algoritmo igualó o superó en '
-             'menos de 4 segundos la mejor solución que el solver obtuvo en 20 minutos; en I9, por '
+             'menos de 12 segundos la mejor solución que el solver obtuvo en 20 minutos; en I9, por '
              'ejemplo, obtuvo 1,214 h frente a 8,077 h. La instancia real, con 100 sublotes y más '
              'de 363.000 variables binarias, está muy por encima de lo que el método exacto puede '
              'resolver.',

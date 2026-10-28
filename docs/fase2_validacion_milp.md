@@ -275,3 +275,12 @@ python validacion_milp.py ruta/final_sc_hfsagls_S2_4.py ruta/BD_HFS.xlsx I1,I2  
 El script es compatible con PuLP 2.x (la versión usual en Colab) y con PuLP 4.x.
 Las instancias, el límite de tiempo y las semillas se cambian al inicio del archivo
 (`INSTANCIAS`, `LIMITE_TIEMPO_S`, `SEMILLAS_AG`).
+
+## Nota: corrida del AG con los parámetros calibrados
+
+Las tablas anteriores muestran el AG con la parada original (50 generaciones sin
+mejora). Con el modelo final (100 generaciones sin mejora) la mejor solución del AG
+es idéntica en las nueve instancias y las conclusiones no cambian. Solo varían: I6,
+promedio 6,020 h y 8/10 réplicas en la referencia; I9, promedio 1,457 h; y los tiempos
+(3–11 s por corrida). Detalle en `fase2/salida_validacion/ag_parametros_calibrados.txt`.
+Los documentos del trabajo de grado usan estos valores.

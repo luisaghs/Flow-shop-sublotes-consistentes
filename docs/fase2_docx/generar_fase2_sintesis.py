@@ -275,21 +275,21 @@ def validacion():
               'sublotes y un subconjunto de máquinas por etapa que incluye máquinas de ensamble de '
               'distinta velocidad. El modelo matemático se resolvió con el solver HiGHS (límite de '
               '10 minutos por objetivo) y, para confirmar los óptimos, con una formulación '
-              'equivalente de precedencia general (Naderi et al., 2014). El algoritmo genético se '
-              'corrió 10 veces en cada instancia. La Tabla {T:validacion} resume los resultados.'),
+              'equivalente de precedencia general (Naderi et al., 2014). El algoritmo genético, con '
+              'los parámetros calibrados en la sección 4.2.4, se corrió 10 veces en cada instancia. La Tabla {T:validacion} resume los resultados.'),
         ('tabla', 'Validación: modelo exacto frente al algoritmo genético',
          ['Inst.', 'Sublotes', 'Óptimo exacto ΣT_j / C_max (h)', 'Mejor regla ΣT_j (h)',
           'AG mejor ΣT_j / C_max (h)', 'AG prom. ΣT_j (h)', 'Réplicas AG ≤ referencia',
           'Tiempo AG (s)'], [
-             ['I1', '4 (sin división)', '28,190 / 19,836', '30,439', '28,190 / 19,836', '28,306', '7/10', '0,9'],
-             ['I2', '5 (sin división)', '34,374 / 21,794', '37,635', '34,374 / 21,794', '34,428', '9/10', '1,1'],
-             ['I3', '6', '0,955 / 15,955', '2,067', '0,955 / 15,955', '1,169', '4/10', '1,4'],
-             ['I4', '6', '3,861 / 12,082', '4,149', '3,861 / 12,082', '3,861', '10/10', '1,3'],
-             ['I5', '8', '1,113 / 20,158', '3,325', '1,113 / 20,158', '1,247', '7/10', '2,3'],
-             ['I6', '8', 'No demostrado (5,928 / 13,942)', '6,682', '5,928 / 13,942', '6,080', '7/10', '2,1'],
-             ['I7', '9', '0,000 / 14,399', '0,404', '0,000 / 14,496', '0,000', '10/10', '2,9'],
-             ['I8', '12', 'No demostrado (3,142 / 12,780)', '2,341', '1,214 / 12,114', '1,336', '10/10', '3,8'],
-             ['I9', '15', 'No demostrado (8,077 / 15,847)', '2,666', '1,214 / 13,857', '1,468', '10/10', '4,0']],
+             ['I1', '4 (sin división)', '28,190 / 19,836', '30,439', '28,190 / 19,836', '28,306', '7/10', '3,4'],
+             ['I2', '5 (sin división)', '34,374 / 21,794', '37,635', '34,374 / 21,794', '34,428', '9/10', '3,7'],
+             ['I3', '6', '0,955 / 15,955', '2,067', '0,955 / 15,955', '1,169', '4/10', '4,5'],
+             ['I4', '6', '3,861 / 12,082', '4,149', '3,861 / 12,082', '3,861', '10/10', '4,3'],
+             ['I5', '8', '1,113 / 20,158', '3,325', '1,113 / 20,158', '1,247', '7/10', '6,9'],
+             ['I6', '8', 'No demostrado (5,928 / 13,942)', '6,682', '5,928 / 13,942', '6,020', '8/10', '6,6'],
+             ['I7', '9', '0,000 / 14,399', '0,404', '0,000 / 14,496', '0,000', '10/10', '7,9'],
+             ['I8', '12', 'No demostrado (3,142 / 12,780)', '2,341', '1,214 / 12,114', '1,336', '10/10', '9,9'],
+             ['I9', '15', 'No demostrado (8,077 / 15,847)', '2,666', '1,214 / 13,857', '1,457', '10/10', '11,3']],
          {'etiqueta': 'validacion', 'anchos': [620, 1000, 1880, 900, 1480, 900, 1200, 858],
           'alineacion': ['l'] + ['c'] * 7, 'tam': 9}),
         ('p', 'La referencia es el óptimo exacto o, si no se demostró en el tiempo límite, la mejor '
@@ -302,7 +302,7 @@ def validacion():
             'diferencia fue el makespan de I7, 0,7 % mayor con la tardanza en cero.',
             '**El método exacto no escala:** con 12 y 15 sublotes, la formulación propuesta no '
             'encontró ninguna solución factible en 10 minutos, mientras que el algoritmo obtuvo en '
-            'menos de 4 segundos soluciones mejores que las del solver. La instancia real, con 100 '
+            'menos de 12 segundos soluciones mejores que las del solver. La instancia real, con 100 '
             'sublotes, solo es abordable con el algoritmo.',
             '**Dividir en sublotes reduce la tardanza:** con las mismas cuatro órdenes, la tardanza '
             'óptima baja de 28,19 h sin división (I1) a 5,93 h con dos sublotes (I6) y a 1,21 h con '
