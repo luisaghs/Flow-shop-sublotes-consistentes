@@ -365,7 +365,10 @@ def calibracion(D):
                           f'no mejoró de forma significativa (Wilcoxon, p = {pv}), por lo que se conservó la '
                           'combinación del diseño por parsimonia.'))
     elif dec['en_borde']:
-        txt_amp = 'La mejor combinación quedó en el borde del rango; la ampliación está pendiente.'
+        txt_amp = (f"La mejor combinación quedó en el borde del rango probado para "
+                   f"{_lista([NOMBRE_F[f] for f in dec['en_borde']])}. El estudio se limitó a los niveles "
+                   'del diseño, definidos a partir de los valores habituales en la literatura, por lo que '
+                   'se adoptó la mejor combinación dentro de ese rango.')
     else:
         txt_amp = ('La mejor combinación no quedó en el borde del rango para ningún factor significativo, '
                    'así que no fue necesario ampliarlo.')

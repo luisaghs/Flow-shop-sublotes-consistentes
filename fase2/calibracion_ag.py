@@ -530,7 +530,7 @@ def analizar(dir_salida):
                    f"{', '.join(NOMBRE_FACTOR[f] for f in sorted(signif)) or 'ninguno'}.")
     en_borde = [f for f in factores if len(grilla[f]) > 1]
     informe.append("- " + (f"La mejor combinación está en el borde para: "
-                           f"{', '.join(NOMBRE_FACTOR[f] for f in en_borde)}; se amplía el rango."
+                           f"{', '.join(NOMBRE_FACTOR[f] for f in en_borde)}."
                            if en_borde else "No hay factores significativos en el borde; no se amplía."))
     informe.append("")
     decisiones.update(mejor_diseno=mejor, significativos=sorted(signif), en_borde=en_borde,
@@ -579,6 +579,9 @@ def analizar(dir_salida):
         else:
             informe.append("- La mejor combinación del diseño sigue siendo la mejor.")
         informe.append("")
+    elif en_borde:
+        informe += ["No se evaluaron niveles fuera del rango del diseño; se adopta la mejor "
+                    "combinación dentro de ese rango.", ""]
     with open(os.path.join(dir_salida, 'config_seleccionada.txt'), 'w', encoding='utf-8') as fh:
         fh.write(f"{int(seleccion['poblacion'])},{float(seleccion['prob_cruce']):g},"
                  f"{float(seleccion['prob_mutacion']):g}\n")
