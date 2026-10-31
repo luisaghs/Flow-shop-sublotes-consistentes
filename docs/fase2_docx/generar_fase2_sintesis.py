@@ -102,7 +102,8 @@ def modelo():
     ]
 
 
-def algoritmo():
+def algoritmo(D):
+    P = D['params']
     return [
         ('h3', 'Algoritmo genético'),
         ('p', 'El algoritmo adapta el esquema de Gürsoy Yılmaz y Yılmaz (2022) para sublotes '
@@ -113,7 +114,8 @@ def algoritmo():
         ('codigo', 'Pseudocódigo del algoritmo genético propuesto', [
             '**Algoritmo genético para el HFS con sublotes consistentes**',
             'Entrada: órdenes (Q, p, r, d), tiempos a(j,m), máquinas de cada etapa',
-            '         Np = 150, pc = 0,9, pm = 0,5, k = 3, Gsm = 100, Gmáx = 1.000',
+            f"         Np = {P['poblacion']}, pc = {n(P['prob_cruce'], 1)}, pm = {n(P['prob_mutacion'], 1)}, "
+            f"k = {P['tam_torneo']}, Gsm = {P['sin_mejora']}, Gmáx = {n(P['generaciones'], 0)}",
             'Salida:  mejor programación encontrada',
             ' 1  Evaluar FIFO, EDD, SPT, LPT, MST y CR con sublotes iguales',
             ' 2  P ← {cromosoma de la mejor regla} ∪ {Np − 1 cromosomas aleatorios}',
@@ -209,20 +211,16 @@ def algoritmo():
             '19  devolver la programación, ΣT = Σ_j T(j) y Cmax = máx_j C(j)'],
          'decod', 'mono'),
         ('h4', 'Población inicial'),
-        ('p', 'La población tiene 150 cromosomas: 149 aleatorios y uno construido con la mejor de seis '
-              'reglas de despacho aplicadas con sublotes iguales y la misma secuencia de órdenes en '
-              r'todas las etapas (Tabla {T:reglas}), donde $P_j$ es el tiempo de la orden completa en '
-              'la máquina más rápida de cada etapa. La regla EDD obtiene la menor tardanza y siembra la '
-              'población, lo que acelera la convergencia sin perder la diversidad que aportan los '
-              'cromosomas aleatorios.'),
+        ('p', f"La población tiene {P['poblacion']} cromosomas: {P['poblacion'] - 1} aleatorios y uno "
+              'construido con la mejor de seis reglas de despacho aplicadas con sublotes iguales y la misma '
+              r'secuencia de órdenes en todas las etapas (Tabla {T:reglas}), donde $P_j$ es el tiempo de la '
+              'orden completa en la máquina más rápida de cada etapa. ' + D['texto_reglas'] +
+              ' Sembrar la población con la mejor regla acelera la convergencia sin perder la diversidad '
+              'que aportan los cromosomas aleatorios, y garantiza que la solución del algoritmo nunca sea '
+              'peor que la de la regla.'),
         ('tabla', 'Reglas de despacho en la instancia del caso de estudio (10 sublotes iguales por orden)',
-         ['Regla', 'Criterio de prioridad', 'ΣT_j (h)', 'T_max (h)', 'C_max (h)', 'Tardías'], [
-             ['EDD', r'Menor $d_j$', '145,00', '145,00', '817,00', '1'],
-             ['FIFO', 'Orden de liberación', '242,48', '135,27', '620,64', '2'],
-             ['CR', r'Menor $d_j/P_j$', '244,18', '164,33', '591,33', '2'],
-             ['SPT', r'Menor $P_j$', '253,61', '162,69', '834,69', '3'],
-             ['MST', r'Menor $d_j-P_j$', '311,70', '159,86', '587,27', '2'],
-             ['LPT', r'Mayor $P_j$', '341,32', '179,24', '589,08', '2']],
+         ['Regla', 'Criterio de prioridad', 'ΣT_j (h)', 'T_max (h)', 'C_max (h)', 'Tardías'],
+         D['filas_reglas'],
          {'etiqueta': 'reglas', 'anchos': [900, 2938, 1250, 1250, 1250, 1250],
           'alineacion': ['l', 'l', 'c', 'c', 'c', 'c']}),
         ('h4', 'Operadores genéticos y criterio de parada'),
@@ -249,7 +247,8 @@ def algoritmo():
             r'perturba la proporción de un sublote con un valor $N(0;\,0{,}15)$ y se normaliza el '
             'vector.',
             '**Elitismo y parada:** el mejor cromosoma pasa a la generación siguiente. El algoritmo '
-            'se detiene tras 100 generaciones sin mejora o al llegar a 1.000 generaciones.']),
+            f"se detiene tras {P['sin_mejora']} generaciones sin mejora o al llegar a "
+            f"{n(P['generaciones'], 0)} generaciones."]),
         ('h4', 'Implementación'),
         ('p', 'El algoritmo se implementó en Python 3. Los datos se leen del libro de Excel '
               'BD_HFS.xlsx, con tres hojas: tiempos estándar por referencia y máquina, órdenes de '
@@ -257,7 +256,7 @@ def algoritmo():
               'puede actualizar la información sin modificar el código. El programa entrega los '
               'tamaños de los sublotes, los indicadores por orden y globales, la programación por '
               'máquina y el diagrama de Gantt. Con los parámetros calibrados, una corrida en la '
-              'instancia real toma entre 2 y 8 minutos en un computador de 4 núcleos. '
+              f"instancia real toma entre {D['t_min']} y {D['t_max']} minutos en un computador de 4 núcleos. "
               '[[El código se incluye en el Anexo X.]]'),
     ]
 
@@ -310,7 +309,84 @@ def validacion():
     ]
 
 
-def calibracion():
+NOMBRE_F = {'poblacion': 'población', 'prob_cruce': 'probabilidad de cruce',
+            'prob_mutacion': 'probabilidad de mutación'}
+
+
+def _p(p):
+    if p is None or p != p:
+        return '—'
+    return '< 0,001' if p < 0.001 else n(p, 3)
+
+
+def _lista(xs):
+    xs = list(xs)
+    return xs[0] if len(xs) == 1 else ', '.join(xs[:-1]) + ' y ' + xs[-1]
+
+
+def calibracion(D):
+    import json
+    import pandas as pd
+    C = G.SAL_CAL
+    dec = json.load(open(os.path.join(C, 'decisiones.json'), encoding='utf-8'))
+    an = {i: pd.read_csv(os.path.join(C, f'anova{suf}.csv')) for i, suf in (('real', ''), ('exigente', '_exigente'))}
+    sel = pd.read_csv(os.path.join(C, 'seleccion_combinada.csv'))
+    rr = pd.read_csv(os.path.join(C, 'resumen_combinaciones.csv'))
+    reps = int(rr['Corridas'].iloc[0])
+    P = D['params']
+    filas_anova = []
+    for k in range(len(an['real']) - 2):
+        f = an['real'].loc[k, 'Fuente']
+        filas_anova.append([f, n(an['real'].loc[k, 'F'], 2), _p(an['real'].loc[k, 'valor p']),
+                            n(an['exigente'].loc[k, 'F'], 2), _p(an['exigente'].loc[k, 'valor p'])])
+    sig = {i: [NOMBRE_F[f] for f, p in dec['instancias'][i]['p_anova'].items() if p < 0.05]
+           for i in ('real', 'exigente')}
+    kw = {i: [NOMBRE_F[f] for f, p in dec['instancias'][i]['p_kruskal'].items() if p < 0.05]
+          for i in ('real', 'exigente')}
+    supuestos_ok = all(dec['instancias'][i]['p_shapiro'] >= 0.05 and
+                       all(p >= 0.05 for p in dec['instancias'][i]['p_levene'].values())
+                       for i in ('real', 'exigente'))
+    def txt_sig(i, lst):
+        return (f"{_lista(lst)} {'tiene' if len(lst) == 1 else 'tienen'} efecto significativo"
+                if lst else 'ningún factor tiene efecto significativo')
+    top = sel.head(5)
+    filas_sel = [[int(r.poblacion), n(r.prob_cruce, 1), n(r.prob_mutacion, 1),
+                  f"{n(r.C_real, 1)} ({int(r.pos_real)})", f"{n(r.T_exigente, 1)} ({int(r.pos_exigente)})",
+                  n(r.pos_prom, 1)] for r in top.itertuples()]
+    mejor = dec['mejor_diseno']
+    cfg = lambda c: (f"población {int(c['poblacion'])}, cruce {n(c['prob_cruce'], 1)} y mutación "
+                     f"{n(c['prob_mutacion'], 1)}")
+    if dec.get('ampliacion'):
+        a = dec['ampliacion']
+        if a['candidata'] is None:
+            txt_amp = ('Como la mejor combinación quedó en el borde del rango para '
+                       f"{_lista([NOMBRE_F[f] for f in dec['en_borde']])}, se probaron niveles más allá; la "
+                       'mejor combinación del diseño siguió siendo la mejor.')
+        else:
+            ps = '; '.join(f"{i}: p = {_p(p)}" for i, p in a['p'].items())
+            txt_amp = ('Como la mejor combinación quedó en el borde del rango para '
+                       f"{_lista([NOMBRE_F[f] for f in dec['en_borde']])}, se probaron niveles más allá. "
+                       f"La mejor de ellas ({cfg(a['candidata'])}) "
+                       + ('mejoró de forma significativa (Wilcoxon; ' + ps + ') y se adoptó.'
+                          if a['cambia'] else
+                          'no mejoró de forma significativa (Wilcoxon; ' + ps + '), por lo que se '
+                          'conservó la combinación del diseño.'))
+    elif dec['en_borde']:
+        txt_amp = 'La mejor combinación quedó en el borde del rango; la ampliación no se ha corrido.'
+    else:
+        txt_amp = ('La mejor combinación no quedó en el borde del rango para ningún factor significativo, '
+                   'así que no fue necesario ampliarlo.')
+    par = dec['parada']
+    filas_par = []
+    if par:
+        tr = {r['sin_mejora']: r for r in par['tablas']['real']}
+        te = {r['sin_mejora']: r for r in par['tablas']['exigente']}
+        for lv in sorted(tr):
+            filas_par.append([lv, n(tr[lv]['C_prom'], 1), n(te[lv]['T_prom'], 1),
+                              n((tr[lv]['Gen'] + te[lv]['Gen']) / 2, 0),
+                              n((tr[lv]['Seg'] + te[lv]['Seg']) / 120, 1)])
+        ps = '; '.join(f"{k.replace('real:', 'real, ').replace('exigente:', 'exigente, ').replace('->', ' → ')}: "
+                       f"p = {_p(p)}" for k, p in par['p'].items())
     return [
         ('h3', 'Número de sublotes y calibración del algoritmo'),
         ('h4', 'Número de sublotes por orden'),
@@ -318,77 +394,70 @@ def calibracion():
               '{T:bbar} muestra su efecto en la instancia real con las reglas de despacho: sin '
               'división todas las órdenes resultan tardías, y la tardanza baja a medida que el '
               r'trabajo se reparte entre las máquinas paralelas. Se adopta $\overline{B}=10$, con '
-              'sublotes promedio entre 21 docenas (J09) y 117 docenas (J01). [[Confirmar con la '
-              'práctica de la planta el tamaño habitual de los paquetes que pasan entre puestos.]] '
-              'El efecto de este parámetro se analiza en la Fase 3.'),
+              f"sublotes promedio entre {D['sub_min']} y {D['sub_max']}. [[Confirmar con la práctica de "
+              'la planta el tamaño habitual de los paquetes que pasan entre puestos.]] El efecto de este '
+              'parámetro se analiza en la Fase 3.'),
         ('tabla', 'Tardanza total (h) y órdenes tardías de las reglas de despacho según el número '
-                  'de sublotes por orden',
-         ['B̄', 'FIFO', 'EDD', 'CR', 'SPT'], [
-             ['1', '8.490 (10)', '8.316 (10)', '8.741 (10)', '8.353 (10)'],
-             ['2', '3.051 (10)', '3.203 (9)', '3.743 (10)', '2.939 (8)'],
-             ['5', '704 (6)', '495 (3)', '798 (7)', '809 (4)'],
-             ['10', '242 (2)', '145 (1)', '244 (2)', '254 (3)'],
-             ['20', '141 (2)', '17 (1)', '131 (2)', '66 (2)']],
+                  'de sublotes por orden', ['B̄', 'FIFO', 'EDD', 'CR', 'SPT'], D['filas_bbar'],
          {'etiqueta': 'bbar', 'anchos': [1238, 1900, 1900, 1900, 1900]}),
         ('h4', 'Calibración de los parámetros'),
-        ('p', 'Los parámetros del algoritmo se calibraron con un diseño factorial completo 3³ sobre '
-              'la instancia real (Montgomery, 2017; Ruiz, Maroto y Alcaraz, 2006): tamaño de '
-              r'población (50, 100 y 150), probabilidad de cruce $p_c$ (0,7; 0,8 y 0,9) y '
-              r'probabilidad de mutación $p_m$ (0,1; 0,3 y 0,5), con 5 réplicas por combinación '
-              '(135 corridas). Todas las corridas tuvieron el mismo esfuerzo de cómputo (30.000 '
-              'cromosomas generados) para que una población grande no tuviera ventaja solo por '
-              'evaluar más soluciones, y cada réplica usó la misma semilla en todas las '
-              'combinaciones. La variable de respuesta fue la tardanza total. La Tabla {T:anova} '
-              'presenta el ANOVA.'),
-        ('tabla', 'ANOVA de la tardanza total en el diseño factorial',
-         ['Fuente', 'SC', 'gl', 'CM', 'F', 'Valor p'], [
-             ['Población', '26.514,5', '2', '13.257,3', '20,65', '< 0,001'],
-             ['Probabilidad de cruce', '2.702,8', '2', '1.351,4', '2,10', '0,127'],
-             ['Probabilidad de mutación', '11.110,5', '2', '5.555,2', '8,65', '< 0,001'],
-             ['Población × cruce', '4.076,3', '4', '1.019,1', '1,59', '0,182'],
-             ['Población × mutación', '2.254,8', '4', '563,7', '0,88', '0,480'],
-             ['Cruce × mutación', '688,1', '4', '172,0', '0,27', '0,898'],
-             ['Error', '74.484,3', '116', '642,1', '', ''],
-             ['Total', '121.831,3', '134', '', '', '']],
-         {'etiqueta': 'anova', 'anchos': [2838, 1300, 800, 1300, 1200, 1400]}),
-        ('p', 'La población y la probabilidad de mutación tienen efecto significativo sobre la '
-              'tardanza (p < 0,001); la probabilidad de cruce y las interacciones no lo tienen. Los '
-              'residuos son normales (Shapiro-Wilk, p = 0,459), pero las varianzas no son homogéneas '
-              'entre niveles, por lo que el resultado se confirmó con la prueba no paramétrica de '
-              'Kruskal-Wallis, que coincide con el ANOVA. Como muestra la Figura {F:efectos}, la '
-              'tardanza disminuye al aumentar la población y la mutación. La combinación de población '
-              '150, cruce 0,9 y mutación 0,5 fue la única que eliminó la tardanza en las cinco '
-              'réplicas (makespan promedio de 652,3 h).'),
-        ('figura', 'Efectos principales sobre la tardanza total (intervalos LSD al 95 %)',
-         os.path.join(G.SAL_CAL, 'efectos_principales.png'), 15.5, 'efectos'),
-        ('p', 'Como la mejor combinación quedó en el límite superior del rango probado, se evaluaron '
-              'además poblaciones de 200 y 250 y una mutación de 0,7. Ninguna mejoró de forma '
-              'significativa (prueba de Wilcoxon, p ≥ 0,06) y las más altas empeoraron, de modo que '
-              'se conservó la población de 150. Por último, con esta configuración se compararon tres '
-              'criterios de parada (Tabla {T:parada}).'),
-        ('tabla', 'Criterio de parada (10 réplicas por criterio)',
-         ['Generaciones sin mejora', 'Réplicas con ΣT_j = 0', 'C_max prom. (h)',
-          'Generaciones prom.', 'Tiempo prom. (min)'], [
-             ['50', '10/10', '650,8', '388', '3,1'],
-             ['100', '10/10', '644,5', '633', '5,0'],
-             ['200', '10/10', '642,7', '855', '6,6']],
-         {'etiqueta': 'parada', 'anchos': [2000, 1700, 1700, 1700, 1738], 'negrita_filas': (1,)}),
-        ('p', 'Todas las corridas eliminaron la tardanza. Pasar de 50 a 100 generaciones sin mejora '
-              'redujo el makespan de forma significativa (Wilcoxon, p = 0,016), mientras que pasar a '
-              '200 no lo hizo (p = 0,063) y aumentó el tiempo en 33 %. La Tabla {T:final} resume la '
-              'configuración final.'),
+        ('p', 'Los parámetros del algoritmo se calibraron con un diseño factorial completo 3³ '
+              '(Montgomery, 2017; Ruiz, Maroto y Alcaraz, 2006): tamaño de población (50, 100 y 150), '
+              r'probabilidad de cruce $p_c$ (0,7; 0,8 y 0,9) y probabilidad de mutación $p_m$ (0,1; 0,3 '
+              f'y 0,5), con {reps} réplicas por combinación. Como en el caso de estudio la tardanza fue cero '
+              'en todas las corridas, las configuraciones solo se diferenciaban por el makespan. Por eso el '
+              'diseño se corrió en dos instancias: la real, con el makespan como respuesta, y una exigente, '
+              'con fechas de entrega 20 % más ajustadas, en la que hay tardanza y la respuesta es la '
+              f'tardanza total ({2 * 27 * reps} corridas en total). Todas las corridas tuvieron el mismo '
+              'esfuerzo de cómputo (30.000 cromosomas generados), para que una población grande no tuviera '
+              'ventaja solo por evaluar más soluciones, y cada réplica usó la misma semilla en todas las '
+              'combinaciones. La Tabla {T:anova} resume el ANOVA de cada instancia.'),
+        ('tabla', 'ANOVA de la calibración: valor F y valor p en cada instancia',
+         ['Fuente', 'Real (C_max): F', 'Real: p', 'Exigente (ΣT_j): F', 'Exigente: p'], filas_anova,
+         {'etiqueta': 'anova', 'anchos': [2838, 1500, 1200, 1900, 1400]}),
+        ('p', f"En la instancia real, {txt_sig('real', sig['real'])} sobre el makespan; en la exigente, "
+              f"{txt_sig('exigente', sig['exigente'])} sobre la tardanza total. "
+              + ('Los supuestos del ANOVA se cumplen. ' if supuestos_ok else
+                 'Como no se cumplen todos los supuestos del ANOVA (normalidad u homogeneidad de varianzas), '
+                 'el resultado se confirmó con la prueba no paramétrica de Kruskal-Wallis, que identifica como '
+                 f"significativos: en la instancia real, {_lista(kw['real']) if kw['real'] else 'ningún factor'}; "
+                 f"en la exigente, {_lista(kw['exigente']) if kw['exigente'] else 'ningún factor'}. ")
+              + 'Las Figuras {F:efectos_exi} y {F:efectos_real} muestran los efectos principales.'),
+        ('figura', 'Efectos principales sobre la tardanza total en la instancia exigente (intervalos LSD al 95 %)',
+         os.path.join(C, 'efectos_principales_exigente.png'), 15.5, 'efectos_exi'),
+        ('figura', 'Efectos principales sobre el makespan en la instancia real (intervalos LSD al 95 %)',
+         os.path.join(C, 'efectos_principales.png'), 15.5, 'efectos_real'),
+        ('p', 'Para elegir la configuración se ordenaron las 27 combinaciones en cada instancia (primero por '
+              'tardanza y luego por makespan) y se calculó su posición promedio en ambas (Tabla {T:seleccion}).'),
+        ('tabla', 'Mejores combinaciones según su posición promedio en las dos instancias',
+         ['Población', 'p_c', 'p_m', 'Real: C_max prom. (posición)', 'Exigente: ΣT_j prom. (posición)',
+          'Posición promedio'], filas_sel,
+         {'etiqueta': 'seleccion', 'anchos': [1100, 700, 700, 2300, 2400, 1638], 'negrita_filas': (0,)}),
+        ('p', f"La mejor combinación del diseño es {cfg(mejor)}. " + txt_amp +
+              (' Por último, con la configuración elegida se compararon tres criterios de parada en ambas '
+               'instancias (Tabla {T:parada}).' if par else '')),
+    ] + ([
+        ('tabla', 'Criterio de parada (10 réplicas por criterio y por instancia)',
+         ['Generaciones sin mejora', 'Real: C_max prom. (h)', 'Exigente: ΣT_j prom. (h)',
+          'Generaciones prom.', 'Tiempo prom. (min)'], filas_par,
+         {'etiqueta': 'parada', 'anchos': [2000, 1800, 1900, 1500, 1638]}),
+        ('p', f"Se adopta {par['elegido']} generaciones sin mejora: es el menor nivel a partir del cual "
+              f"aumentarlo no mejora de forma significativa en ninguna instancia (Wilcoxon; {ps}). "
+              'La Tabla {T:final} resume la configuración final.'),
+    ] if par else []) + [
         ('tabla', 'Configuración final del algoritmo genético', ['Parámetro', 'Valor'], [
-            ['Tamaño de la población', '150'],
-            ['Probabilidad de cruce', '0,9'],
-            ['Probabilidad de mutación', '0,5'],
-            ['Criterio de parada', '100 generaciones sin mejora (máximo 1.000)'],
-            ['Tamaño del torneo', '3'],
-            ['Probabilidad de intercambio / de perturbación (desviación)', '0,30 / 0,40 (0,15)']],
+            ['Tamaño de la población', str(P['poblacion'])],
+            ['Probabilidad de cruce', n(P['prob_cruce'], 1)],
+            ['Probabilidad de mutación', n(P['prob_mutacion'], 1)],
+            ['Criterio de parada', f"{P['sin_mejora']} generaciones sin mejora (máximo {n(P['generaciones'], 0)})"],
+            ['Tamaño del torneo', str(P['tam_torneo'])],
+            ['Probabilidad de intercambio / de perturbación (desviación)',
+             f"{n(P['prob_mut_pos'], 2)} / {n(P['prob_mut_prop'], 2)} ({n(P['desv_mut_prop'], 2)})"]],
          {'etiqueta': 'final', 'anchos': [5000, 3838], 'alineacion': ['l', 'c']}),
     ]
 
 
-def solucion(M, rep, mejor, indic, tam, util, al):
+def solucion(M, rep, mejor, indic, tam, util, al, D):
     def fecha(x):
         f = M.horas_a_fecha(x)
         return f.strftime('%d/%m/%Y') if f is not None else '—'
@@ -412,8 +481,13 @@ def solucion(M, rep, mejor, indic, tam, util, al):
               + f'el makespan varió entre {n(rep["Cmax"].min(), 1)} y {n(rep["Cmax"].max(), 1)} h '
               f'(promedio de {n(rep["Cmax"].mean(), 1)} h) y cada corrida tomó en promedio '
               f'{n(rep["segundos"].mean() / 60, 1)} minutos. La mejor programación, que se propone '
-              f'para el conjunto de órdenes, partió de la regla EDD (145 h de tardanza) y eliminó la '
-              f'tardanza en la generación {gen_cero}. La Tabla {{T:tamanos}} presenta los tamaños de '
+              f"para el conjunto de órdenes, partió de la regla {D['regla_mejor']} "
+              f"({n(D['regla_T'], 1)} h de tardanza y makespan de {n(D['regla_C'], 1)} h) y "
+              + (f'eliminó la tardanza en la generación {gen_cero}' if D['regla_T'] > 1e-6 else
+                 f"redujo el makespan a {n(indic['Cmax'], 1)} h, "
+                 f"{n(100 * (D['regla_C'] - indic['Cmax']) / D['regla_C'], 1)} % menos que la regla, "
+                 'manteniendo la tardanza en cero')
+              + '. La Tabla {T:tamanos} presenta los tamaños de '
               'sublote, iguales en las cuatro etapas, y la Tabla {T:orden} los resultados por orden.'),
         ('tabla', 'Tamaños de los sublotes de la programación propuesta [docenas]',
          ['Orden'] + [f'S{b}' for b in range(1, 11)] + ['Total'], filas_tam,
@@ -422,7 +496,9 @@ def solucion(M, rep, mejor, indic, tam, util, al):
          ['Orden', 'Ref.', 'Q_j (doc.)', 'd_j (h)', 'Entrega', 'C_j (h)', 'Terminación',
           'T_j (h)', 'E_j (h)'], filas_ord,
          {'etiqueta': 'orden', 'anchos': [780, 700, 900, 800, 1250, 950, 1300, 1000, 1158], 'tam': 9}),
-        ('p', 'Ninguna orden termina después de su fecha de entrega. La Tabla {T:indicadores} resume '
+        ('p', ('Ninguna orden termina después de su fecha de entrega. ' if indic['num_tardy'] == 0 else
+               f"{indic['num_tardy']} órdenes terminan después de su fecha de entrega. ")
+              + 'La Tabla {T:indicadores} resume '
               'los indicadores globales; la ocupación de cada etapa es su tiempo de procesamiento '
               'dividido entre el número de máquinas por el makespan. '
               + (f'Troquelado, el cuello de botella identificado en la caracterización, tiene la mayor '
@@ -443,19 +519,64 @@ def solucion(M, rep, mejor, indic, tam, util, al):
         ('p', 'En síntesis, la fase produjo un modelo matemático que representa el Flow Shop híbrido '
               'de la empresa con sublotes consistentes, y un algoritmo genético verificado, validado '
               'frente a soluciones óptimas y calibrado estadísticamente, que en el caso de estudio '
-              'entrega una programación sin órdenes tardías. Su comparación con el sistema de '
+              + ('entrega una programación sin órdenes tardías' if indic['num_tardy'] == 0 else
+                 f"reduce la tardanza a {n(indic['suma_Ti'], 1)} h")
+              + '. Su comparación con el sistema de '
               'programación actual se presenta en la Fase 3.'),
     ]
 
 
+def datos_documento(M, rep):
+    """Valores calculados desde la base de datos, el modelo y los resultados."""
+    criterio = {'EDD': r'Menor $d_j$', 'FIFO': 'Orden de liberación', 'CR': r'Menor $d_j/P_j$',
+                'SPT': r'Menor $P_j$', 'MST': r'Menor $d_j-P_j$', 'LPT': r'Mayor $P_j$'}
+    b_orig = M.NUM_SUBLOTES
+    M.NUM_SUBLOTES = 10
+    reglas = sorted(M.evaluar_reglas(), key=lambda r: (r['suma_Ti'], r['Cmax']))
+    filas_reglas = [[r['regla'], criterio[r['regla']], n(r['suma_Ti'], 2), n(r['Tmax'], 2),
+                     n(r['Cmax'], 2), str(r['num_tardy'])] for r in reglas]
+    mejor = reglas[0]
+    if mejor['suma_Ti'] <= 1e-6:
+        texto_reglas = (f"La regla {mejor['regla']} ya cumple todas las fechas de entrega con sublotes "
+                        f"iguales (makespan de {n(mejor['Cmax'], 1)} h); el algoritmo parte de esa solución "
+                        'y busca reducir el makespan sin generar tardanza.')
+    else:
+        texto_reglas = (f"La regla {mejor['regla']} obtiene la menor tardanza "
+                        f"({n(mejor['suma_Ti'], 1)} h) y siembra la población.")
+    filas_bbar = []
+    for B in (1, 2, 5, 10, 20):
+        M.NUM_SUBLOTES = B
+        sec = M.secuencias_reglas()
+        celdas = []
+        for rg in ('FIFO', 'EDD', 'CR', 'SPT'):
+            r = M.calcular_indicadores(M.simular_hfs(M.individuo_regla_ls(sec[rg]))[0])
+            celdas.append(f"{n(r['suma_Ti'], 0)} ({r['num_tardy']})")
+        filas_bbar.append([str(B)] + celdas)
+    M.NUM_SUBLOTES = b_orig
+    prom = {j: M.DEMANDA[j] / 10 for j in M.TRABAJOS}
+    jmin, jmax = min(prom, key=prom.get), max(prom, key=prom.get)
+    minutos = rep['segundos'] / 60
+    return {
+        'params': dict(M.GA_PARAMS), 'filas_reglas': filas_reglas, 'texto_reglas': texto_reglas,
+        'regla_mejor': mejor['regla'], 'regla_T': mejor['suma_Ti'], 'regla_C': mejor['Cmax'],
+        'filas_bbar': filas_bbar,
+        'sub_min': f"{n(prom[jmin], 0)} docenas ({jmin})", 'sub_max': f"{n(prom[jmax], 0)} docenas ({jmax})",
+        't_min': max(1, int(minutos.min())), 't_max': int(minutos.max()) + 1,
+    }
+
+
 def main():
+    from correcciones_fase1 import corregir_fase1
     borrador, salida, ruta_modelo, ruta_bd = sys.argv[1:5]
     M, rep, mejor, indic, tam, util, al = G.datos_solucion(ruta_modelo, ruta_bd)
-    bloques = modelo() + algoritmo() + validacion() + calibracion() + \
-        solucion(M, rep, mejor, indic, tam, util, al)
+    D = datos_documento(M, rep)
+    bloques = modelo() + algoritmo(D) + validacion() + calibracion(D) + \
+        solucion(M, rep, mejor, indic, tam, util, al, D)
     bloques = L.resolver_referencias(bloques, tabla_ini=5, figura_ini=3)
     bloques = L.matematizar(bloques)
     d = docx.Document(borrador)
+    for h in corregir_fase1(d, ruta_bd):
+        print('Fase 1 corregida:', h)
     L.quitar_desde(d, 'Construcción del modelo matemático')
     omml = L.latex_a_omml(L.recolectar_latex(bloques))
     esc = L.Escritor(d, omml, primer_figura=3)

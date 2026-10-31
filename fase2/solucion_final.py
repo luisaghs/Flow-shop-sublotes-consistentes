@@ -11,8 +11,8 @@ import multiprocessing as mp
 os.environ.setdefault('MPLBACKEND', 'Agg')
 import pandas as pd
 
-PARAMS = {'poblacion': 150, 'prob_cruce': 0.9, 'prob_mutacion': 0.5,
-          'sin_mejora': 100, 'generaciones': 1000}
+# Los parámetros del AG son los del modelo (GA_PARAMS, ya calibrados); aquí solo se
+# fija la semilla de cada réplica.
 SEMILLA_BASE = 1200
 DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'salida_solucion')
 _M = None
@@ -33,7 +33,6 @@ def _init(rm, rb):
 
 
 def _correr(semilla):
-    _M.GA_PARAMS.update(PARAMS)
     _M.GA_PARAMS['semilla'] = semilla
     regla = _M.mejor_de(_M.evaluar_reglas())
     t0 = time.time()

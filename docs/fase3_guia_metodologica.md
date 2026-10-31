@@ -4,6 +4,9 @@
 los indicadores evaluados mediante la comparación del desempeño del modelo propuesto
 respecto al sistema de programación actual.*
 
+> **Actualizada con los datos corregidos** (J01 = 580 docenas, entrega el 25/08/2026).
+> Las cifras con la base anterior quedan en el historial del repositorio.
+
 ## 1. El problema
 
 Para comparar contra "el sistema de programación actual" hay que poder simularlo.
@@ -16,7 +19,7 @@ Hoy se sabe:
 | Cómo se reparte cada orden entre las máquinas y cuántas docenas pasan juntas de una etapa a otra | **No** | — |
 
 El dato que falta pesa mucho: según cómo se represente la división de las órdenes,
-la FIFO simulada da desde 20 % hasta 100 % de órdenes tardías (Tabla 1).
+la FIFO simulada da desde 20 % hasta 90 % de órdenes tardías (Tabla 1).
 
 ## 2. Recomendación: no cambiar el objetivo; cambiar cómo se representa el sistema actual
 
@@ -28,115 +31,117 @@ comprueba que la conclusión se mantiene en todo el rango de valores plausibles.
 
 En concreto:
 
-1. **Modelo del sistema actual:** regla FIFO, la misma secuencia de órdenes en las
-   cuatro etapas, órdenes divididas en *B* partes iguales y la regla del menor
-   tiempo de terminación para elegir máquina. Es el mismo decodificador del AG
-   aplicado a un cromosoma "FIFO con sublotes iguales". Solo *B* es desconocido.
+1. **Modelo del sistema actual: FIFO por etapa.** En troquelado, las órdenes se
+   atienden por orden de liberación; en cada etapa siguiente, los sublotes se
+   atienden en el orden en que llegan de la etapa anterior. Cada orden se divide en
+   *B* partes iguales y la máquina se elige con la regla del menor tiempo de
+   terminación. Solo *B* es desconocido.
 2. **Calibración de *B*:** se elige el número de partes con el que la FIFO
    simulada reproduce la tasa histórica de incumplimiento (≈ 45 %).
-3. **Análisis de sensibilidad:** la comparación se repite para todos los valores
-   de *B* compatibles con el dato histórico. Si el modelo propuesto es mejor en
-   todos, la conclusión no depende del dato desconocido.
+3. **Análisis de sensibilidad:** la comparación se repite para los valores de *B*
+   vecinos. Si el modelo propuesto es mejor en todos, la conclusión no depende del
+   dato desconocido.
 
-### Tabla 1. Calibración: FIFO simulada con *B* partes iguales por orden
+### Tabla 1. Calibración: FIFO por etapa con *B* partes iguales por orden
 
-| *B* | Órdenes tardías | ΣT_j (h) | T_max (h) | C_max (h) |
-|---|---|---|---|---|
-| 1 (orden completa) | 10 (100 %) | 8.489,8 | 1.734,6 | 2.406,6 |
-| 2 | 10 (100 %) | 3.051,2 | 531,3 | 1.203,3 |
-| 3 | 9 (90 %) | 1.968,7 | 369,8 | 922,5 |
-| 4 | 8 (80 %) | 1.145,6 | 296,9 | 807,0 |
-| **5** | **6 (60 %)** | **704,2** | **243,1** | **746,6** |
-| **6** | **4 (40 %)** | **493,0** | **213,7** | **689,7** |
-| **7** | **4 (40 %)** | **392,8** | **181,3** | **665,3** |
-| 8 | 3 (30 %) | 329,4 | 174,1 | 636,9 |
-| 10 | 2 (20 %) | 242,5 | 135,3 | 620,6 |
-| 20 | 2 (20 %) | 141,3 | 81,8 | 560,5 |
+| *B* | Órdenes tardías | ΣT_j (h) | C_max (h) |
+|---|---|---|---|
+| 2 | 9 (90 %) | 2.207,0 | 1.016,7 |
+| 3 | 7 (70 %) | 1.009,0 | 815,1 |
+| **4** | **5 (50 %)** | **322,9** | **700,0** |
+| 5 | 3 (30 %) | 184,3 | 655,6 |
+| 6 | 2 (20 %) | 150,3 | 617,1 |
+| 10 | 2 (20 %) | 104,3 | 559,5 |
 
 - Con 10 órdenes, el porcentaje de tardías solo puede tomar valores de 10 en 10.
-  El 45 % histórico queda entre 4 y 5 órdenes tardías, que corresponde a
-  **B entre 5 y 7**.
-- **Escenario base propuesto: B = 6** (40 %, el más cercano al 45 %), con
-  **banda de sensibilidad B = 5 a 7**.
+  El valor más cercano al 45 % histórico es **B = 4 (50 %)**: cada orden se divide en
+  cuatro partes, una por troqueladora, lo que es una práctica plausible en planta.
+- **Escenario base: B = 4**, con **sensibilidad en B = 3 (70 %) y B = 5 (30 %)**.
 - Hay que decir en el documento que es una representación calibrada, no una
   observación directa de cómo se reparte el trabajo.
 
-### Tabla 2. Prueba preliminar: AG calibrado frente a la FIFO calibrada
+### Tabla 2. Prueba preliminar: AG frente al sistema actual
 
-Resultados exploratorios con 2 semillas por escenario; en la Fase 3 se usan 30
-réplicas.
+Resultados exploratorios (5 semillas, calculados antes de corregir la fecha de
+entrega de J01); en la Fase 3 se recalculan con 30 réplicas.
 
-| Escenario | FIFO actual: tardías / ΣT_j | AG con la misma *B*: tardías / ΣT_j | Reducción de ΣT_j |
-|---|---|---|---|
-| B = 5 | 6 (60 %) / 704,2 h | 1 (10 %) / 249,2 – 249,4 h | 65 % |
-| B = 6 | 4 (40 %) / 493,0 h | 1 (10 %) / 107,7 – 147,8 h | 70 – 78 % |
-| B = 7 | 4 (40 %) / 392,8 h | 1 (10 %) / 65,2 – 81,0 h | 79 – 83 % |
-| B̄ = 10 (modelo propuesto) | 2 (20 %) / 242,5 h | 0 (0 %) / 0,0 h | 100 % |
+| Escenario | Sistema actual: tardías / ΣT_j | AG con la misma división: tardías / ΣT_j |
+|---|---|---|
+| B = 4 | 5 (50 %) / 322,9 h | 1–2 (10–20 %) / 98–125 h |
+| B̄ = 10 (modelo propuesto) | 2 (20 %) / 104,3 h | 0 (0 %) / 0,0 h |
 
-**La mejora se mantiene en todo el rango plausible**, así que la conclusión es
-robusta frente al dato desconocido.
-
-## 3. Un punto que hay que separar: dos fuentes de mejora
+## 3. Dos fuentes de mejora y el papel de la regla EDD
 
 El modelo propuesto usa B̄ = 10 sublotes de tamaño variable; el sistema actual,
-según la calibración, unos 6 sublotes iguales. Si solo se compara "actual contra
-propuesto", la mejora mezcla dos cosas distintas:
+según la calibración, 4 partes iguales. Si solo se compara "actual contra
+propuesto", la mejora mezcla tres cosas: cambiar la regla de prioridad, dividir más
+las órdenes y optimizar con el AG. Conviene presentar una **descomposición de la
+mejora** en el escenario base:
 
-1. **Mejor programación** (secuencia y tamaños optimizados) con la misma división.
-2. **Más división** de las órdenes (de 6 a 10 sublotes), que es un cambio operativo.
+| Paso | Configuración | Tardías | ΣT_j (h) | C_max (h) | Qué mide |
+|---|---|---|---|---|---|
+| 0 | FIFO por etapa, B = 4 (actual) | 5 | 322,9 | 700,0 | Línea base |
+| 1 | EDD, B = 4 | 4 | 355,8 | 825,2 | Cambiar solo la regla |
+| 2 | AG, B = 4 | 1–2 | ≈ 98–125 | ≈ 720–765 | Optimizar con la misma división |
+| 3 | EDD, B̄ = 10 | 0 | 0,0 | 650,1 | Dividir más con una regla simple |
+| 4 | AG, B̄ = 10 | 0 | 0,0 | ≈ 550–565 | Dividir más y optimizar |
 
-Para que el jurado vea qué aporta cada una, conviene presentar una
-**descomposición de la mejora** en el escenario base:
+(Los pasos 2 y 4 son preliminares; en la Fase 3 se calculan con 30 réplicas.)
 
-| Paso | Configuración | Tardías | ΣT_j (h) | Qué mide |
-|---|---|---|---|---|
-| 0 | FIFO, B = 6 (actual) | 4 | 493,0 | Línea base |
-| 1 | EDD, B = 6 | 3 | 344,7 | Efecto de cambiar solo la regla de prioridad |
-| 2 | AG, B = 6 | 1 | ≈ 108 – 148 | Efecto de optimizar con la misma división |
-| 3 | AG, B̄ = 10 | 0 | 0,0 | Efecto adicional de dividir más las órdenes |
+**Punto clave para la discusión:** con los datos corregidos, la regla EDD con 10
+sublotes iguales ya cumple todas las fechas de entrega del caso de estudio. Por eso
+hay que mostrar con claridad qué aporta el AG:
 
-(Valores preliminares; en la Fase 3 los pasos 2 y 3 se calculan con 30 réplicas.)
+- **Con la misma división que hoy usa la empresa (4 partes)**, la regla EDD no mejora
+  al sistema actual, mientras que el AG baja de 5 a 1–2 órdenes tardías.
+- **Con 10 sublotes**, el AG mantiene la tardanza en cero y reduce el makespan cerca de
+  un 14 % frente a la regla, lo que libera capacidad antes.
+- **Cuando el sistema está más exigido** (fechas más ajustadas o más demanda), la regla
+  deja órdenes tardías y el AG las reduce. Así se observó en la calibración con fechas
+  20 % más ajustadas (la regla deja 238 h de tardanza y el AG unas 70–80 h); los
+  escenarios de exigencia de la Fase 3 lo miden.
+- El AG parte de la mejor regla y nunca entrega una solución peor que ella.
 
-Esto, además, le sirve a la empresa: muestra que solo con cambiar la forma de
-programar, sin cambiar la manera de dividir las órdenes, ya se baja de 4 a 1 orden
-tardía.
+Para la empresa esto también es útil: una mejora inmediata y sin software es dividir
+más las órdenes y priorizar por fecha de entrega; el AG es el que garantiza el mejor
+resultado cuando la carga sube o las fechas se ajustan.
 
 ## 4. Estructura propuesta para la Fase 3
 
-1. **Representación del sistema actual.** Supuestos (FIFO, sublotes iguales,
-   misma secuencia en todas las etapas, ECT), qué se conoce y qué no.
-2. **Calibración con el dato histórico.** Tabla 1, elección de B = 6 y banda de
-   5 a 7. Limitaciones: el 45 % es una tasa histórica de largo plazo y la
+1. **Representación del sistema actual.** Supuestos (FIFO por etapa, sublotes
+   iguales, ECT), qué se conoce y qué no.
+2. **Calibración con el dato histórico.** Tabla 1, elección de B = 4 y sensibilidad
+   en 3 y 5. Limitaciones: el 45 % es una tasa histórica de largo plazo y la
    instancia tiene 10 órdenes.
 3. **Indicadores de desempeño**, con su fórmula:
    - % de órdenes tardías (comparable directamente con el 45 % histórico);
    - tardanza total ΣT_j, tardanza promedio y tardanza máxima T_max;
-   - % de órdenes adelantadas y adelanto total ΣE_j (el planteamiento menciona
-     10 % de adelantos);
+   - adelanto total ΣE_j (el planteamiento menciona 10 % de adelantos);
    - makespan C_max y tiempo de flujo medio;
    - ocupación por etapa y número y tiempo de alistamientos en troquelado.
 4. **Diseño de la comparación:**
-   - AG con 30 réplicas (semillas distintas) frente a la FIFO calibrada, que es
-     determinística;
-   - también frente a las otras reglas de despacho (EDD, SPT, LPT, MST, CR) como
-     referencias.
+   - AG con 30 réplicas (semillas 3001–3030) frente al sistema actual, que es
+     determinístico;
+   - también frente a las otras reglas de despacho como referencias.
 5. **Análisis estadístico:**
    - media, desviación estándar, mínimo, máximo e intervalo de confianza del 95 %
      de cada indicador del AG;
-   - prueba de Wilcoxon de una muestra (mediana del AG frente al valor de la FIFO);
+   - prueba de Wilcoxon de una muestra (mediana del AG frente al valor del sistema
+     actual);
    - porcentaje de mejora de cada indicador.
 6. **Resultados del escenario base** y **descomposición de la mejora** (sección 3).
 7. **Análisis de sensibilidad:**
-   - *B* del sistema actual: 5, 6 y 7 (robustez frente al dato desconocido);
-   - B̄ del modelo propuesto: 5, 10 y 20 (cuánto conviene dividir; conecta con la
-     Tabla 16 de la Fase 2);
-   - escenarios de exigencia: fechas de entrega 10 % y 20 % más ajustadas, o
-     demanda 10 % y 20 % mayor. Como en la instancia real el AG llega a tardanza
-     cero, estos escenarios muestran cómo se comporta el modelo cuando el sistema
-     está más cargado;
+   - *B* del sistema actual: 3, 4 y 5 (robustez frente al dato desconocido);
+   - B̄ del modelo propuesto: 4, 10 y 20 (cuánto conviene dividir);
+   - escenarios de exigencia: fechas de entrega 10 % y 30 % más ajustadas, y
+     demanda 10 % y 20 % mayor. No se usa la de fechas 20 % más ajustadas, porque
+     con ella se calibró el AG en la Fase 2;
    - opcional: robustez frente a tiempos de proceso con variación de ±10 %, en
      simulación Monte Carlo de la programación propuesta.
-8. **Discusión, limitaciones y recomendaciones para la empresa.**
+8. **Discusión, limitaciones y recomendaciones para la empresa** (incluido el papel
+   de la regla EDD, sección 3).
+
+El programa `fase3/experimentos_fase3.py` ya está ajustado a este diseño.
 
 ## 5. Si es posible, conseguir un dato más de la planta
 
@@ -148,7 +153,7 @@ Con una conversación corta con el jefe de producción o el supervisor bastaría
   aproximadamente?
 - ¿Se espera a terminar toda la orden en una etapa antes de pasarla a la siguiente?
 
-Si la respuesta indica, por ejemplo, paquetes de unas 100 docenas (B ≈ 6 para una
+Si la respuesta indica, por ejemplo, paquetes de unas 150 docenas (B ≈ 4 para una
 orden de 600 docenas), coincide con la calibración y se puede citar como validación
 cualitativa. Si las órdenes de BD_HFS.xlsx son órdenes reales con fechas de
 terminación registradas, también se pueden comparar esas fechas con las simuladas.

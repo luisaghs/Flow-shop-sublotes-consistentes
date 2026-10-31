@@ -7,18 +7,21 @@ Sistema actual (representación calibrada): regla FIFO por etapa — en troquela
 las órdenes se atienden por orden de liberación y en cada etapa siguiente los
 sublotes se atienden en el orden en que llegan de la etapa anterior —, con cada
 orden dividida en B partes iguales y la máquina elegida por la regla ECT.
-B se calibró con la tasa histórica de incumplimiento (≈ 45 %): B = 6 da 50 %,
-B = 5 da 60 % y B = 7 da 40 %. Escenario base: B = 6; sensibilidad: 5 y 7.
+B se calibró con la tasa histórica de incumplimiento (≈ 45 %), con los datos
+corregidos (J01 = 580 docenas): B = 4 da 50 %, B = 3 da 70 % y B = 5 da 30 %.
+Escenario base: B = 4 (una parte por troqueladora); sensibilidad: 3 y 5.
 
 Modelo propuesto: el algoritmo genético calibrado (final_sc_hfsagls_S2_4.py).
 
 Experimentos (todos con semillas nuevas, distintas de las de la Fase 2):
-  base       : AG con B̄ = 10 y AG con B = 6 (misma división que el sistema
+  base       : AG con B̄ = 10 y AG con B = 4 (misma división que el sistema
                actual), 30 réplicas cada uno (semillas 3001–3030).
-  sensib.    : AG con B = 4, 5 y 7 (sistema actual con 4, 5 y 7 partes) y AG con
+  sensib.    : AG con B = 3 y 5 (sistema actual con 3 y 5 partes) y AG con
                B̄ = 20, 10 réplicas (semillas 3001–3010).
-  exigencia  : fechas de entrega 10 % y 20 % más ajustadas y demanda 10 % y 20 %
-               mayor; sistema actual (B = 6) frente a AG (B̄ = 10), 10 réplicas.
+  exigencia  : fechas de entrega 10 % y 30 % más ajustadas y demanda 10 % y 20 %
+               mayor; sistema actual (B = 4) frente a AG (B̄ = 10), 10 réplicas.
+               (Las fechas 20 % más ajustadas no se usan: es la instancia con la
+               que se calibró el AG en la Fase 2.)
 
 Uso:
   python experimentos_fase3.py correr ruta/modelo.py ruta/BD_HFS.xlsx [--procesos 4] [--grupo base]
@@ -45,7 +48,7 @@ except ImportError:
     stats = None
 
 DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'salida_fase3')
-B_ACTUAL_BASE = 6
+B_ACTUAL_BASE = 4
 SEM_BASE = list(range(3001, 3031))
 SEM_SENS = list(range(3001, 3011))
 
@@ -53,22 +56,22 @@ SEM_SENS = list(range(3001, 3011))
 ESCENARIOS = {
     'base':       (1.0, 1.0),
     'fechas_-10': (0.9, 1.0),
-    'fechas_-20': (0.8, 1.0),
+    'fechas_-30': (0.7, 1.0),
     'demanda_+10': (1.0, 1.1),
     'demanda_+20': (1.0, 1.2),
 }
 DESCRIPCION = {
     'base': 'Caso de estudio',
     'fechas_-10': 'Fechas de entrega 10 % más ajustadas',
-    'fechas_-20': 'Fechas de entrega 20 % más ajustadas',
+    'fechas_-30': 'Fechas de entrega 30 % más ajustadas',
     'demanda_+10': 'Demanda 10 % mayor',
     'demanda_+20': 'Demanda 20 % mayor',
 }
 
 # Corridas del AG: (grupo, escenario, B del AG, semillas)
 PLAN = (
-    [('base', 'base', 10, SEM_BASE), ('base', 'base', 6, SEM_BASE)]
-    + [('sensibilidad', 'base', B, SEM_SENS) for B in (4, 5, 7, 20)]
+    [('base', 'base', 10, SEM_BASE), ('base', 'base', B_ACTUAL_BASE, SEM_BASE)]
+    + [('sensibilidad', 'base', B, SEM_SENS) for B in (3, 5, 20)]
     + [('exigencia', e, 10, SEM_SENS) for e in ESCENARIOS if e != 'base']
 )
 
@@ -194,7 +197,7 @@ def deterministas(rm, rb):
     filas = []
     for e in ESCENARIOS:
         aplicar_escenario(M, base, e)
-        for B in (4, 5, 6, 7, 10):
+        for B in (3, 4, 5, 10):
             if e != 'base' and B != B_ACTUAL_BASE:
                 continue
             filas.append({'escenario': e, 'metodo': 'Actual (FIFO por etapa)', 'B': B,
@@ -255,8 +258,9 @@ def analizar(rm, rb):
                            & (det.metodo == 'Actual (FIFO por etapa)')].iloc[0]
     inf = ['# Fase 3 — Resultados de la evaluación', '']
 
-    # 1. Escenario base: actual (B = 6) frente al AG
+    # 1. Escenario base: sistema actual frente al AG
     a6 = act('base', B_ACTUAL_BASE)
+    bb = B_ACTUAL_BASE
     for B in (10, B_ACTUAL_BASE):
         g = ag[(ag.escenario == 'base') & (ag.B == B)]
         if g.empty:
@@ -266,16 +270,18 @@ def analizar(rm, rb):
             media, desv, ic, mn, mx, p, mej = _comparar(g, a6[col], col)
             filas.append([nombre, _f(a6[col]), f"{_f(media)} ± {_f(ic)}", _f(desv), _f(mn), _f(mx),
                           _f(mej) + ' %', '—' if pd.isna(p) else (f'{p:.2g}' if p >= 1e-4 else '< 0,0001')])
-        tab = pd.DataFrame(filas, columns=['Indicador', 'Actual (B = 6)', f'AG media ± IC 95 %',
+        tab = pd.DataFrame(filas, columns=['Indicador', f'Actual (B = {bb})', f'AG media ± IC 95 %',
                                            'Desv.', 'Mín.', 'Máx.', 'Mejora', 'Wilcoxon p'])
-        inf += [f"## 1.{'a' if B == 10 else 'b'} Escenario base: sistema actual (B = 6) frente al "
-                f"AG con {'B̄ = 10' if B == 10 else 'B = 6'} ({len(g)} réplicas)", '', _md(tab), '']
+        inf += [f"## 1.{'a' if B == 10 else 'b'} Escenario base: sistema actual (B = {bb}) frente al "
+                f"AG con {'B̄ = 10' if B == 10 else f'B = {bb}'} ({len(g)} réplicas)", '', _md(tab), '']
 
     # 2. Descomposición de la mejora (escenario base)
-    pasos = [('Sistema actual: FIFO por etapa, B = 6', a6['pct_tardias'], a6['suma_T'], a6['Cmax'])]
-    edd6 = det[(det.escenario == 'base') & (det.B == 6) & (det.metodo == 'Regla EDD')].iloc[0]
-    pasos.append(('Cambiar solo la regla: EDD, B = 6', edd6['pct_tardias'], edd6['suma_T'], edd6['Cmax']))
-    for B, txt in ((6, 'Optimizar con la misma división: AG, B = 6'),
+    pasos = [(f'Sistema actual: FIFO por etapa, B = {bb}', a6['pct_tardias'], a6['suma_T'], a6['Cmax'])]
+    edd6 = det[(det.escenario == 'base') & (det.B == bb) & (det.metodo == 'Regla EDD')].iloc[0]
+    pasos.append((f'Cambiar solo la regla: EDD, B = {bb}', edd6['pct_tardias'], edd6['suma_T'], edd6['Cmax']))
+    edd10 = det[(det.escenario == 'base') & (det.B == 10) & (det.metodo == 'Regla EDD')].iloc[0]
+    pasos.append(('Regla EDD con B̄ = 10 (sin AG)', edd10['pct_tardias'], edd10['suma_T'], edd10['Cmax']))
+    for B, txt in ((bb, f'Optimizar con la misma división: AG, B = {bb}'),
                    (10, 'Además, dividir más: AG, B̄ = 10')):
         g = ag[(ag.escenario == 'base') & (ag.B == B)]
         if not g.empty:
@@ -287,7 +293,7 @@ def analizar(rm, rb):
     # 3. Sensibilidad a la representación del sistema actual
     filas = []
     g10 = ag[(ag.escenario == 'base') & (ag.B == 10)]
-    for B in (4, 5, 6, 7):
+    for B in (3, 4, 5):
         a = act('base', B)
         gB = ag[(ag.escenario == 'base') & (ag.B == B)]
         filas.append([f'B = {B}', f"{_f(a.pct_tardias, 0)} % / {_f(a.suma_T)}",
@@ -300,7 +306,7 @@ def analizar(rm, rb):
 
     # 4. Sensibilidad al número de sublotes del modelo propuesto
     filas = []
-    for B in (4, 5, 6, 7, 10, 20):
+    for B in (3, 4, 5, 10, 20):
         g = ag[(ag.escenario == 'base') & (ag.B == B)]
         if not g.empty:
             filas.append([B, len(g), _f(g.pct_tardias.mean(), 0) + ' %', _f(g.suma_T.mean()),
@@ -320,17 +326,17 @@ def analizar(rm, rb):
         filas.append([DESCRIPCION[e], f"{_f(a.pct_tardias, 0)} % / {_f(a.suma_T)}",
                       f"{_f(g.pct_tardias.mean(), 0)} % / {_f(g.suma_T.mean())}", _f(mej) + ' %',
                       '—' if pd.isna(p) else f'{p:.2g}'])
-    inf += ['## 5. Escenarios de exigencia (actual B = 6 frente a AG B̄ = 10)', '',
+    inf += [f'## 5. Escenarios de exigencia (actual B = {bb} frente a AG B̄ = 10)', '',
             _md(pd.DataFrame(filas, columns=['Escenario', 'Actual: % tardías / ΣTj',
                                              'AG: % tardías / ΣTj (media)', 'Mejora ΣTj',
                                              'Wilcoxon p'])), '']
 
-    # 6. Reglas de despacho (referencia, escenario base, B = 6)
-    r6 = det[(det.escenario == 'base') & (det.B == 6)][['metodo', 'pct_tardias', 'suma_T', 'Cmax']]
+    # 6. Reglas de despacho (referencia, escenario base)
+    r6 = det[(det.escenario == 'base') & (det.B == bb)][['metodo', 'pct_tardias', 'suma_T', 'Cmax']]
     r6 = r6.assign(pct_tardias=r6.pct_tardias.map(lambda v: _f(v, 0) + ' %'),
                    suma_T=r6.suma_T.map(_f), Cmax=r6.Cmax.map(_f))
-    r6.columns = ['Método (B = 6)', '% tardías', 'ΣTj (h)', 'Cmax (h)']
-    inf += ['## 6. Reglas de despacho de referencia (escenario base, B = 6)', '', _md(r6), '']
+    r6.columns = [f'Método (B = {bb})', '% tardías', 'ΣTj (h)', 'Cmax (h)']
+    inf += [f'## 6. Reglas de despacho de referencia (escenario base, B = {bb})', '', _md(r6), '']
 
     grafico_base(ag, a6)
     with open(os.path.join(DIR, 'informe_fase3.md'), 'w', encoding='utf-8') as fh:
@@ -340,7 +346,7 @@ def analizar(rm, rb):
 
 def grafico_base(ag, a6):
     import matplotlib.pyplot as plt
-    g6 = ag[(ag.escenario == 'base') & (ag.B == 6)]
+    g6 = ag[(ag.escenario == 'base') & (ag.B == B_ACTUAL_BASE)]
     g10 = ag[(ag.escenario == 'base') & (ag.B == 10)]
     if g6.empty and g10.empty:
         return
@@ -348,11 +354,11 @@ def grafico_base(ag, a6):
     for ax, col, tit in ((axes[0], 'suma_T', 'Tardanza total ΣTj (h)'),
                          (axes[1], 'pct_tardias', '% de órdenes tardías')):
         datos, etiquetas = [], []
-        for g, et in ((g6, 'AG, B = 6'), (g10, 'AG, B̄ = 10')):
+        for g, et in ((g6, f'AG, B = {B_ACTUAL_BASE}'), (g10, 'AG, B̄ = 10')):
             if not g.empty:
                 datos.append(g[col].values); etiquetas.append(et)
         ax.boxplot(datos, labels=etiquetas, widths=0.5)
-        ax.axhline(a6[col], color='#E15759', ls='--', lw=1.5, label='Sistema actual (B = 6)')
+        ax.axhline(a6[col], color='#E15759', ls='--', lw=1.5, label=f'Sistema actual (B = {B_ACTUAL_BASE})')
         ax.set_title(tit, fontsize=10); ax.grid(axis='y', ls=':', alpha=0.5)
     axes[0].legend(fontsize=8)
     fig.tight_layout()

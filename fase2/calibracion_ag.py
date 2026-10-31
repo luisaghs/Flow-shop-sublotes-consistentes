@@ -80,12 +80,21 @@ PRESUPUESTO = 30000            # individuos generados por corrida
 SEMILLA_BASE = 1000            # réplica r → semilla SEMILLA_BASE + r
 PESO_TARDANZA = 1000.0         # Z = PESO·ΣTj + Cmax (orden lexicográfico)
 
-# Experimento 1b: ampliación del rango si la mejor combinación queda en el borde
-AMPLIACION = {'poblacion': [150, 200, 250], 'prob_cruce': [0.9], 'prob_mutacion': [0.5, 0.7]}
 
 PARADA_NIVELES = [50, 100, 200]   # generaciones sin mejora (experimento 2)
 PARADA_MAX_GEN = 1000
 PARADA_REPLICAS = 10
+
+# Instancias de calibración: factor aplicado a la ventana d_j − r_j de cada orden.
+#   real     : el caso de estudio. Con los datos corregidos (J01 = 580 docenas) la
+#              tardanza es cero en todas las corridas, así que discrimina por Cmax.
+#   exigente : fechas de entrega 20 % más ajustadas; hay tardanza que el AG reduce
+#              pero no elimina, así que discrimina por ΣTj (objetivo principal).
+INSTANCIAS_CAL = {'real': 1.0, 'exigente': 0.8}
+SUFIJO = {'real': '', 'exigente': '_exigente'}
+NOMBRE_INSTANCIA = {'real': 'Instancia real (caso de estudio)',
+                    'exigente': 'Instancia exigente (fechas de entrega 20 % más ajustadas)'}
+INSTANCIA = 'real'
 
 DIR_BASE = os.path.dirname(os.path.abspath(__file__))
 
@@ -97,8 +106,9 @@ _M = None          # módulo del modelo cargado en cada proceso
 _SEMILLA_IND = None
 
 
-def _iniciar_proceso(ruta_modelo, ruta_bd):
-    """Carga el modelo y los datos una sola vez por proceso."""
+def _iniciar_proceso(ruta_modelo, ruta_bd, factor_fechas=1.0):
+    """Carga el modelo y los datos una sola vez por proceso. factor_fechas < 1
+    ajusta las fechas de entrega: d_j ← r_j + factor·(d_j − r_j)."""
     global _M, _SEMILLA_IND
     import io
     import contextlib
@@ -107,6 +117,9 @@ def _iniciar_proceso(ruta_modelo, ruta_bd):
     spec.loader.exec_module(_M)
     with contextlib.redirect_stdout(io.StringIO()):
         _M.cargar_datos(ruta_bd)
+    if factor_fechas != 1.0:
+        for j in _M.TRABAJOS:
+            _M.DUE_DATE[j] = _M.RELEASE[j] + factor_fechas * (_M.DUE_DATE[j] - _M.RELEASE[j])
     regla = _M.mejor_de(_M.evaluar_reglas())
     _SEMILLA_IND = _M.individuo_regla_ls(regla['secuencia'])
 
@@ -144,7 +157,8 @@ def _ejecutar(tareas, ruta_csv, ruta_modelo, ruta_bd, procesos):
     if not pendientes:
         return
     t0 = time.time()
-    with mp.Pool(procesos, initializer=_iniciar_proceso, initargs=(ruta_modelo, ruta_bd)) as pool:
+    with mp.Pool(procesos, initializer=_iniciar_proceso,
+                 initargs=(ruta_modelo, ruta_bd, INSTANCIAS_CAL[INSTANCIA])) as pool:
         for k, res in enumerate(pool.imap_unordered(_correr, pendientes), start=1):
             pd.DataFrame([res]).to_csv(ruta_csv, mode='a', index=False,
                                        header=not os.path.isfile(ruta_csv),
@@ -177,20 +191,36 @@ def _tareas_factoriales(factores, replicas, presupuesto):
     return tareas
 
 
+def _arch(nombre, instancia=None):
+    return f"{nombre}{SUFIJO[instancia or INSTANCIA]}.csv"
+
+
 def experimento_diseno(ruta_modelo, ruta_bd, dir_salida, replicas, presupuesto, procesos):
     tareas = _tareas_factoriales(FACTORES, replicas, presupuesto)
-    print(f"\nEXPERIMENTO 1 — diseño factorial {len(tareas) // replicas} combinaciones × "
-          f"{replicas} réplicas, presupuesto {presupuesto} individuos por corrida")
-    _ejecutar(tareas, os.path.join(dir_salida, 'corridas_diseno.csv'),
+    print(f"\nEXPERIMENTO 1 — {NOMBRE_INSTANCIA[INSTANCIA]}: diseño factorial "
+          f"{len(tareas) // replicas} combinaciones × {replicas} réplicas, presupuesto "
+          f"{presupuesto} individuos por corrida")
+    _ejecutar(tareas, os.path.join(dir_salida, _arch('corridas_diseno')),
               ruta_modelo, ruta_bd, procesos)
 
 
+def _leer_json(dir_salida, nombre):
+    import json
+    with open(os.path.join(dir_salida, nombre), encoding='utf-8') as fh:
+        return json.load(fh)
+
+
 def experimento_ampliacion(ruta_modelo, ruta_bd, dir_salida, replicas, presupuesto, procesos):
-    """Niveles más allá del borde del diseño (mismas semillas y presupuesto)."""
-    tareas = [t for t in _tareas_factoriales(AMPLIACION, replicas, presupuesto)
-              if t['clave'] != CONFIG_ACTUAL]          # ese punto ya está en el diseño
-    print(f"\nEXPERIMENTO 1b — ampliación del rango {AMPLIACION}, {replicas} réplicas")
-    _ejecutar(tareas, os.path.join(dir_salida, 'corridas_ampliacion.csv'),
+    """Niveles más allá del borde del diseño, alrededor de la mejor combinación
+    (calculados por el análisis del diseño en ampliacion_grilla.json)."""
+    grilla = _leer_json(dir_salida, 'ampliacion_grilla.json')
+    mejor = grilla.pop('_mejor')
+    if all(len(v) == 1 for v in grilla.values()):
+        print("La mejor combinación no está en el borde: no se requiere ampliación.")
+        return
+    tareas = [t for t in _tareas_factoriales(grilla, replicas, presupuesto) if t['clave'] != mejor]
+    print(f"\nEXPERIMENTO 1b — {NOMBRE_INSTANCIA[INSTANCIA]}: ampliación {grilla}, {replicas} réplicas")
+    _ejecutar(tareas, os.path.join(dir_salida, _arch('corridas_ampliacion')),
               ruta_modelo, ruta_bd, procesos)
 
 
@@ -203,11 +233,11 @@ def experimento_parada(ruta_modelo, ruta_bd, dir_salida, config, replicas, proce
                 'params': {**config, 'sin_mejora': sm, 'generaciones': PARADA_MAX_GEN},
                 'semilla': SEMILLA_BASE + 100 + r,
             })
-    print(f"\nEXPERIMENTO 2 — criterio de parada {PARADA_NIVELES} generaciones sin mejora, "
-          f"configuración {config}, {replicas} réplicas")
+    print(f"\nEXPERIMENTO 2 — {NOMBRE_INSTANCIA[INSTANCIA]}: criterio de parada {PARADA_NIVELES} "
+          f"generaciones sin mejora, configuración {config}, {replicas} réplicas")
     with open(os.path.join(dir_salida, 'config_parada.txt'), 'w', encoding='utf-8') as fh:
         fh.write(str(config))
-    _ejecutar(tareas, os.path.join(dir_salida, 'corridas_parada.csv'),
+    _ejecutar(tareas, os.path.join(dir_salida, _arch('corridas_parada')),
               ruta_modelo, ruta_bd, procesos)
 
 # ---------------------------------------------------------------------------
@@ -222,34 +252,35 @@ def experimento_parada(ruta_modelo, ruta_bd, dir_salida, config, replicas, proce
 #                       ordenar lexicográficamente (primero ΣTj, luego Cmax).
 
 TOL = 1e-3
+ETIQUETA = {'suma_T': 'ΣTj promedio (h)', 'Cmax': 'Cmax promedio (h)'}
+NOMBRE_RESP = {'suma_T': 'tardanza total ΣTj', 'Cmax': 'makespan Cmax'}
 
 
-def _preparar(df, t_mejor, c_mejor):
+def _respuesta(df):
+    """Respuesta de una instancia: ΣTj si varía entre corridas; si es cero en todas,
+    Cmax, que es el criterio secundario del objetivo lexicográfico."""
+    return 'suma_T' if df['suma_T'].max() > TOL else 'Cmax'
+
+
+def _con_z(df):
     df = df.copy()
-    df['Z'] = PESO_TARDANZA * df['suma_T'] + df['Cmax']
-    df['RPD_Cmax'] = 100.0 * (df['Cmax'] - c_mejor) / c_mejor
-    df['llega_mejor_T'] = df['suma_T'] <= t_mejor + TOL
+    df['Z'] = PESO_TARDANZA * df['suma_T'] + df['Cmax']     # orden lexicográfico
     return df
 
 
 def _resumen(df, claves):
-    r = (df.groupby(claves)
-         .agg(Corridas=('suma_T', 'size'),
-              T_prom=('suma_T', 'mean'), T_desv=('suma_T', 'std'), T_max=('suma_T', 'max'),
-              Pct=('llega_mejor_T', lambda s: 100.0 * s.mean()),
-              C_prom=('Cmax', 'mean'), RPD_C=('RPD_Cmax', 'mean'),
-              Seg=('segundos', 'mean'), Gen=('generaciones', 'mean'),
-              Ind=('individuos_mejor', 'mean'))
-         .reset_index().sort_values(['T_prom', 'C_prom']))
-    return r
+    return (df.groupby(claves)
+            .agg(Corridas=('suma_T', 'size'), T_prom=('suma_T', 'mean'), T_desv=('suma_T', 'std'),
+                 Tard=('tardias', 'mean'), C_prom=('Cmax', 'mean'), C_desv=('Cmax', 'std'),
+                 Seg=('segundos', 'mean'), Gen=('generaciones', 'mean'))
+            .reset_index().sort_values(['T_prom', 'C_prom']).reset_index(drop=True))
 
 
 NOMBRES_RESUMEN = {
     'poblacion': 'Población', 'prob_cruce': 'P. cruce', 'prob_mutacion': 'P. mutación',
     'sin_mejora': 'Gen. sin mejora', 'T_prom': 'ΣTj prom (h)', 'T_desv': 'ΣTj desv',
-    'T_max': 'ΣTj máx', 'Pct': '% con mejor ΣTj', 'C_prom': 'Cmax prom (h)',
-    'RPD_C': 'RPD Cmax (%)', 'Seg': 'Tiempo prom (s)', 'Gen': 'Generaciones prom',
-    'Ind': 'Individuos hasta el mejor'}
+    'Tard': 'Tardías prom', 'C_prom': 'Cmax prom (h)', 'C_desv': 'Cmax desv',
+    'Seg': 'Tiempo prom (s)', 'Gen': 'Generaciones prom', 'rango': 'Posición'}
 
 
 def anova_balanceado(df, factores, y='suma_T'):
@@ -354,15 +385,23 @@ def _md(df, decimales=3):
     return '\n'.join([cab, sep] + filas)
 
 
-def _wilcoxon(a, b):
-    """Wilcoxon pareado por semilla sobre Z (orden lexicográfico)."""
+def _wilcoxon(a, b, col='Z'):
+    """Wilcoxon pareado por semilla (por defecto sobre Z, el orden lexicográfico)."""
     comunes = a.index.intersection(b.index)
     if stats is None or len(comunes) < 5:
         return None, len(comunes)
-    da, db = a.loc[comunes, 'Z'], b.loc[comunes, 'Z']
+    da, db = a.loc[comunes, col], b.loc[comunes, col]
     if ((da - db).abs() < 1e-9).all():
         return 1.0, len(comunes)
     return stats.wilcoxon(da, db).pvalue, len(comunes)
+
+
+def _pf(p):
+    return '—' if p is None else f'{p:.4g}'
+
+
+def _por_semilla(d, c):
+    return d[(d[list(c)] == pd.Series(c)).all(axis=1)].set_index('semilla')
 
 
 def _texto_config(c):
@@ -370,170 +409,227 @@ def _texto_config(c):
             f"mutación = {float(c['prob_mutacion']):g}")
 
 
-def analizar(dir_salida):
+def _leer(dir_salida, base, inst):
+    ruta = os.path.join(dir_salida, _arch(base, inst))
+    return _con_z(pd.read_csv(ruta)) if os.path.isfile(ruta) else None
+
+
+def _posiciones(res):
+    """Posición lexicográfica de cada combinación (1 = mejor ΣTj, desempate por Cmax)."""
+    r = res.sort_values(['T_prom', 'C_prom']).reset_index(drop=True)
+    r['rango'] = range(1, len(r) + 1)
+    return r
+
+
+def _seccion_diseno(dis, inst, dir_salida, informe):
     factores = list(FACTORES)
-    leer = lambda n: (pd.read_csv(os.path.join(dir_salida, n))
-                      if os.path.isfile(os.path.join(dir_salida, n)) else None)
-    dis, amp, par = leer('corridas_diseno.csv'), leer('corridas_ampliacion.csv'), \
-        leer('corridas_parada.csv')
-    if dis is None:
-        print("No hay resultados del diseño todavía.")
-        return
-    todas = pd.concat([d for d in (dis, amp, par) if d is not None], ignore_index=True)
-    t_mejor = todas['suma_T'].min()
-    c_mejor = todas.loc[todas['suma_T'] <= t_mejor + TOL, 'Cmax'].min()
-    dis = _preparar(dis, t_mejor, c_mejor)
-
-    informe = ["# Calibración de los parámetros del algoritmo genético", ""]
-    informe += [f"- Mejor solución encontrada en todos los experimentos: ΣTj = {t_mejor:.4f} h, "
-                f"Cmax = {c_mejor:.4f} h.",
-                "- Respuesta principal: ΣTj (h). Respuesta secundaria: RPD del Cmax = "
-                "100·(Cmax − Cmax*)/Cmax*, con Cmax* el mejor Cmax entre las corridas con la "
-                "mejor ΣTj.",
-                "- Pruebas de rangos (Kruskal-Wallis, Wilcoxon) sobre el orden lexicográfico "
-                f"(Z = {PESO_TARDANZA:g}·ΣTj + Cmax).", ""]
-
-    # ── 1. Diseño factorial ──
+    y = _respuesta(dis)
+    suf = SUFIJO[inst]
     res = _resumen(dis, factores)
-    res.to_csv(os.path.join(dir_salida, 'resumen_combinaciones.csv'), index=False,
+    res.to_csv(os.path.join(dir_salida, f'resumen_combinaciones{suf}.csv'), index=False,
                encoding='utf-8-sig')
-    n_rep = dis.groupby(factores).size()
-    informe += [f"## 1. Diseño factorial: {dis.groupby(factores).ngroups} combinaciones × "
-                f"{n_rep.min()} réplicas ({len(dis)} corridas)", "",
-                "Ordenado por ΣTj promedio y luego por Cmax promedio.", "",
-                _md(res.drop(columns=['Corridas', 'Gen']).rename(columns=NOMBRES_RESUMEN), 3), ""]
-
-    if n_rep.nunique() == 1:
-        tabla_anova, mse, gl_err, residuos = anova_balanceado(dis, factores)
-        tabla_anova.to_csv(os.path.join(dir_salida, 'anova.csv'), index=False, encoding='utf-8-sig')
-        informe += ["## 2. ANOVA sobre ΣTj (efectos principales e interacciones dobles)", "",
-                    _md(tabla_anova, 4), ""]
-        grafico_medias(dis, factores, mse, gl_err, os.path.join(dir_salida, 'efectos_principales.png'))
-        grafico_interacciones(dis, factores, os.path.join(dir_salida, 'interacciones.png'))
-        informe += ["Figuras: `efectos_principales.png` (medias de ΣTj con intervalos LSD al "
-                    "95 %; si dos intervalos no se traslapan, los niveles difieren) e "
-                    "`interacciones.png`.", ""]
+    informe += [f"## {NOMBRE_INSTANCIA[inst]}", "",
+                f"Respuesta analizada: **{NOMBRE_RESP[y]}**" +
+                (" (la tardanza fue cero en todas las corridas, así que las configuraciones solo "
+                 "se diferencian por el makespan, el criterio secundario)." if y == 'Cmax' else "."),
+                "", "Combinaciones ordenadas por ΣTj promedio y luego por Cmax promedio (10 primeras):", "",
+                _md(res.drop(columns=['Gen']).head(10).rename(columns=NOMBRES_RESUMEN), 3), ""]
+    significativos = set()
+    est = {'respuesta': y, 'p_anova': {}, 'p_kruskal': {}, 'p_levene': {}, 'p_shapiro': None}
+    if dis.groupby(factores).size().nunique() == 1:
+        tabla, mse, gl_err, residuos = anova_balanceado(dis, factores, y=y)
+        tabla.to_csv(os.path.join(dir_salida, f'anova{suf}.csv'), index=False, encoding='utf-8-sig')
+        informe += [f"ANOVA sobre {NOMBRE_RESP[y]}:", "", _md(tabla, 4), ""]
+        for f in factores:
+            p = tabla.loc[tabla['Fuente'] == NOMBRE_FACTOR[f], 'valor p'].iloc[0]
+            est['p_anova'][f] = float(p)
+            if p < 0.05:
+                significativos.add(f)
+        grafico_medias(dis, factores, mse, gl_err,
+                       os.path.join(dir_salida, f'efectos_principales{suf}.png'), y=y, etiqueta=ETIQUETA[y])
+        grafico_interacciones(dis, factores, os.path.join(dir_salida, f'interacciones{suf}.png'),
+                              y=y, etiqueta=ETIQUETA[y])
         if stats is not None:
             sw = stats.shapiro(residuos)
-            informe += ["## 3. Supuestos del ANOVA y prueba no paramétrica", "",
-                        f"- Normalidad de residuos (Shapiro-Wilk): W = {sw.statistic:.4f}, "
-                        f"p = {sw.pvalue:.4g}."]
+            est['p_shapiro'] = float(sw.pvalue)
+            informe.append(f"- Normalidad de residuos (Shapiro-Wilk): W = {sw.statistic:.4f}, "
+                           f"p = {sw.pvalue:.4g}.")
             for f in factores:
-                lev = stats.levene(*[g['suma_T'].values for _, g in dis.groupby(f)])
-                informe.append(f"- Homogeneidad de varianzas entre niveles de {NOMBRE_FACTOR[f]} "
-                               f"(Levene): W = {lev.statistic:.4f}, p = {lev.pvalue:.4g}.")
-            informe += ["- Kruskal-Wallis (no paramétrica, orden lexicográfico); es la prueba de "
-                        "referencia si algún supuesto anterior tiene p < 0,05:"]
-            for f in factores:
-                kw = stats.kruskal(*[g['Z'].values for _, g in dis.groupby(f)])
-                informe.append(f"  - {NOMBRE_FACTOR[f]}: H = {kw.statistic:.3f}, p = {kw.pvalue:.4g}")
+                lev = stats.levene(*[g[y].values for _, g in dis.groupby(f)])
+                kw = stats.kruskal(*[g[y].values for _, g in dis.groupby(f)])
+                est['p_levene'][f], est['p_kruskal'][f] = float(lev.pvalue), float(kw.pvalue)
+                informe.append(f"- {NOMBRE_FACTOR[f]}: Levene p = {lev.pvalue:.4g}; "
+                               f"Kruskal-Wallis H = {kw.statistic:.3f}, p = {kw.pvalue:.4g}.")
             informe.append("")
-        try:                                   # contraste opcional con statsmodels
-            import statsmodels.formula.api as smf
-            import statsmodels.api as sm
-            modelo = smf.ols('suma_T ~ (C(poblacion) + C(prob_cruce) + C(prob_mutacion))**2',
-                             data=dis).fit()
-            sm.stats.anova_lm(modelo, typ=2).to_csv(
-                os.path.join(dir_salida, 'anova_statsmodels.csv'), encoding='utf-8-sig')
-        except Exception:
-            pass
-    else:
-        informe += ["## 2. ANOVA", "", "Faltan corridas en alguna combinación; se omite el ANOVA.", ""]
+    return res, y, significativos, est
 
-    # ── 4. Mejor combinación frente a la configuración actual ──
-    por_semilla = lambda d, c: d[(d[list(c)] == pd.Series(c)).all(axis=1)].set_index('semilla')
-    mejor = res.iloc[0]
-    clave_mejor = {f: mejor[f] for f in factores}
-    actual = por_semilla(dis, CONFIG_ACTUAL)
-    informe += ["## 4. Mejor combinación del diseño frente a la configuración actual", "",
-                f"- Mejor combinación: {_texto_config(clave_mejor)} "
-                f"(ΣTj promedio = {mejor['T_prom']:.3f} h, Cmax promedio = {mejor['C_prom']:.3f} h)."]
-    if len(actual):
-        informe.append(f"- Configuración actual: {_texto_config(CONFIG_ACTUAL)} "
-                       f"(ΣTj promedio = {actual['suma_T'].mean():.3f} h).")
-    if clave_mejor == CONFIG_ACTUAL:
-        informe.append("- La configuración actual es la mejor combinación del diseño.")
-        en_borde = [NOMBRE_FACTOR[f] for f in factores
-                    if CONFIG_ACTUAL[f] in (min(FACTORES[f]), max(FACTORES[f]))]
-        if en_borde:
-            informe.append(f"- Está en el borde del rango probado en: {', '.join(en_borde)}. "
-                           "Por eso se amplía el rango (experimento 1b).")
-    else:
-        p, n = _wilcoxon(por_semilla(dis, clave_mejor), actual)
-        if p is not None:
-            informe.append(f"- Wilcoxon pareado por semilla ({n} pares): p = {p:.4g}. " +
-                           ("Diferencia significativa al 5 %." if p < 0.05 else
-                            "Diferencia no significativa al 5 %."))
+
+def _grilla_ampliacion(mejor, significativos):
+    """Niveles adicionales para los factores significativos cuyo mejor nivel quedó en el
+    borde del rango probado."""
+    extra_max = {'poblacion': lambda v: [v + 50, v + 100], 'prob_cruce': lambda v: [min(1.0, round(v + 0.05, 2))],
+                 'prob_mutacion': lambda v: [round(v + 0.2, 2)]}
+    extra_min = {'poblacion': lambda v: [max(10, v // 2)], 'prob_cruce': lambda v: [round(v - 0.1, 2)],
+                 'prob_mutacion': lambda v: [round(v / 2, 3)]}
+    grilla = {}
+    for f, niveles in FACTORES.items():
+        v = mejor[f]
+        extra = []
+        if f in significativos and v == max(niveles):
+            extra = extra_max[f](v)
+        elif f in significativos and v == min(niveles):
+            extra = extra_min[f](v)
+        grilla[f] = sorted(set([v] + [e for e in extra if e != v]))
+    return grilla
+
+
+def analizar(dir_salida):
+    import json
+    factores = list(FACTORES)
+    informe = ["# Calibración de los parámetros del algoritmo genético", "",
+               "Se calibró con dos instancias: la real y una exigente (fechas de entrega 20 % más "
+               "ajustadas). La configuración se elige por su posición promedio en ambas.", ""]
+    resumenes, respuestas, signif, disenos = {}, {}, set(), {}
+    decisiones = {'instancias': {}, 'vs_anterior': {}, 'ampliacion': None, 'parada': None}
+    for inst in INSTANCIAS_CAL:
+        dis = _leer(dir_salida, 'corridas_diseno', inst)
+        if dis is None:
+            continue
+        disenos[inst] = dis
+        res, y, sig, est = _seccion_diseno(dis, inst, dir_salida, informe)
+        decisiones['instancias'][inst] = est
+        resumenes[inst], respuestas[inst] = res, y
+        signif |= sig
+    if not resumenes:
+        print("No hay resultados del diseño todavía.")
+        return
+
+    # ── Selección combinada por posición promedio
+    comb = None
+    for inst, res in resumenes.items():
+        r = _posiciones(res)[factores + ['rango', 'T_prom', 'C_prom']]
+        r = r.rename(columns={'rango': f'pos_{inst}', 'T_prom': f'T_{inst}', 'C_prom': f'C_{inst}'})
+        comb = r if comb is None else comb.merge(r, on=factores)
+    cols_pos = [c for c in comb.columns if c.startswith('pos_')]
+    comb['pos_prom'] = comb[cols_pos].mean(axis=1)
+    orden = ['pos_prom'] + (['pos_exigente'] if 'pos_exigente' in comb else [])
+    comb = comb.sort_values(orden).reset_index(drop=True)
+    comb.to_csv(os.path.join(dir_salida, 'seleccion_combinada.csv'), index=False, encoding='utf-8-sig')
+    mejor = {f: (int(comb.loc[0, f]) if f == 'poblacion' else float(comb.loc[0, f])) for f in factores}
+    informe += ["## Selección combinada", "",
+                "Posición de cada combinación en cada instancia (1 = mejor) y posición promedio "
+                "(10 primeras):", "", _md(comb.head(10), 2), "",
+                f"- Mejor combinación del diseño: {_texto_config(mejor)}."]
+    for inst, dis in disenos.items():
+        a, b = _por_semilla(dis, mejor), _por_semilla(dis, CONFIG_ACTUAL)
+        if mejor != CONFIG_ACTUAL and len(b):
+            p, n = _wilcoxon(a, b)
+            decisiones['vs_anterior'][inst] = p
+            informe.append(f"- Frente a la configuración anterior del código ({_texto_config(CONFIG_ACTUAL)}), "
+                           f"{inst}: Wilcoxon p = {_pf(p)}.")
+    grilla = _grilla_ampliacion(mejor, signif)
+    informe.append(f"- Factores significativos en al menos una instancia: "
+                   f"{', '.join(NOMBRE_FACTOR[f] for f in sorted(signif)) or 'ninguno'}.")
+    en_borde = [f for f in factores if len(grilla[f]) > 1]
+    informe.append("- " + (f"La mejor combinación está en el borde para: "
+                           f"{', '.join(NOMBRE_FACTOR[f] for f in en_borde)}; se amplía el rango."
+                           if en_borde else "No hay factores significativos en el borde; no se amplía."))
     informe.append("")
+    decisiones.update(mejor_diseno=mejor, significativos=sorted(signif), en_borde=en_borde,
+                      grilla={k: v for k, v in grilla.items()})
+    with open(os.path.join(dir_salida, 'ampliacion_grilla.json'), 'w', encoding='utf-8') as fh:
+        json.dump({**grilla, '_mejor': mejor}, fh)
 
-    # ── 5. Ampliación del rango ──
-    seleccion = clave_mejor
-    if amp is not None and len(amp):
-        amp = _preparar(amp, t_mejor, c_mejor)
-        base = por_semilla(dis, CONFIG_ACTUAL).reset_index()
-        comb = pd.concat([amp, base[amp.columns.intersection(base.columns)]], ignore_index=True)
-        comb = comb[comb['semilla'].isin(amp['semilla'].unique())]
-        ra = _resumen(comb, factores)
-        ra.to_csv(os.path.join(dir_salida, 'resumen_ampliacion.csv'), index=False,
-                  encoding='utf-8-sig')
-        informe += ["## 5. Ampliación del rango (experimento 1b)", "",
-                    "Mismas semillas y presupuesto que el diseño; incluye la configuración actual "
-                    "como referencia.", "",
-                    _md(ra.drop(columns=['Gen']).rename(columns=NOMBRES_RESUMEN), 3), ""]
-        if stats is not None and comb.groupby(factores).ngroups > 1:
-            kw = stats.kruskal(*[g['Z'].values for _, g in comb.groupby(factores)])
-            informe.append(f"- Kruskal-Wallis entre estas combinaciones: H = {kw.statistic:.3f}, "
-                           f"p = {kw.pvalue:.4g}.")
-        for _, f in ra.iterrows():
-            c = {k: f[k] for k in factores}
-            if c == CONFIG_ACTUAL:
-                continue
-            p, n = _wilcoxon(por_semilla(comb, c), por_semilla(comb, CONFIG_ACTUAL))
-            if p is not None:
-                informe.append(f"- {_texto_config(c)} frente a la actual: Wilcoxon p = {p:.4g}.")
-        mejor_a = ra.iloc[0]
-        cand = {k: mejor_a[k] for k in factores}
-        # Se cambia la configuración solo si la mejora es significativa
-        if cand != CONFIG_ACTUAL:
-            p, _ = _wilcoxon(por_semilla(comb, cand), por_semilla(comb, CONFIG_ACTUAL))
-            if p is not None and p < 0.05:
+    # ── Ampliación
+    seleccion = mejor
+    amps = {inst: _leer(dir_salida, 'corridas_ampliacion', inst) for inst in disenos}
+    if en_borde and all(a is not None for a in amps.values()):
+        informe += ["## Ampliación del rango", ""]
+        comb2, datos = None, {}
+        decisiones['ampliacion'] = {'tablas': {}, 'p': {}, 'candidata': None, 'cambia': False}
+        for inst, dis in disenos.items():
+            d = pd.concat([_por_semilla(dis, mejor).reset_index(), amps[inst]], ignore_index=True)
+            datos[inst] = d
+            r = _posiciones(_resumen(d, factores))
+            decisiones['ampliacion']['tablas'][inst] = r.to_dict('records')
+            informe += [f"{NOMBRE_INSTANCIA[inst]}:", "",
+                        _md(r.drop(columns=['Gen']).rename(columns=NOMBRES_RESUMEN), 3), ""]
+            r = r[factores + ['rango']].rename(columns={'rango': f'pos_{inst}'})
+            comb2 = r if comb2 is None else comb2.merge(r, on=factores)
+        comb2['pos_prom'] = comb2[[c for c in comb2.columns if c.startswith('pos_')]].mean(axis=1)
+        comb2 = comb2.sort_values('pos_prom').reset_index(drop=True)
+        cand = {f: (int(comb2.loc[0, f]) if f == 'poblacion' else float(comb2.loc[0, f])) for f in factores}
+        if cand != mejor:
+            mejor_en, peor_en = [], []
+            for inst, d in datos.items():
+                a, b = _por_semilla(d, cand), _por_semilla(d, mejor)
+                p, _ = _wilcoxon(a, b)
+                decisiones['ampliacion']['p'][inst] = p
+                informe.append(f"- {_texto_config(cand)} frente a {_texto_config(mejor)}, {inst}: "
+                               f"Wilcoxon p = {_pf(p)}.")
+                if p is not None and p < 0.05:
+                    (mejor_en if a['Z'].mean() < b['Z'].mean() else peor_en).append(inst)
+            decisiones['ampliacion']['candidata'] = cand
+            if mejor_en and not peor_en:
                 seleccion = cand
-                informe.append(f"- Se selecciona {_texto_config(cand)}: mejora significativa "
-                               "frente a la actual.")
+                decisiones['ampliacion']['cambia'] = True
+                informe.append(f"- Se selecciona {_texto_config(cand)}: mejora significativa en "
+                               f"{', '.join(mejor_en)} sin empeorar en la otra instancia.")
             else:
-                informe.append(f"- La mejor de la ampliación ({_texto_config(cand)}) no mejora "
-                               "de forma significativa a la actual; se conserva la actual "
-                               "(principio de parsimonia).")
+                informe.append("- La mejora no es significativa; se conserva la mejor combinación del "
+                               "diseño (parsimonia).")
         else:
-            informe.append("- La configuración actual sigue siendo la mejor.")
+            informe.append("- La mejor combinación del diseño sigue siendo la mejor.")
         informe.append("")
     with open(os.path.join(dir_salida, 'config_seleccionada.txt'), 'w', encoding='utf-8') as fh:
         fh.write(f"{int(seleccion['poblacion'])},{float(seleccion['prob_cruce']):g},"
                  f"{float(seleccion['prob_mutacion']):g}\n")
+    informe += [f"**Configuración seleccionada: {_texto_config(seleccion)}.**", ""]
+    decisiones['seleccion'] = seleccion
 
-    # ── 6. Criterio de parada ──
-    if par is not None and len(par):
-        par = _preparar(par, t_mejor, c_mejor)
-        cfg = ''
+    # ── Criterio de parada
+    pars = {inst: _leer(dir_salida, 'corridas_parada', inst) for inst in disenos}
+    if any(p is not None for p in pars.values()):
+        informe += ["## Criterio de parada", ""]
         if os.path.isfile(os.path.join(dir_salida, 'config_parada.txt')):
-            cfg = open(os.path.join(dir_salida, 'config_parada.txt'), encoding='utf-8').read().strip()
-        rp = _resumen(par, ['sin_mejora']).sort_values('sin_mejora')
-        rp.to_csv(os.path.join(dir_salida, 'resumen_parada.csv'), index=False, encoding='utf-8-sig')
-        informe += ["## 6. Criterio de parada (experimento 2)", "", f"Configuración: {cfg}", "",
-                    _md(rp.drop(columns=['Ind']).rename(columns=NOMBRES_RESUMEN), 3), ""]
-        if stats is not None and par['sin_mejora'].nunique() > 1:
-            kw = stats.kruskal(*[g['Z'].values for _, g in par.groupby('sin_mejora')])
-            informe.append(f"- Kruskal-Wallis entre criterios: H = {kw.statistic:.3f}, "
-                           f"p = {kw.pvalue:.4g}.")
+            informe += [f"Configuración: {open(os.path.join(dir_salida, 'config_parada.txt'), encoding='utf-8').read().strip()}", ""]
+        mejora_sig = {}
+        decisiones['parada'] = {'tablas': {}, 'p': {}}
+        for inst, par in pars.items():
+            if par is None:
+                continue
+            rp = _resumen(par, ['sin_mejora']).sort_values('sin_mejora')
+            rp.to_csv(os.path.join(dir_salida, f'resumen_parada{SUFIJO[inst]}.csv'), index=False,
+                      encoding='utf-8-sig')
+            decisiones['parada']['tablas'][inst] = rp.to_dict('records')
+            informe += [f"{NOMBRE_INSTANCIA[inst]}:", "", _md(rp.rename(columns=NOMBRES_RESUMEN), 3), ""]
             niveles = sorted(par['sin_mejora'].unique())
             for a_, b_ in zip(niveles, niveles[1:]):
-                p, n = _wilcoxon(par[par['sin_mejora'] == a_].set_index('semilla'),
-                                 par[par['sin_mejora'] == b_].set_index('semilla'))
-                if p is not None:
-                    informe.append(f"- {a_} frente a {b_} generaciones sin mejora: "
-                                   f"Wilcoxon p = {p:.4g}.")
+                A = par[par['sin_mejora'] == a_].set_index('semilla')
+                Bq = par[par['sin_mejora'] == b_].set_index('semilla')
+                p, _ = _wilcoxon(Bq, A)
+                mejor_b = p is not None and p < 0.05 and Bq['Z'].mean() < A['Z'].mean()
+                mejora_sig[(inst, b_)] = mejor_b
+                decisiones['parada']['p'][f'{inst}:{a_}->{b_}'] = p
+                informe.append(f"- {a_} → {b_} generaciones sin mejora: Wilcoxon p = {_pf(p)}"
+                               f"{' (mejora significativa)' if mejor_b else ''}.")
             informe.append("")
+        niveles = sorted(PARADA_NIVELES)
+        elegido = niveles[0]
+        for b_ in niveles[1:]:
+            if any(mejora_sig.get((inst, b_), False) for inst in pars):
+                elegido = b_
+            else:
+                break
+        informe += [f"**Criterio de parada recomendado: {elegido} generaciones sin mejora** "
+                    "(el menor nivel a partir del cual aumentar no mejora de forma significativa "
+                    "en ninguna instancia).", ""]
+        decisiones['parada']['elegido'] = int(elegido)
+        with open(os.path.join(dir_salida, 'parada_seleccionada.txt'), 'w', encoding='utf-8') as fh:
+            fh.write(f"{elegido}\n")
 
+    with open(os.path.join(dir_salida, 'decisiones.json'), 'w', encoding='utf-8') as fh:
+        json.dump(decisiones, fh, ensure_ascii=False, indent=1, default=float)
     ruta_inf = os.path.join(dir_salida, 'informe_calibracion.md')
     with open(ruta_inf, 'w', encoding='utf-8') as fh:
         fh.write('\n'.join(informe) + '\n')
@@ -545,10 +641,12 @@ def analizar(dir_salida):
 # ---------------------------------------------------------------------------
 
 def main():
+    global INSTANCIA, PARADA_NIVELES, PARADA_MAX_GEN
     ap = argparse.ArgumentParser(description='Calibración de parámetros del AG')
     ap.add_argument('accion', choices=['diseno', 'ampliacion', 'parada', 'analizar'])
     ap.add_argument('modelo', nargs='?', default='final_sc_hfsagls_S2_4.py')
     ap.add_argument('bd', nargs='?', default='BD_HFS.xlsx')
+    ap.add_argument('--instancia', choices=['real', 'exigente', 'ambas'], default='ambas')
     ap.add_argument('--replicas', type=int, default=None)
     ap.add_argument('--presupuesto', type=int, default=PRESUPUESTO)
     ap.add_argument('--procesos', type=int, default=os.cpu_count() or 1)
@@ -561,33 +659,30 @@ def main():
     dir_salida = os.path.join(DIR_BASE, 'salida_calibracion_prueba' if a.prueba
                               else 'salida_calibracion')
     os.makedirs(dir_salida, exist_ok=True)
-    global PARADA_NIVELES, PARADA_MAX_GEN
     presupuesto = a.presupuesto
     if a.prueba:
         FACTORES.update(poblacion=[20, 40], prob_cruce=[0.8, 0.9], prob_mutacion=[0.3, 0.5])
         CONFIG_ACTUAL.update(poblacion=40, prob_cruce=0.9, prob_mutacion=0.5)
-        AMPLIACION.update(poblacion=[40, 60], prob_cruce=[0.9], prob_mutacion=[0.5, 0.7])
         PARADA_NIVELES, PARADA_MAX_GEN = [5, 10], 30
         presupuesto = 400
     modelo, bd = os.path.abspath(a.modelo), os.path.abspath(a.bd)
+    instancias = list(INSTANCIAS_CAL) if a.instancia == 'ambas' else [a.instancia]
 
-    if a.accion == 'diseno':
-        experimento_diseno(modelo, bd, dir_salida, a.replicas or (2 if a.prueba else REPLICAS),
-                           presupuesto, a.procesos)
-    elif a.accion == 'ampliacion':
-        experimento_ampliacion(modelo, bd, dir_salida, a.replicas or (2 if a.prueba else REPLICAS),
+    for inst in instancias:
+        INSTANCIA = inst
+        if a.accion == 'diseno':
+            experimento_diseno(modelo, bd, dir_salida, a.replicas or (2 if a.prueba else REPLICAS),
                                presupuesto, a.procesos)
-    elif a.accion == 'parada':
-        if a.config:
-            texto = a.config
-        else:                              # la seleccionada por el análisis
-            analizar(dir_salida)
-            texto = open(os.path.join(dir_salida, 'config_seleccionada.txt'),
-                         encoding='utf-8').read().strip()
-        p, c, m = texto.split(',')
-        config = {'poblacion': int(p), 'prob_cruce': float(c), 'prob_mutacion': float(m)}
-        experimento_parada(modelo, bd, dir_salida, config,
-                           a.replicas or (2 if a.prueba else PARADA_REPLICAS), a.procesos)
+        elif a.accion == 'ampliacion':
+            experimento_ampliacion(modelo, bd, dir_salida, a.replicas or (2 if a.prueba else REPLICAS),
+                                   presupuesto, a.procesos)
+        elif a.accion == 'parada':
+            texto = a.config or open(os.path.join(dir_salida, 'config_seleccionada.txt'),
+                                     encoding='utf-8').read().strip()
+            p, c, m = texto.split(',')
+            config = {'poblacion': int(p), 'prob_cruce': float(c), 'prob_mutacion': float(m)}
+            experimento_parada(modelo, bd, dir_salida, config,
+                               a.replicas or (2 if a.prueba else PARADA_REPLICAS), a.procesos)
     analizar(dir_salida)
 
 
