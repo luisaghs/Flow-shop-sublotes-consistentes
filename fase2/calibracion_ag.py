@@ -81,7 +81,7 @@ SEMILLA_BASE = 1000            # réplica r → semilla SEMILLA_BASE + r
 PESO_TARDANZA = 1000.0         # Z = PESO·ΣTj + Cmax (orden lexicográfico)
 
 
-PARADA_NIVELES = [50, 100, 200]   # generaciones sin mejora (experimento 2)
+PARADA_NIVELES = [50, 100]   # generaciones sin mejora (experimento 2)
 PARADA_MAX_GEN = 1000
 PARADA_REPLICAS = 10
 

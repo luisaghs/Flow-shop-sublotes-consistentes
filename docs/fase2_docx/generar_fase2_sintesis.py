@@ -374,6 +374,7 @@ def calibracion(D):
                    'así que no fue necesario ampliarlo.')
     par = dec.get('parada')
     filas_par, ps = [], ''
+    niv_par = sorted(int(r['sin_mejora']) for r in par['tablas']['real']) if par else []
     if par:
         for r in sorted(par['tablas']['real'], key=lambda r: r['sin_mejora']):
             filas_par.append([str(int(r['sin_mejora'])), n(r['T_prom'], 1), n(r['Tard'], 1),
@@ -419,16 +420,21 @@ def calibracion(D):
          filas_top, {'etiqueta': 'mejores', 'anchos': [1150, 700, 700, 1500, 1500, 1500, 1788],
                      'negrita_filas': (0,)}),
         ('p', f"La mejor combinación del diseño es {cfg(mejor)}. " + txt_amp +
-              (' Por último, con la configuración elegida se compararon tres criterios de parada '
-               '(Tabla {T:parada}).' if par else '')),
+              (f' Por último, con la configuración elegida se compararon {len(niv_par)} criterios de '
+               f"parada: {_lista([str(v) for v in niv_par])} generaciones sin mejora (Tabla {{T:parada}})."
+               if par else '')),
     ] + ([
         ('tabla', 'Criterio de parada (10 réplicas por criterio)',
          ['Generaciones sin mejora', 'ΣT_j prom. (h)', 'Tardías prom.', 'C_max prom. (h)',
           'Generaciones prom.', 'Tiempo prom. (min)'], filas_par,
          {'etiqueta': 'parada', 'anchos': [1900, 1400, 1300, 1400, 1400, 1438]}),
-        ('p', f"Se adopta {par['elegido']} generaciones sin mejora: es el menor nivel a partir del cual "
-              f"aumentarlo no mejora de forma significativa (Wilcoxon; {ps}). La Tabla {{T:final}} resume "
-              'la configuración final.'),
+        ('p', (f"Se adopta {par['elegido']} generaciones sin mejora: aumentar el criterio a "
+               f"{niv_par[niv_par.index(par['elegido']) + 1]} no mejora de forma significativa la tardanza "
+               f"(Wilcoxon; {ps}), así que se prefiere el menor tiempo de cómputo. "
+               if par['elegido'] != niv_par[-1] else
+               f"Se adopta {par['elegido']} generaciones sin mejora, porque mejora de forma significativa la "
+               f"tardanza frente a criterios menores (Wilcoxon; {ps}). Criterios más largos no se evaluaron. ")
+              + 'La Tabla {T:final} resume la configuración final.'),
     ] if par else []) + [
         ('tabla', 'Configuración final del algoritmo genético', ['Parámetro', 'Valor'], [
             ['Tamaño de la población', str(P['poblacion'])],
