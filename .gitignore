@@ -1,3 +1,5 @@
 __pycache__/
 *.pyc
 fase2/salida_calibracion_prueba/
+# Resultados de la Fase 3 en curso (se suben al terminar los experimentos)
+fase3/salida_fase3/
