@@ -1,0 +1,88 @@
+{
+ "instancias": {
+  "real": {
+   "respuesta": "suma_T",
+   "p_anova": {
+    "poblacion": 0.0006474991011930704,
+    "prob_cruce": 0.18324499228454882,
+    "prob_mutacion": 2.2022441684302902e-08
+   },
+   "p_kruskal": {
+    "poblacion": 0.0036317024723133435,
+    "prob_cruce": 0.23597645664181785,
+    "prob_mutacion": 4.219892944508429e-06
+   },
+   "p_levene": {
+    "poblacion": 0.019858687028015607,
+    "prob_cruce": 0.14075255346595836,
+    "prob_mutacion": 0.026250087750551227
+   },
+   "p_shapiro": 0.27229970601801057
+  }
+ },
+ "vs_anterior": {
+  "real": 0.1875
+ },
+ "ampliacion": null,
+ "parada": {
+  "tablas": {
+   "real": [
+    {
+     "sin_mejora": 50,
+     "Corridas": 10,
+     "T_prom": 99.44796666666676,
+     "T_desv": 56.78669812535548,
+     "Tard": 2.2,
+     "C_prom": 599.6836500000001,
+     "C_desv": 24.64250718884262,
+     "Seg": 207.02984986305236,
+     "Gen": 507.4
+    },
+    {
+     "sin_mejora": 100,
+     "Corridas": 10,
+     "T_prom": 71.16663333333338,
+     "T_desv": 39.75198176353472,
+     "Tard": 2.1,
+     "C_prom": 588.0055,
+     "C_desv": 17.448013991657767,
+     "Seg": 304.1835745811462,
+     "Gen": 780.8
+    }
+   ]
+  },
+  "p": {
+   "real:50->100": 0.03125
+  },
+  "elegido": 100
+ },
+ "mejor_diseno": {
+  "poblacion": 100,
+  "prob_cruce": 0.8,
+  "prob_mutacion": 0.5
+ },
+ "significativos": [
+  "poblacion",
+  "prob_mutacion"
+ ],
+ "en_borde": [
+  "prob_mutacion"
+ ],
+ "grilla": {
+  "poblacion": [
+   100
+  ],
+  "prob_cruce": [
+   0.8
+  ],
+  "prob_mutacion": [
+   0.5,
+   0.7
+  ]
+ },
+ "seleccion": {
+  "poblacion": 100,
+  "prob_cruce": 0.8,
+  "prob_mutacion": 0.5
+ }
+}

@@ -33,7 +33,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('modelo')
     ap.add_argument('bd')
-    ap.add_argument('--combinacion', default='150,0.9,0.5',
+    ap.add_argument('--combinacion', default='100,0.8,0.5',
                     help='población,cruce,mutación (por defecto la configuración elegida)')
     ap.add_argument('--replicas', default='1,2,3,4,5', help='réplicas a repetir, p. ej. 1,2')
     a = ap.parse_args()

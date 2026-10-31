@@ -261,7 +261,63 @@ def algoritmo(D):
     ]
 
 
+def _datos_validacion():
+    """Tabla y cifras de la validación, leídas de resultados_validacion_todas.csv."""
+    import pandas as pd
+    v = pd.read_csv(os.path.join(G.SAL_VAL, 'resultados_validacion_todas.csv'))
+    filas, info = [], []
+    for _, r in v.iterrows():
+        cand = [(r[f'{f} ΣTj'], r[f'{f} Cmax']) for f in ('F1', 'F2') if not pd.isna(r[f'{f} ΣTj'])]
+        ref = min(cand, key=lambda c: (round(c[0], 6), round(c[1], 6)))
+        ag = (r['AG mejor ΣTj'], r['AG mejor Cmax'])
+        # mismo valor con distinta precisión numérica del solver → se muestra igual
+        ref = tuple(g if abs(x - g) < 1e-4 else x for x, g in zip(ref, ag))
+        opt = bool(r['ΣTj óptima demostrada'])
+        txt_ref = f"{n(ref[0], 3)} / {n(ref[1], 3)}"
+        sub = f"{int(r['Sublotes'])}" + (' (sin división)' if int(r['B̄']) == 1 else '')
+        filas.append([r['Instancia'], sub, txt_ref if opt else f'No demostrado ({txt_ref})',
+                      n(r['Regla ΣTj'], 3), f"{n(r['AG mejor ΣTj'], 3)} / {n(r['AG mejor Cmax'], 3)}",
+                      n(r['AG prom ΣTj'], 3), r['AG ≤ MILP en ΣTj'], n(r['AG s prom'], 1)])
+        info.append({'inst': r['Instancia'], 'opt': opt, 'ref': ref, 'B': int(r['B̄']),
+                     'sub': int(r['Sublotes']), 'f1_sin': pd.isna(r['F1 ΣTj']),
+                     'ag': (r['AG mejor ΣTj'], r['AG mejor Cmax']),
+                     'hits': int(str(r['AG ≤ MILP en ΣTj']).split('/')[0]),
+                     'reps': int(str(r['AG ≤ MILP en ΣTj']).split('/')[1]), 'seg': r['AG s prom']})
+    return filas, info
+
+
 def validacion():
+    filas, info = _datos_validacion()
+    con_opt = [i for i in info if i['opt']]
+    alcanza = [i for i in con_opt if i['ag'][0] <= i['ref'][0] + 1e-3]
+    hits, reps = sum(i['hits'] for i in con_opt), sum(i['reps'] for i in con_opt)
+    dif_c = [i for i in alcanza if i['ag'][1] > i['ref'][1] + 1e-3]
+    sin_f1 = [i for i in info if i['f1_sin']]
+    mejores = [i for i in info if not i['opt'] and i['ag'][0] < i['ref'][0] - 1e-3]
+    t_max = max(i['seg'] for i in info)
+    num = {1: 'uno', 2: 'dos', 3: 'tres', 4: 'cuatro', 5: 'cinco', 6: 'seis', 7: 'siete',
+           8: 'ocho', 9: 'nueve'}
+    if len(alcanza) == len(con_opt):
+        txt_alc = (f"en las {num.get(len(con_opt), len(con_opt))} instancias con óptimo conocido, la "
+                   'mejor réplica obtuvo la tardanza óptima')
+    else:
+        txt_alc = (f"en {len(alcanza)} de las {len(con_opt)} instancias con óptimo conocido, la mejor "
+                   'réplica obtuvo la tardanza óptima')
+    txt_alc += f", y {hits} de {reps} réplicas ({100 * hits / reps:.0f} %) la alcanzaron."
+    if dif_c:
+        txt_alc += (' La única diferencia fue el makespan de ' if len(dif_c) == 1 else
+                    ' Las diferencias se dieron en el makespan de ') + _lista(
+            [f"{i['inst']}, {100 * (i['ag'][1] / i['ref'][1] - 1):.1f} % mayor".replace('.', ',')
+             for i in dif_c]) + ', con la tardanza óptima.'
+    else:
+        txt_alc += ' En esas instancias también coincidió el makespan.'
+    # Efecto de dividir en sublotes con las mismas órdenes (I1 → I6 → I8)
+    efecto = {i['inst']: min(i['ref'][0], i['ag'][0]) for i in info}
+    txt_div = ''
+    if all(k in efecto for k in ('I1', 'I6', 'I8')):
+        txt_div = ('**Dividir en sublotes reduce la tardanza:** con las mismas cuatro órdenes, la mejor '
+                   f"tardanza encontrada baja de {n(efecto['I1'], 2)} h sin división (I1) a "
+                   f"{n(efecto['I6'], 2)} h con dos sublotes (I6) y a {n(efecto['I8'], 2)} h con tres (I8).")
     return [
         ('h3', 'Verificación y validación'),
         ('p', '**Verificación.** Un verificador independiente revisó, en las programaciones producidas '
@@ -279,16 +335,7 @@ def validacion():
         ('tabla', 'Validación: modelo exacto frente al algoritmo genético',
          ['Inst.', 'Sublotes', 'Óptimo exacto ΣT_j / C_max (h)', 'Mejor regla ΣT_j (h)',
           'AG mejor ΣT_j / C_max (h)', 'AG prom. ΣT_j (h)', 'Réplicas AG ≤ referencia',
-          'Tiempo AG (s)'], [
-             ['I1', '4 (sin división)', '28,190 / 19,836', '30,439', '28,190 / 19,836', '28,306', '7/10', '3,4'],
-             ['I2', '5 (sin división)', '34,374 / 21,794', '37,635', '34,374 / 21,794', '34,428', '9/10', '3,7'],
-             ['I3', '6', '0,955 / 15,955', '2,067', '0,955 / 15,955', '1,169', '4/10', '4,5'],
-             ['I4', '6', '3,861 / 12,082', '4,149', '3,861 / 12,082', '3,861', '10/10', '4,3'],
-             ['I5', '8', '1,113 / 20,158', '3,325', '1,113 / 20,158', '1,247', '7/10', '6,9'],
-             ['I6', '8', 'No demostrado (5,928 / 13,942)', '6,682', '5,928 / 13,942', '6,020', '8/10', '6,6'],
-             ['I7', '9', '0,000 / 14,399', '0,404', '0,000 / 14,496', '0,000', '10/10', '7,9'],
-             ['I8', '12', 'No demostrado (3,142 / 12,780)', '2,341', '1,214 / 12,114', '1,336', '10/10', '9,9'],
-             ['I9', '15', 'No demostrado (8,077 / 15,847)', '2,666', '1,214 / 13,857', '1,457', '10/10', '11,3']],
+          'Tiempo AG (s)'], filas,
          {'etiqueta': 'validacion', 'anchos': [620, 1000, 1880, 900, 1480, 900, 1200, 858],
           'alineacion': ['l'] + ['c'] * 7, 'tam': 9}),
         ('p', 'La referencia es el óptimo exacto o, si no se demostró en el tiempo límite, la mejor '
@@ -296,19 +343,17 @@ def validacion():
         ('viñetas', [
             '**El modelo está bien formulado:** todas sus soluciones cumplieron las restricciones, y '
             'las dos formulaciones coincidieron en el óptimo.',
-            '**El algoritmo alcanza el óptimo:** en las seis instancias con óptimo conocido, la mejor '
-            'réplica obtuvo la tardanza óptima, y 47 de 60 réplicas (78 %) la alcanzaron. La única '
-            'diferencia fue el makespan de I7, 0,7 % mayor con la tardanza en cero.',
-            '**El método exacto no escala:** con 12 y 15 sublotes, la formulación propuesta no '
+            '**El algoritmo alcanza el óptimo:** ' + txt_alc,
+            '**El método exacto no escala:** con '
+            + _lista([str(i['sub']) for i in sin_f1]) + ' sublotes, la formulación propuesta no '
             'encontró ninguna solución factible en 10 minutos, mientras que el algoritmo obtuvo en '
-            'menos de 12 segundos soluciones mejores que las del solver. La instancia real, con 100 '
-            'sublotes, solo es abordable con el algoritmo.',
-            '**Dividir en sublotes reduce la tardanza:** con las mismas cuatro órdenes, la tardanza '
-            'óptima baja de 28,19 h sin división (I1) a 5,93 h con dos sublotes (I6) y a 1,21 h con '
-            'tres (I8).']),
+            f'menos de {int(t_max) + 1} segundos '
+            + ('soluciones mejores que las del solver' if mejores else 'soluciones iguales o mejores')
+            + '. La instancia real, con 100 sublotes, solo es abordable con el algoritmo.',
+        ] + ([txt_div] if txt_div else [])),
     ]
 
-
+NUM = {2: 'dos', 3: 'tres', 4: 'cuatro'}
 NOMBRE_F = {'poblacion': 'población', 'prob_cruce': 'probabilidad de cruce',
             'prob_mutacion': 'probabilidad de mutación'}
 
@@ -342,6 +387,17 @@ def calibracion(D):
     nosig = [NOMBRE_F[f] for f, p in est['p_anova'].items() if p >= 0.05]
     kw = [NOMBRE_F[f] for f, p in est['p_kruskal'].items() if p < 0.05]
     supuestos_ok = est['p_shapiro'] >= 0.05 and all(p >= 0.05 for p in est['p_levene'].values())
+    lev_mal = [NOMBRE_F[f] for f, p in est['p_levene'].items() if p < 0.05]
+    inter = [r for r in an.itertuples() if '×' in str(r.Fuente) and r._6 == r._6 and r._6 < 0.05]
+    txt_inter = ''
+    if inter:
+        nom = lambda f: (str(f).replace('Prob. de ', 'probabilidad de ').replace('Población', 'población')
+                         .replace(' × ', ' y '))
+        txt_inter = ((f'También es significativa la interacción entre {nom(inter[0].Fuente)} '
+                      f'(p = {_p(inter[0]._6)}): el efecto de un factor depende del nivel del otro. ')
+                     if len(inter) == 1 else
+                     'También son significativas las interacciones ' + _lista(
+                         [f'{nom(r.Fuente)} (p = {_p(r._6)})' for r in inter]) + '. ')
     nresp = 'la tardanza total' if y == 'suma_T' else 'el makespan'
     de_resp = 'de la tardanza total' if y == 'suma_T' else 'del makespan'
     top = rr.head(5)
@@ -365,7 +421,7 @@ def calibracion(D):
                           f'no mejoró de forma significativa (Wilcoxon, p = {pv}), por lo que se conservó la '
                           'combinación del diseño por parsimonia.'))
     elif dec['en_borde']:
-        txt_amp = (f"La mejor combinación quedó en el borde del rango probado para "
+        txt_amp = (f"Esta combinación quedó en el borde del rango probado para "
                    f"{_lista([NOMBRE_F[f] for f in dec['en_borde']])}. El estudio se limitó a los niveles "
                    'del diseño, definidos a partir de los valores habituales en la literatura, por lo que '
                    'se adoptó la mejor combinación dentro de ese rango.')
@@ -407,10 +463,14 @@ def calibracion(D):
         ('p', (f"{_lista(sig).capitalize()} {'tiene' if len(sig) == 1 else 'tienen'} efecto significativo "
                f"sobre {nresp} (p < 0,05)" if sig else f'Ningún factor tiene efecto significativo sobre {nresp}')
               + (f"; {_lista(nosig)} no lo {'tiene' if len(nosig) == 1 else 'tienen'}. " if nosig and sig else '. ')
+              + txt_inter
               + ('Los supuestos de normalidad y homogeneidad de varianzas se cumplen. ' if supuestos_ok else
-                 'Como no se cumplen todos los supuestos del ANOVA (normalidad u homogeneidad de varianzas), '
-                 'el resultado se confirmó con la prueba no paramétrica de Kruskal-Wallis, que identifica como '
-                 f"significativos: {_lista(kw) if kw else 'ningún factor'}. ")
+                 (f"Los residuos siguen una distribución normal (Shapiro-Wilk, p = {_p(est['p_shapiro'])}), "
+                  f"pero las varianzas no son homogéneas entre los niveles de {_lista(lev_mal)} (Levene, "
+                  'p < 0,05); ' if est['p_shapiro'] >= 0.05 and lev_mal else
+                  'No se cumplen todos los supuestos del ANOVA (normalidad u homogeneidad de varianzas); ')
+                 + 'por eso el resultado se confirmó con la prueba no paramétrica de Kruskal-Wallis, que '
+                 f"identifica como significativos: {_lista(kw) if kw else 'ningún factor'}. ")
               + 'La Figura {F:efectos} muestra los efectos principales y la Tabla {T:mejores} las mejores '
               'combinaciones.'),
         ('figura', f"Efectos principales sobre {nresp} (intervalos LSD al 95 %)",
@@ -420,7 +480,7 @@ def calibracion(D):
          filas_top, {'etiqueta': 'mejores', 'anchos': [1150, 700, 700, 1500, 1500, 1500, 1788],
                      'negrita_filas': (0,)}),
         ('p', f"La mejor combinación del diseño es {cfg(mejor)}. " + txt_amp +
-              (f' Por último, con la configuración elegida se compararon {len(niv_par)} criterios de '
+              (f" Por último, con la configuración elegida se compararon {NUM.get(len(niv_par), len(niv_par))} criterios de "
                f"parada: {_lista([str(v) for v in niv_par])} generaciones sin mejora (Tabla {{T:parada}})."
                if par else '')),
     ] + ([
@@ -432,8 +492,11 @@ def calibracion(D):
                f"{niv_par[niv_par.index(par['elegido']) + 1]} no mejora de forma significativa la tardanza "
                f"(Wilcoxon; {ps}), así que se prefiere el menor tiempo de cómputo. "
                if par['elegido'] != niv_par[-1] else
-               f"Se adopta {par['elegido']} generaciones sin mejora, porque mejora de forma significativa la "
-               f"tardanza frente a criterios menores (Wilcoxon; {ps}). Criterios más largos no se evaluaron. ")
+               f"Se adopta {par['elegido']} generaciones sin mejora, porque reduce de forma significativa la "
+               f"tardanza frente a {_lista([str(v) for v in niv_par[:-1]])} (prueba de Wilcoxon de una cola; {ps}). "
+               'La prueba es de una cola porque, con la misma semilla, la corrida con el criterio mayor '
+               'continúa la de criterio menor y no puede terminar con una solución peor. Criterios más '
+               'largos no se evaluaron. ')
               + 'La Tabla {T:final} resume la configuración final.'),
     ] if par else []) + [
         ('tabla', 'Configuración final del algoritmo genético', ['Parámetro', 'Valor'], [
@@ -463,18 +526,26 @@ def solucion(M, rep, mejor, indic, tam, util, al, D):
     hist = mejor['historial']
     gen_cero = next((g + 1 for g, h in enumerate(hist) if h[0] <= 1e-9), len(hist))
     mayor = max(util.values(), key=lambda u: u[3])
+    tardias = [j for j in M.TRABAJOS if indic['por_trabajo'][j]['Ti'] > 1e-9]
     return [
         ('h3', 'Programación obtenida para el caso de estudio'),
         ('p', f'Con la configuración calibrada, el algoritmo se ejecutó {len(rep)} veces sobre la '
-              'instancia real. '
-              + ('Todas las réplicas eliminaron la tardanza; '
-                 if tard == len(rep) else f'{tard} de {len(rep)} réplicas eliminaron la tardanza; ')
+              f'instancia real (semillas {int(rep["semilla"].min())} a {int(rep["semilla"].max())}). '
+              + ('Todas las réplicas eliminaron la tardanza; ' if tard == len(rep) else
+                 (f'{tard} de {len(rep)} réplicas eliminaron la tardanza; ' if tard else
+                  f'La tardanza total varió entre {n(rep["suma_T"].min(), 1)} y '
+                  f'{n(rep["suma_T"].max(), 1)} h (promedio de {n(rep["suma_T"].mean(), 1)} h)'
+                  + (f', con {int(rep["tardias"].iloc[0])} órdenes tardías en todas las réplicas; '
+                     if rep['tardias'].nunique() == 1 else '; ')))
               + f'el makespan varió entre {n(rep["Cmax"].min(), 1)} y {n(rep["Cmax"].max(), 1)} h '
               f'(promedio de {n(rep["Cmax"].mean(), 1)} h) y cada corrida tomó en promedio '
-              f'{n(rep["segundos"].mean() / 60, 1)} minutos. La mejor programación, que se propone '
-              f"para el conjunto de órdenes, partió de la regla {D['regla_mejor']} "
-              f"({n(D['regla_T'], 1)} h de tardanza y makespan de {n(D['regla_C'], 1)} h) y "
-              + (f'eliminó la tardanza en la generación {gen_cero}' if D['regla_T'] > 1e-6 else
+              f'{n(rep["segundos"].mean() / 60, 1)} minutos. La mejor programación (semilla '
+              f"{int(mejor['semilla'])}), que se propone para el conjunto de órdenes, partió de la regla "
+              f"{D['regla_mejor']} ({n(D['regla_T'], 1)} h de tardanza y makespan de {n(D['regla_C'], 1)} h) y "
+              + ((f"redujo la tardanza total a {n(indic['suma_Ti'], 1)} h, "
+                  f"{n(100 * (1 - indic['suma_Ti'] / D['regla_T']), 1)} % menos que la regla, y el makespan "
+                  f"a {n(indic['Cmax'], 1)} h" if indic['suma_Ti'] > 1e-6 else
+                  f'eliminó la tardanza en la generación {gen_cero}') if D['regla_T'] > 1e-6 else
                  f"redujo el makespan a {n(indic['Cmax'], 1)} h, "
                  f"{n(100 * (D['regla_C'] - indic['Cmax']) / D['regla_C'], 1)} % menos que la regla, "
                  'manteniendo la tardanza en cero')
@@ -488,7 +559,9 @@ def solucion(M, rep, mejor, indic, tam, util, al, D):
           'T_j (h)', 'E_j (h)'], filas_ord,
          {'etiqueta': 'orden', 'anchos': [780, 700, 900, 800, 1250, 950, 1300, 1000, 1158], 'tam': 9}),
         ('p', ('Ninguna orden termina después de su fecha de entrega. ' if indic['num_tardy'] == 0 else
-               f"{indic['num_tardy']} órdenes terminan después de su fecha de entrega. ")
+               f"{_lista(tardias)} terminan después de su fecha de entrega, con "
+               f"{_lista([n(indic['por_trabajo'][j]['Ti'], 1) for j in tardias])} h de retraso"
+               f"{' respectivamente' if len(tardias) > 1 else ''}; las demás órdenes se entregan a tiempo. ")
               + 'La Tabla {T:indicadores} resume '
               'los indicadores globales; la ocupación de cada etapa es su tiempo de procesamiento '
               'dividido entre el número de máquinas por el makespan. '
@@ -511,7 +584,8 @@ def solucion(M, rep, mejor, indic, tam, util, al, D):
               'de la empresa con sublotes consistentes, y un algoritmo genético verificado, validado '
               'frente a soluciones óptimas y calibrado estadísticamente, que en el caso de estudio '
               + ('entrega una programación sin órdenes tardías' if indic['num_tardy'] == 0 else
-                 f"reduce la tardanza a {n(indic['suma_Ti'], 1)} h")
+                 f"reduce la tardanza total de {n(D['regla_T'], 1)} h, con la mejor regla de despacho, a "
+                 f"{n(indic['suma_Ti'], 1)} h")
               + '. Su comparación con el sistema de '
               'programación actual se presenta en la Fase 3.'),
     ]

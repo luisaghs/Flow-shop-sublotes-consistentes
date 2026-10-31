@@ -383,15 +383,16 @@ def _md(df, decimales=3):
     return '\n'.join([cab, sep] + filas)
 
 
-def _wilcoxon(a, b, col='Z'):
-    """Wilcoxon pareado por semilla (por defecto sobre Z, el orden lexicográfico)."""
+def _wilcoxon(a, b, col='Z', alternativa='two-sided'):
+    """Wilcoxon pareado por semilla (por defecto sobre Z, el orden lexicográfico).
+    alternativa='less' prueba si a es menor que b (una cola)."""
     comunes = a.index.intersection(b.index)
     if stats is None or len(comunes) < 5:
         return None, len(comunes)
     da, db = a.loc[comunes, col], b.loc[comunes, col]
     if ((da - db).abs() < 1e-9).all():
         return 1.0, len(comunes)
-    return stats.wilcoxon(da, db).pvalue, len(comunes)
+    return stats.wilcoxon(da, db, alternative=alternativa).pvalue, len(comunes)
 
 
 def _pf(p):
@@ -608,11 +609,14 @@ def analizar(dir_salida):
             for a_, b_ in zip(niveles, niveles[1:]):
                 A = par[par['sin_mejora'] == a_].set_index('semilla')
                 Bq = par[par['sin_mejora'] == b_].set_index('semilla')
-                p, _ = _wilcoxon(Bq, A)
+                # Con la misma semilla, la corrida con el criterio mayor continúa la
+                # trayectoria de la corrida con el criterio menor: nunca termina peor.
+                # Por eso la prueba es de una cola (¿el criterio mayor mejora?).
+                p, _ = _wilcoxon(Bq, A, alternativa='less')
                 mejor_b = p is not None and p < 0.05 and Bq['Z'].mean() < A['Z'].mean()
                 mejora_sig[(inst, b_)] = mejor_b
                 decisiones['parada']['p'][f'{inst}:{a_}->{b_}'] = p
-                informe.append(f"- {a_} → {b_} generaciones sin mejora: Wilcoxon p = {_pf(p)}"
+                informe.append(f"- {a_} → {b_} generaciones sin mejora: Wilcoxon de una cola p = {_pf(p)}"
                                f"{' (mejora significativa)' if mejor_b else ''}.")
             informe.append("")
         niveles = sorted(PARADA_NIVELES)
@@ -623,8 +627,10 @@ def analizar(dir_salida):
             else:
                 break
         informe += [f"**Criterio de parada recomendado: {elegido} generaciones sin mejora** "
-                    "(el menor nivel a partir del cual aumentar no mejora de forma significativa "
-                    "en ninguna instancia).", ""]
+                    + ("(el menor nivel a partir del cual aumentar no mejora de forma significativa)."
+                       if elegido != niveles[-1] else
+                       "(mejora de forma significativa frente a los niveles menores; no se "
+                       "evaluaron niveles mayores)."), ""]
         decisiones['parada']['elegido'] = int(elegido)
         with open(os.path.join(dir_salida, 'parada_seleccionada.txt'), 'w', encoding='utf-8') as fh:
             fh.write(f"{elegido}\n")

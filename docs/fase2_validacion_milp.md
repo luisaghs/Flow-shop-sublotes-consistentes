@@ -278,9 +278,12 @@ Las instancias, el límite de tiempo y las semillas se cambian al inicio del arc
 
 ## Nota: corrida del AG con los parámetros calibrados
 
-Las tablas anteriores muestran el AG con la parada original (50 generaciones sin
-mejora). Con el modelo final (100 generaciones sin mejora) la mejor solución del AG
-es idéntica en las nueve instancias y las conclusiones no cambian. Solo varían: I6,
-promedio 6,020 h y 8/10 réplicas en la referencia; I9, promedio 1,457 h; y los tiempos
-(3–11 s por corrida). Detalle en `fase2/salida_validacion/ag_parametros_calibrados.txt`.
-Los documentos del trabajo de grado usan estos valores.
+Las columnas del AG de `fase2/salida_validacion/resultados_validacion_todas.csv` se
+actualizaron con los parámetros calibrados del modelo final (población 100, cruce 0,8,
+mutación 0,5, parada tras 100 generaciones sin mejora) con
+`python validacion_milp.py ag ruta/final_sc_hfsagls_S2_4.py`; los resultados del MILP no
+cambian. Las conclusiones se mantienen: el AG alcanza la tardanza óptima en las seis
+instancias con óptimo conocido (42 de 60 réplicas) y, en I8 e I9, obtiene en menos de 6 s
+soluciones mejores que las del solver. Las tablas anteriores de esta nota corresponden a
+la corrida inicial del AG. Detalle en `fase2/salida_validacion/ag_parametros_calibrados.txt`.
+El documento del trabajo de grado lee estos valores del CSV.

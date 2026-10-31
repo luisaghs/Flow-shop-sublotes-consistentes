@@ -10,8 +10,8 @@ con **sublotes consistentes** (escenario 2 de Gürsoy Yılmaz & Yılmaz, 2022,
 
 **`final_sc_hfsagls_S2_4.py`** es el modelo final (algoritmo genético) y
 **`BD_HFS.xlsx`** los datos del caso de estudio. Con ellos se obtuvieron todos los
-resultados de la Fase 2. Los parámetros del AG son los calibrados (población 150,
-cruce 0,9, mutación 0,5, parada tras 100 generaciones sin mejora).
+resultados de la Fase 2. Los parámetros del AG son los calibrados (población 100,
+cruce 0,8, mutación 0,5, parada tras 100 generaciones sin mejora).
 
 La versión anterior (`final_sc_hfsagls.py`, cromosoma de tres niveles) se retiró;
 sigue disponible en el historial de git.
@@ -61,16 +61,15 @@ Las etapas se toman en el orden en que aparecen en la hoja de tiempos.
 | `fase2/verificar_factibilidad.py` | Comprueba que las programaciones del decodificador cumplen las restricciones del MILP |
 | `fase2/validacion_milp.py` | Resuelve el MILP con HiGHS (dos formulaciones), lo verifica y lo compara con el AG |
 | `fase2/salida_validacion/` | Instancias (`I*.xlsx`), registros, programaciones óptimas, tablas y Gantt |
-| `docs/fase2_calibracion.md` | Calibración de los parámetros del AG (diseño factorial, ampliación, criterio de parada) |
+| `docs/fase2_calibracion.md` | Calibración de los parámetros del AG (diseño factorial y criterio de parada) |
 | `fase2/calibracion_ag.py` | Corre los experimentos de calibración en paralelo y genera ANOVA, figuras e informe |
 | `fase2/salida_calibracion/` | Corridas, resúmenes, ANOVA, figuras e `informe_calibracion.md` |
-| `fase2/salida_calibracion/anova_calibracion_excel.xlsx` | ANOVA de la calibración calculado con fórmulas de Excel |
+| `fase2/salida_calibracion/anova_calibracion_excel.xlsx` | ANOVA de la calibración calculado con fórmulas de Excel (lo arma `fase2/anova_excel.py`) |
 | `fase2/verificar_reproduccion.py` | Repite corridas de la calibración y comprueba que dan los mismos resultados |
 | `docs/guia_apropiacion_calibracion.md` | Cómo entender, reproducir y declarar la calibración |
 | `docs/Trabajo_de_Grado_con_Fase_2_sintetizada.docx` | Borrador con la Fase 2 sintetizada (≈ 13 páginas) e incluye el pseudocódigo del AG |
-| `docs/Trabajo_de_Grado_con_Fase_2.docx` | Borrador con la Fase 2 en versión extensa (≈ 23 páginas) |
 | `docs/fase2_referencias.md` | Referencias nuevas citadas en la Fase 2 (verificar antes de usar) |
-| `docs/fase2_docx/` | Generador del documento (`generar_fase2.py`) y utilidades |
+| `docs/fase2_docx/` | Generador del documento (`generar_fase2_sintesis.py`) y utilidades |
 | `fase2/solucion_final.py`, `fase2/salida_solucion/` | 10 réplicas del AG calibrado y la mejor programación (tablas, Gantt, convergencia) |
 
 ```bash
@@ -79,9 +78,10 @@ cd fase2
 python verificar_factibilidad.py ../final_sc_hfsagls_S2_4.py ../BD_HFS.xlsx
 python validacion_milp.py ../final_sc_hfsagls_S2_4.py ../BD_HFS.xlsx [I1,I2,...]
 python validacion_milp.py resumen
-python calibracion_ag.py diseno ../final_sc_hfsagls_S2_4.py ../BD_HFS.xlsx
-python calibracion_ag.py ampliacion ../final_sc_hfsagls_S2_4.py ../BD_HFS.xlsx
-python calibracion_ag.py parada ../final_sc_hfsagls_S2_4.py ../BD_HFS.xlsx
+python validacion_milp.py ag ../final_sc_hfsagls_S2_4.py   # solo el AG, con los parámetros actuales
+python calibracion_ag.py diseno ../final_sc_hfsagls_S2_4.py ../BD_HFS.xlsx --instancia real
+python calibracion_ag.py parada ../final_sc_hfsagls_S2_4.py ../BD_HFS.xlsx --instancia real
+python anova_excel.py
 ```
 
 Para volver a generar la Fase 2 dentro del borrador (por ejemplo, tras nuevas corridas):
@@ -89,6 +89,5 @@ Para volver a generar la Fase 2 dentro del borrador (por ejemplo, tras nuevas co
 ```bash
 pip install python-docx   # además de pandoc instalado en el sistema
 python fase2/solucion_final.py final_sc_hfsagls_S2_4.py BD_HFS.xlsx 10
-python docs/fase2_docx/generar_fase2.py borrador.docx salida.docx final_sc_hfsagls_S2_4.py BD_HFS.xlsx
 python docs/fase2_docx/generar_fase2_sintesis.py borrador.docx salida.docx final_sc_hfsagls_S2_4.py BD_HFS.xlsx
 ```

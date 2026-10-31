@@ -18,6 +18,8 @@ VALIDACIÓN DEL MODELO MATEMÁTICO (MILP) CON INSTANCIAS PEQUEÑAS
 Uso:
   python validacion_milp.py ruta/final_sc_hfsagls_S2_4.py ruta/BD_HFS.xlsx [I1,I2,...]
   python validacion_milp.py resumen        # une los resultados de todas las instancias
+  python validacion_milp.py ag ruta/final_sc_hfsagls_S2_4.py
+                                           # repite solo el AG con los parámetros actuales
 
 Requiere: pip install pulp highspy pandas openpyxl matplotlib
 """
@@ -579,6 +581,46 @@ def consolidar():
     print(tabla)
     return df
 
+
+def solo_ag(ruta_modelo):
+    """Repite solo las réplicas del AG (con los parámetros actuales del modelo) sobre las
+    instancias ya resueltas y actualiza sus columnas; los resultados del MILP no cambian."""
+    M = cargar_modulo(ruta_modelo)
+    P = M.GA_PARAMS
+    lineas = [f"Validación: algoritmo genético con los parámetros calibrados ({os.path.basename(ruta_modelo)},",
+              f"población {P['poblacion']}, cruce {P['prob_cruce']:g}, mutación {P['prob_mutacion']:g}, "
+              f"parada tras {P['sin_mejora']} generaciones sin mejora),".replace('.', ','),
+              f"{len(SEMILLAS_AG)} semillas ({SEMILLAS_AG[0]} a {SEMILLAS_AG[-1]}) por instancia. "
+              "Referencia: óptimo exacto o mejor solución exacta conocida.", ""]
+    for nombre, ordenes, b_max, maquinas in INSTANCIAS:
+        ruta_csv = os.path.join(DIR_SALIDA, f"resultados_validacion_{nombre}.csv")
+        df = pd.read_csv(ruta_csv)
+        r = df.iloc[0]
+        cand = [(r[f'{f} ΣTj'], r[f'{f} Cmax']) for f in ('F1', 'F2') if not pd.isna(r[f'{f} ΣTj'])]
+        ref = min(cand, key=lambda v: (round(v[0], 6), round(v[1], 6))) if cand else None
+        regla, res = correr_ag(M, os.path.join(DIR_SALIDA, f"{nombre}.xlsx"), b_max, SEMILLAS_AG)
+        mejor = min(res, key=lambda v: (round(v[0], 6), round(v[1], 6)))
+        igual_t = sum(1 for v in res if ref and v[0] <= ref[0] + 1e-3)
+        igual_tc = sum(1 for v in res if ref and v[0] <= ref[0] + 1e-3 and v[1] <= ref[1] + 1e-3)
+        df.loc[0, ['AG mejor ΣTj', 'AG mejor Cmax']] = [mejor[0], mejor[1]]
+        df.loc[0, ['AG prom ΣTj', 'AG prom Cmax']] = [sum(v[0] for v in res) / len(res),
+                                                     sum(v[1] for v in res) / len(res)]
+        df.loc[0, 'AG ≤ MILP en ΣTj'] = f"{igual_t}/{len(res)}" if ref else '—'
+        df.loc[0, 'AG ≤ MILP en (ΣTj, Cmax)'] = f"{igual_tc}/{len(res)}" if ref else '—'
+        df.loc[0, 'AG s prom'] = round(sum(v[2] for v in res) / len(res), 1)
+        df.to_csv(ruta_csv, index=False, encoding='utf-8-sig')
+        lineas.append(f"{nombre}: mejor {mejor[0]:.3f} / {mejor[1]:.3f} | prom ΣT "
+                      f"{df.loc[0, 'AG prom ΣTj']:.3f} | ≤ref {df.loc[0, 'AG ≤ MILP en ΣTj']} | "
+                      f"{df.loc[0, 'AG s prom']:.1f} s")
+        print(lineas[-1], flush=True)
+    with open(os.path.join(DIR_SALIDA, 'ag_parametros_calibrados.txt'), 'w', encoding='utf-8') as fh:
+        fh.write('\n'.join(lineas) + '\n')
+    consolidar()
+
+
+if __name__ == '__main__' and len(sys.argv) > 2 and sys.argv[1] == 'ag':
+    solo_ag(sys.argv[2])
+    sys.exit()
 
 if __name__ == '__main__' and len(sys.argv) > 1 and sys.argv[1] == 'resumen':
     consolidar()
