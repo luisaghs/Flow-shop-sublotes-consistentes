@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-Correcciones de la Fase 1 por el cambio de datos de la orden J01
-(cantidad: 1.172 → 580 docenas; fecha de entrega: 01/09/2026 → 25/08/2026,
-d_j: 672 → 630 h). Con el cambio, la última entrega es la de J10 (657 h).
+Actualiza las cifras de la Fase 1 del borrador con los datos vigentes de
+BD_HFS.xlsx: Tabla 3 (cantidades, fechas de entrega y ventanas de cada orden),
+Tabla 4 (carga y ocupación por etapa), horizonte de planeación, semanas de
+entrega, orden de mayor tamaño y ritmo de producción requerido.
 
 Los valores de carga se calculan con el mismo método de la Tabla 4 del borrador
 (carga por máquina = Σ_j Q_j / R_p, con R_p la suma de los ritmos de las
@@ -52,7 +53,9 @@ def corregir_fase1(documento, ruta_bd):
     filas, total, horizonte, j = cargas(ruta_bd)
     c = {f[0]: f for f in filas}
     tro, ens, cos, vol = (c[e] for e in ETAPAS)
-    j01 = j[j['Orden de trabajo'] == 'J01'].iloc[0]
+    inicio = pd.Timestamp(j['Fecha de liberación'].min()).normalize()
+    semana = lambda f: (pd.Timestamp(f).normalize() - inicio).days // 7 + 1
+    sem_min, sem_max = semana(j['Fechas de entrega'].min()), semana(j['Fechas de entrega'].max())
     mayor = j.loc[j['Cantidad (docenas)'].idxmax()]
     pct_mayor = 100.0 * mayor['Cantidad (docenas)'] / total
     hechos = []
@@ -62,13 +65,17 @@ def corregir_fase1(documento, ruta_bd):
         cab = [cel.text.strip() for cel in t.rows[0].cells]
         if cab[:3] == ['Orden', 'Referencia', 'Cantidad de docenas']:
             for fila in t.rows[1:]:
-                if fila.cells[0].text.strip() == 'J01':
-                    nuevos = {2: _n(j01['Cantidad (docenas)'], 0), 4: _n(j01['d_j horas'], 0),
-                              5: _n(j01['d_j horas'] - j01['r_j Liberación'], 0)}
-                    for k, v in nuevos.items():
-                        _reemplazar_en_parrafo(fila.cells[k].paragraphs[0],
-                                               fila.cells[k].text.strip(), v)
-                    hechos.append('Tabla 3: fila J01')
+                o = j[j['Orden de trabajo'] == fila.cells[0].text.strip()]
+                if o.empty:
+                    continue
+                o = o.iloc[0]
+                nuevos = {2: _n(o['Cantidad (docenas)'], 0), 3: _n(o['r_j Liberación'], 0),
+                          4: _n(o['d_j horas'], 0), 5: _n(o['d_j horas'] - o['r_j Liberación'], 0)}
+                for k, v in nuevos.items():
+                    viejo = fila.cells[k].text.strip()
+                    if viejo != v:
+                        _reemplazar_en_parrafo(fila.cells[k].paragraphs[0], viejo, v)
+            hechos.append('Tabla 3: cantidades, fechas de entrega y ventanas')
         if cab[:3] == ['Etapa', 'Cantidad Maquinas', 'Carga total (h)']:
             for fila in t.rows[1:]:
                 nombre = fila.cells[0].text.split('.')[-1].strip()
@@ -80,8 +87,9 @@ def corregir_fase1(documento, ruta_bd):
             hechos.append('Tabla 4: cargas y ocupación')
 
     textos = [
-        ('entre la semana 11 y la semana 18', 'entre la semana 11 y la semana 17'),
-        ('es decir, 672 horas laborables', f'es decir, {_n(horizonte, 0)} horas laborables'),
+        ('entre la semana 11 y la semana 18', f'entre la semana {sem_min} y la semana {sem_max}'),
+        ('es decir, 672 horas laborables, que equivalen a 17 semanas calendario',
+         f'es decir, {_n(horizonte, 0)} horas laborables, que equivalen a {sem_max} semanas calendario'),
         ('Es posible notar que J01 concentra al menos el 20% del volumen, con 1.172 docenas, '
          'mientras que J09 solo tiene 210 docenas.',
          f"Es posible notar que {mayor['Orden de trabajo']} es la orden de mayor tamaño, con "

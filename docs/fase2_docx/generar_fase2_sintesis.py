@@ -329,64 +329,53 @@ def calibracion(D):
     import pandas as pd
     C = G.SAL_CAL
     dec = json.load(open(os.path.join(C, 'decisiones.json'), encoding='utf-8'))
-    an = {i: pd.read_csv(os.path.join(C, f'anova{suf}.csv')) for i, suf in (('real', ''), ('exigente', '_exigente'))}
-    sel = pd.read_csv(os.path.join(C, 'seleccion_combinada.csv'))
+    est = dec['instancias']['real']
+    y = est['respuesta']
+    an = pd.read_csv(os.path.join(C, 'anova.csv'))
     rr = pd.read_csv(os.path.join(C, 'resumen_combinaciones.csv'))
     reps = int(rr['Corridas'].iloc[0])
     P = D['params']
-    filas_anova = []
-    for k in range(len(an['real']) - 2):
-        f = an['real'].loc[k, 'Fuente']
-        filas_anova.append([f, n(an['real'].loc[k, 'F'], 2), _p(an['real'].loc[k, 'valor p']),
-                            n(an['exigente'].loc[k, 'F'], 2), _p(an['exigente'].loc[k, 'valor p'])])
-    sig = {i: [NOMBRE_F[f] for f, p in dec['instancias'][i]['p_anova'].items() if p < 0.05]
-           for i in ('real', 'exigente')}
-    kw = {i: [NOMBRE_F[f] for f, p in dec['instancias'][i]['p_kruskal'].items() if p < 0.05]
-          for i in ('real', 'exigente')}
-    supuestos_ok = all(dec['instancias'][i]['p_shapiro'] >= 0.05 and
-                       all(p >= 0.05 for p in dec['instancias'][i]['p_levene'].values())
-                       for i in ('real', 'exigente'))
-    def txt_sig(i, lst):
-        return (f"{_lista(lst)} {'tiene' if len(lst) == 1 else 'tienen'} efecto significativo"
-                if lst else 'ningún factor tiene efecto significativo')
-    top = sel.head(5)
-    filas_sel = [[int(r.poblacion), n(r.prob_cruce, 1), n(r.prob_mutacion, 1),
-                  f"{n(r.C_real, 1)} ({int(r.pos_real)})", f"{n(r.T_exigente, 1)} ({int(r.pos_exigente)})",
-                  n(r.pos_prom, 1)] for r in top.itertuples()]
+    filas_anova = [[r.Fuente, n(r.SC, 1), str(int(r.gl)), n(r.CM, 1) if r.CM == r.CM else '',
+                    n(r.F, 2) if r.F == r.F else '', _p(r._6) if r._6 == r._6 else '']
+                   for r in an.itertuples()]
+    sig = [NOMBRE_F[f] for f, p in est['p_anova'].items() if p < 0.05]
+    nosig = [NOMBRE_F[f] for f, p in est['p_anova'].items() if p >= 0.05]
+    kw = [NOMBRE_F[f] for f, p in est['p_kruskal'].items() if p < 0.05]
+    supuestos_ok = est['p_shapiro'] >= 0.05 and all(p >= 0.05 for p in est['p_levene'].values())
+    nresp = 'la tardanza total' if y == 'suma_T' else 'el makespan'
+    de_resp = 'de la tardanza total' if y == 'suma_T' else 'del makespan'
+    top = rr.head(5)
+    filas_top = [[int(r.poblacion), n(r.prob_cruce, 1), n(r.prob_mutacion, 1), n(r.T_prom, 1),
+                  n(r.T_desv, 1), n(r.Tard, 1), n(r.C_prom, 1)] for r in top.itertuples()]
     mejor = dec['mejor_diseno']
     cfg = lambda c: (f"población {int(c['poblacion'])}, cruce {n(c['prob_cruce'], 1)} y mutación "
                      f"{n(c['prob_mutacion'], 1)}")
-    if dec.get('ampliacion'):
-        a = dec['ampliacion']
+    a = dec.get('ampliacion')
+    if a:
+        borde = _lista([NOMBRE_F[f] for f in dec['en_borde']])
         if a['candidata'] is None:
-            txt_amp = ('Como la mejor combinación quedó en el borde del rango para '
-                       f"{_lista([NOMBRE_F[f] for f in dec['en_borde']])}, se probaron niveles más allá; la "
-                       'mejor combinación del diseño siguió siendo la mejor.')
+            txt_amp = (f'Como la mejor combinación quedó en el borde del rango probado para {borde}, se '
+                       'evaluaron niveles más allá con las mismas semillas; la combinación del diseño '
+                       'siguió siendo la mejor.')
         else:
-            ps = '; '.join(f"{i}: p = {_p(p)}" for i, p in a['p'].items())
-            txt_amp = ('Como la mejor combinación quedó en el borde del rango para '
-                       f"{_lista([NOMBRE_F[f] for f in dec['en_borde']])}, se probaron niveles más allá. "
-                       f"La mejor de ellas ({cfg(a['candidata'])}) "
-                       + ('mejoró de forma significativa (Wilcoxon; ' + ps + ') y se adoptó.'
-                          if a['cambia'] else
-                          'no mejoró de forma significativa (Wilcoxon; ' + ps + '), por lo que se '
-                          'conservó la combinación del diseño.'))
+            pv = _p(a['p'].get('real'))
+            txt_amp = (f'Como la mejor combinación quedó en el borde del rango probado para {borde}, se '
+                       f"evaluaron niveles más allá con las mismas semillas. La mejor de ellas ({cfg(a['candidata'])}) "
+                       + (f'mejoró de forma significativa (Wilcoxon, p = {pv}) y se adoptó.' if a['cambia'] else
+                          f'no mejoró de forma significativa (Wilcoxon, p = {pv}), por lo que se conservó la '
+                          'combinación del diseño por parsimonia.'))
     elif dec['en_borde']:
-        txt_amp = 'La mejor combinación quedó en el borde del rango; la ampliación no se ha corrido.'
+        txt_amp = 'La mejor combinación quedó en el borde del rango; la ampliación está pendiente.'
     else:
         txt_amp = ('La mejor combinación no quedó en el borde del rango para ningún factor significativo, '
                    'así que no fue necesario ampliarlo.')
-    par = dec['parada']
-    filas_par = []
+    par = dec.get('parada')
+    filas_par, ps = [], ''
     if par:
-        tr = {r['sin_mejora']: r for r in par['tablas']['real']}
-        te = {r['sin_mejora']: r for r in par['tablas']['exigente']}
-        for lv in sorted(tr):
-            filas_par.append([lv, n(tr[lv]['C_prom'], 1), n(te[lv]['T_prom'], 1),
-                              n((tr[lv]['Gen'] + te[lv]['Gen']) / 2, 0),
-                              n((tr[lv]['Seg'] + te[lv]['Seg']) / 120, 1)])
-        ps = '; '.join(f"{k.replace('real:', 'real, ').replace('exigente:', 'exigente, ').replace('->', ' → ')}: "
-                       f"p = {_p(p)}" for k, p in par['p'].items())
+        for r in sorted(par['tablas']['real'], key=lambda r: r['sin_mejora']):
+            filas_par.append([str(int(r['sin_mejora'])), n(r['T_prom'], 1), n(r['Tard'], 1),
+                              n(r['C_prom'], 1), n(r['Gen'], 0), n(r['Seg'] / 60, 1)])
+        ps = '; '.join(f"{k.split(':')[1].replace('->', ' → ')}: p = {_p(p)}" for k, p in par['p'].items())
     return [
         ('h3', 'Número de sublotes y calibración del algoritmo'),
         ('h4', 'Número de sublotes por orden'),
@@ -401,49 +390,42 @@ def calibracion(D):
                   'de sublotes por orden', ['B̄', 'FIFO', 'EDD', 'CR', 'SPT'], D['filas_bbar'],
          {'etiqueta': 'bbar', 'anchos': [1238, 1900, 1900, 1900, 1900]}),
         ('h4', 'Calibración de los parámetros'),
-        ('p', 'Los parámetros del algoritmo se calibraron con un diseño factorial completo 3³ '
-              '(Montgomery, 2017; Ruiz, Maroto y Alcaraz, 2006): tamaño de población (50, 100 y 150), '
-              r'probabilidad de cruce $p_c$ (0,7; 0,8 y 0,9) y probabilidad de mutación $p_m$ (0,1; 0,3 '
-              f'y 0,5), con {reps} réplicas por combinación. Como en el caso de estudio la tardanza fue cero '
-              'en todas las corridas, las configuraciones solo se diferenciaban por el makespan. Por eso el '
-              'diseño se corrió en dos instancias: la real, con el makespan como respuesta, y una exigente, '
-              'con fechas de entrega 20 % más ajustadas, en la que hay tardanza y la respuesta es la '
-              f'tardanza total ({2 * 27 * reps} corridas en total). Todas las corridas tuvieron el mismo '
-              'esfuerzo de cómputo (30.000 cromosomas generados), para que una población grande no tuviera '
-              'ventaja solo por evaluar más soluciones, y cada réplica usó la misma semilla en todas las '
-              'combinaciones. La Tabla {T:anova} resume el ANOVA de cada instancia.'),
-        ('tabla', 'ANOVA de la calibración: valor F y valor p en cada instancia',
-         ['Fuente', 'Real (C_max): F', 'Real: p', 'Exigente (ΣT_j): F', 'Exigente: p'], filas_anova,
-         {'etiqueta': 'anova', 'anchos': [2838, 1500, 1200, 1900, 1400]}),
-        ('p', f"En la instancia real, {txt_sig('real', sig['real'])} sobre el makespan; en la exigente, "
-              f"{txt_sig('exigente', sig['exigente'])} sobre la tardanza total. "
-              + ('Los supuestos del ANOVA se cumplen. ' if supuestos_ok else
+        ('p', 'Los parámetros del algoritmo se calibraron con un diseño factorial completo 3³ sobre la '
+              'instancia real (Montgomery, 2017; Ruiz, Maroto y Alcaraz, 2006): tamaño de población '
+              r'(50, 100 y 150), probabilidad de cruce $p_c$ (0,7; 0,8 y 0,9) y probabilidad de '
+              f'mutación $p_m$ (0,1; 0,3 y 0,5), con {reps} réplicas por combinación ({27 * reps} '
+              'corridas). Todas las corridas tuvieron el mismo esfuerzo de cómputo (30.000 cromosomas '
+              'generados), para que una población grande no tuviera ventaja solo por evaluar más '
+              'soluciones, y cada réplica usó la misma semilla en todas las combinaciones. La variable '
+              f'de respuesta fue {nresp}. La Tabla {{T:anova}} presenta el ANOVA.'),
+        ('tabla', f"ANOVA {de_resp} en el diseño factorial", ['Fuente', 'SC', 'gl', 'CM', 'F', 'Valor p'],
+         filas_anova, {'etiqueta': 'anova', 'anchos': [2838, 1300, 800, 1300, 1200, 1400]}),
+        ('p', (f"{_lista(sig).capitalize()} {'tiene' if len(sig) == 1 else 'tienen'} efecto significativo "
+               f"sobre {nresp} (p < 0,05)" if sig else f'Ningún factor tiene efecto significativo sobre {nresp}')
+              + (f"; {_lista(nosig)} no lo {'tiene' if len(nosig) == 1 else 'tienen'}. " if nosig and sig else '. ')
+              + ('Los supuestos de normalidad y homogeneidad de varianzas se cumplen. ' if supuestos_ok else
                  'Como no se cumplen todos los supuestos del ANOVA (normalidad u homogeneidad de varianzas), '
                  'el resultado se confirmó con la prueba no paramétrica de Kruskal-Wallis, que identifica como '
-                 f"significativos: en la instancia real, {_lista(kw['real']) if kw['real'] else 'ningún factor'}; "
-                 f"en la exigente, {_lista(kw['exigente']) if kw['exigente'] else 'ningún factor'}. ")
-              + 'Las Figuras {F:efectos_exi} y {F:efectos_real} muestran los efectos principales.'),
-        ('figura', 'Efectos principales sobre la tardanza total en la instancia exigente (intervalos LSD al 95 %)',
-         os.path.join(C, 'efectos_principales_exigente.png'), 15.5, 'efectos_exi'),
-        ('figura', 'Efectos principales sobre el makespan en la instancia real (intervalos LSD al 95 %)',
-         os.path.join(C, 'efectos_principales.png'), 15.5, 'efectos_real'),
-        ('p', 'Para elegir la configuración se ordenaron las 27 combinaciones en cada instancia (primero por '
-              'tardanza y luego por makespan) y se calculó su posición promedio en ambas (Tabla {T:seleccion}).'),
-        ('tabla', 'Mejores combinaciones según su posición promedio en las dos instancias',
-         ['Población', 'p_c', 'p_m', 'Real: C_max prom. (posición)', 'Exigente: ΣT_j prom. (posición)',
-          'Posición promedio'], filas_sel,
-         {'etiqueta': 'seleccion', 'anchos': [1100, 700, 700, 2300, 2400, 1638], 'negrita_filas': (0,)}),
+                 f"significativos: {_lista(kw) if kw else 'ningún factor'}. ")
+              + 'La Figura {F:efectos} muestra los efectos principales y la Tabla {T:mejores} las mejores '
+              'combinaciones.'),
+        ('figura', f"Efectos principales sobre {nresp} (intervalos LSD al 95 %)",
+         os.path.join(C, 'efectos_principales.png'), 15.5, 'efectos'),
+        ('tabla', 'Mejores combinaciones del diseño factorial',
+         ['Población', 'p_c', 'p_m', 'ΣT_j prom. (h)', 'ΣT_j desv. (h)', 'Tardías prom.', 'C_max prom. (h)'],
+         filas_top, {'etiqueta': 'mejores', 'anchos': [1150, 700, 700, 1500, 1500, 1500, 1788],
+                     'negrita_filas': (0,)}),
         ('p', f"La mejor combinación del diseño es {cfg(mejor)}. " + txt_amp +
-              (' Por último, con la configuración elegida se compararon tres criterios de parada en ambas '
-               'instancias (Tabla {T:parada}).' if par else '')),
+              (' Por último, con la configuración elegida se compararon tres criterios de parada '
+               '(Tabla {T:parada}).' if par else '')),
     ] + ([
-        ('tabla', 'Criterio de parada (10 réplicas por criterio y por instancia)',
-         ['Generaciones sin mejora', 'Real: C_max prom. (h)', 'Exigente: ΣT_j prom. (h)',
+        ('tabla', 'Criterio de parada (10 réplicas por criterio)',
+         ['Generaciones sin mejora', 'ΣT_j prom. (h)', 'Tardías prom.', 'C_max prom. (h)',
           'Generaciones prom.', 'Tiempo prom. (min)'], filas_par,
-         {'etiqueta': 'parada', 'anchos': [2000, 1800, 1900, 1500, 1638]}),
+         {'etiqueta': 'parada', 'anchos': [1900, 1400, 1300, 1400, 1400, 1438]}),
         ('p', f"Se adopta {par['elegido']} generaciones sin mejora: es el menor nivel a partir del cual "
-              f"aumentarlo no mejora de forma significativa en ninguna instancia (Wilcoxon; {ps}). "
-              'La Tabla {T:final} resume la configuración final.'),
+              f"aumentarlo no mejora de forma significativa (Wilcoxon; {ps}). La Tabla {{T:final}} resume "
+              'la configuración final.'),
     ] if par else []) + [
         ('tabla', 'Configuración final del algoritmo genético', ['Parámetro', 'Valor'], [
             ['Tamaño de la población', str(P['poblacion'])],
@@ -579,7 +561,7 @@ def main():
         print('Fase 1 corregida:', h)
     L.quitar_desde(d, 'Construcción del modelo matemático')
     omml = L.latex_a_omml(L.recolectar_latex(bloques))
-    esc = L.Escritor(d, omml, primer_figura=3)
+    esc = L.Escritor(d, omml, primer_figura=3, primer_tabla=5)
     L.escribir(esc, bloques)
     L.normalizar_orden(d)
     d.save(salida)

@@ -7,21 +7,18 @@ Sistema actual (representación calibrada): regla FIFO por etapa — en troquela
 las órdenes se atienden por orden de liberación y en cada etapa siguiente los
 sublotes se atienden en el orden en que llegan de la etapa anterior —, con cada
 orden dividida en B partes iguales y la máquina elegida por la regla ECT.
-B se calibró con la tasa histórica de incumplimiento (≈ 45 %), con los datos
-corregidos (J01 = 580 docenas): B = 4 da 50 %, B = 3 da 70 % y B = 5 da 30 %.
-Escenario base: B = 4 (una parte por troqueladora); sensibilidad: 3 y 5.
+B se calibró con la tasa histórica de incumplimiento (≈ 45 %): B = 6 y B = 7 dan
+50 % y B = 8 da 40 %. Escenario base: B = 7; sensibilidad: 6 y 8.
 
 Modelo propuesto: el algoritmo genético calibrado (final_sc_hfsagls_S2_4.py).
 
 Experimentos (todos con semillas nuevas, distintas de las de la Fase 2):
-  base       : AG con B̄ = 10 y AG con B = 4 (misma división que el sistema
+  base       : AG con B̄ = 10 y AG con B = 7 (misma división que el sistema
                actual), 30 réplicas cada uno (semillas 3001–3030).
-  sensib.    : AG con B = 3 y 5 (sistema actual con 3 y 5 partes) y AG con
+  sensib.    : AG con B = 6 y 8 (sistema actual con 6 y 8 partes) y AG con
                B̄ = 20, 10 réplicas (semillas 3001–3010).
-  exigencia  : fechas de entrega 10 % y 30 % más ajustadas y demanda 10 % y 20 %
-               mayor; sistema actual (B = 4) frente a AG (B̄ = 10), 10 réplicas.
-               (Las fechas 20 % más ajustadas no se usan: es la instancia con la
-               que se calibró el AG en la Fase 2.)
+  exigencia  : fechas de entrega 10 % y 20 % más ajustadas y demanda 10 % y 20 %
+               mayor; sistema actual (B = 7) frente a AG (B̄ = 10), 10 réplicas.
 
 Uso:
   python experimentos_fase3.py correr ruta/modelo.py ruta/BD_HFS.xlsx [--procesos 4] [--grupo base]
@@ -48,7 +45,7 @@ except ImportError:
     stats = None
 
 DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'salida_fase3')
-B_ACTUAL_BASE = 4
+B_ACTUAL_BASE = 7
 SEM_BASE = list(range(3001, 3031))
 SEM_SENS = list(range(3001, 3011))
 
@@ -56,14 +53,14 @@ SEM_SENS = list(range(3001, 3011))
 ESCENARIOS = {
     'base':       (1.0, 1.0),
     'fechas_-10': (0.9, 1.0),
-    'fechas_-30': (0.7, 1.0),
+    'fechas_-20': (0.8, 1.0),
     'demanda_+10': (1.0, 1.1),
     'demanda_+20': (1.0, 1.2),
 }
 DESCRIPCION = {
     'base': 'Caso de estudio',
     'fechas_-10': 'Fechas de entrega 10 % más ajustadas',
-    'fechas_-30': 'Fechas de entrega 30 % más ajustadas',
+    'fechas_-20': 'Fechas de entrega 20 % más ajustadas',
     'demanda_+10': 'Demanda 10 % mayor',
     'demanda_+20': 'Demanda 20 % mayor',
 }
@@ -71,7 +68,7 @@ DESCRIPCION = {
 # Corridas del AG: (grupo, escenario, B del AG, semillas)
 PLAN = (
     [('base', 'base', 10, SEM_BASE), ('base', 'base', B_ACTUAL_BASE, SEM_BASE)]
-    + [('sensibilidad', 'base', B, SEM_SENS) for B in (3, 5, 20)]
+    + [('sensibilidad', 'base', B, SEM_SENS) for B in (6, 8, 20)]
     + [('exigencia', e, 10, SEM_SENS) for e in ESCENARIOS if e != 'base']
 )
 
@@ -197,7 +194,7 @@ def deterministas(rm, rb):
     filas = []
     for e in ESCENARIOS:
         aplicar_escenario(M, base, e)
-        for B in (3, 4, 5, 10):
+        for B in (6, 7, 8, 10):
             if e != 'base' and B != B_ACTUAL_BASE:
                 continue
             filas.append({'escenario': e, 'metodo': 'Actual (FIFO por etapa)', 'B': B,
@@ -293,7 +290,7 @@ def analizar(rm, rb):
     # 3. Sensibilidad a la representación del sistema actual
     filas = []
     g10 = ag[(ag.escenario == 'base') & (ag.B == 10)]
-    for B in (3, 4, 5):
+    for B in (6, 7, 8):
         a = act('base', B)
         gB = ag[(ag.escenario == 'base') & (ag.B == B)]
         filas.append([f'B = {B}', f"{_f(a.pct_tardias, 0)} % / {_f(a.suma_T)}",
@@ -306,7 +303,7 @@ def analizar(rm, rb):
 
     # 4. Sensibilidad al número de sublotes del modelo propuesto
     filas = []
-    for B in (3, 4, 5, 10, 20):
+    for B in (6, 7, 8, 10, 20):
         g = ag[(ag.escenario == 'base') & (ag.B == B)]
         if not g.empty:
             filas.append([B, len(g), _f(g.pct_tardias.mean(), 0) + ' %', _f(g.suma_T.mean()),

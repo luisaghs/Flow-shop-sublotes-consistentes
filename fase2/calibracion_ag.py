@@ -86,13 +86,11 @@ PARADA_MAX_GEN = 1000
 PARADA_REPLICAS = 10
 
 # Instancias de calibración: factor aplicado a la ventana d_j − r_j de cada orden.
-#   real     : el caso de estudio. Con los datos corregidos (J01 = 580 docenas) la
-#              tardanza es cero en todas las corridas, así que discrimina por Cmax.
-#   exigente : fechas de entrega 20 % más ajustadas; hay tardanza que el AG reduce
-#              pero no elimina, así que discrimina por ΣTj (objetivo principal).
-INSTANCIAS_CAL = {'real': 1.0, 'exigente': 0.8}
+# Se calibra con el caso de estudio ('real'). El mecanismo admite otras instancias
+# (por ejemplo, {'exigente': 0.8}) por si se quiere calibrar con varias.
+INSTANCIAS_CAL = {'real': 1.0}
 SUFIJO = {'real': '', 'exigente': '_exigente'}
-NOMBRE_INSTANCIA = {'real': 'Instancia real (caso de estudio)',
+NOMBRE_INSTANCIA = {'real': 'Caso de estudio',
                     'exigente': 'Instancia exigente (fechas de entrega 20 % más ajustadas)'}
 INSTANCIA = 'real'
 
@@ -487,8 +485,8 @@ def analizar(dir_salida):
     import json
     factores = list(FACTORES)
     informe = ["# Calibración de los parámetros del algoritmo genético", "",
-               "Se calibró con dos instancias: la real y una exigente (fechas de entrega 20 % más "
-               "ajustadas). La configuración se elige por su posición promedio en ambas.", ""]
+               f"Instancias de calibración: {', '.join(NOMBRE_INSTANCIA[i] for i in INSTANCIAS_CAL)}. "
+               "Si hay más de una, la configuración se elige por su posición promedio.", ""]
     resumenes, respuestas, signif, disenos = {}, {}, set(), {}
     decisiones = {'instancias': {}, 'vs_anterior': {}, 'ampliacion': None, 'parada': None}
     for inst in INSTANCIAS_CAL:

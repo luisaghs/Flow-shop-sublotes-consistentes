@@ -4,9 +4,6 @@
 los indicadores evaluados mediante la comparación del desempeño del modelo propuesto
 respecto al sistema de programación actual.*
 
-> **Actualizada con los datos corregidos** (J01 = 580 docenas, entrega el 25/08/2026).
-> Las cifras con la base anterior quedan en el historial del repositorio.
-
 ## 1. El problema
 
 Para comparar contra "el sistema de programación actual" hay que poder simularlo.
@@ -19,7 +16,7 @@ Hoy se sabe:
 | Cómo se reparte cada orden entre las máquinas y cuántas docenas pasan juntas de una etapa a otra | **No** | — |
 
 El dato que falta pesa mucho: según cómo se represente la división de las órdenes,
-la FIFO simulada da desde 20 % hasta 90 % de órdenes tardías (Tabla 1).
+la FIFO simulada da desde 40 % hasta 100 % de órdenes tardías (Tabla 1).
 
 ## 2. Recomendación: no cambiar el objetivo; cambiar cómo se representa el sistema actual
 
@@ -46,72 +43,62 @@ En concreto:
 
 | *B* | Órdenes tardías | ΣT_j (h) | C_max (h) |
 |---|---|---|---|
-| 2 | 9 (90 %) | 2.207,0 | 1.016,7 |
-| 3 | 7 (70 %) | 1.009,0 | 815,1 |
-| **4** | **5 (50 %)** | **322,9** | **700,0** |
-| 5 | 3 (30 %) | 184,3 | 655,6 |
-| 6 | 2 (20 %) | 150,3 | 617,1 |
-| 10 | 2 (20 %) | 104,3 | 559,5 |
+| 2 | 10 (100 %) | 3.134,6 | 1.016,7 |
+| 3 | 9 (90 %) | 1.695,0 | 815,1 |
+| 4 | 7 (70 %) | 899,3 | 700,0 |
+| 5 | 7 (70 %) | 652,0 | 655,6 |
+| 6 | 5 (50 %) | 456,7 | 617,1 |
+| **7** | **5 (50 %)** | **378,7** | **596,8** |
+| 8 | 4 (40 %) | 324,5 | 585,2 |
+| 10 | 4 (40 %) | 264,1 | 559,5 |
 
-- Con 10 órdenes, el porcentaje de tardías solo puede tomar valores de 10 en 10.
-  El valor más cercano al 45 % histórico es **B = 4 (50 %)**: cada orden se divide en
-  cuatro partes, una por troqueladora, lo que es una práctica plausible en planta.
-- **Escenario base: B = 4**, con **sensibilidad en B = 3 (70 %) y B = 5 (30 %)**.
+- Con 10 órdenes, el porcentaje de tardías solo puede tomar valores de 10 en 10. El
+  45 % histórico queda entre 50 % (B = 6 o 7) y 40 % (B = 8 a 10).
+- **Escenario base: B = 7**, con **sensibilidad en B = 6 (50 %) y B = 8 (40 %)**, que
+  rodean al valor histórico.
 - Hay que decir en el documento que es una representación calibrada, no una
   observación directa de cómo se reparte el trabajo.
 
-### Tabla 2. Prueba preliminar: AG frente al sistema actual
-
-Resultados exploratorios (5 semillas, calculados antes de corregir la fecha de
-entrega de J01); en la Fase 3 se recalculan con 30 réplicas.
-
-| Escenario | Sistema actual: tardías / ΣT_j | AG con la misma división: tardías / ΣT_j |
-|---|---|---|
-| B = 4 | 5 (50 %) / 322,9 h | 1–2 (10–20 %) / 98–125 h |
-| B̄ = 10 (modelo propuesto) | 2 (20 %) / 104,3 h | 0 (0 %) / 0,0 h |
-
-## 3. Dos fuentes de mejora y el papel de la regla EDD
+## 3. Dos fuentes de mejora
 
 El modelo propuesto usa B̄ = 10 sublotes de tamaño variable; el sistema actual,
-según la calibración, 4 partes iguales. Si solo se compara "actual contra
+según la calibración, 7 partes iguales. Si solo se compara "actual contra
 propuesto", la mejora mezcla tres cosas: cambiar la regla de prioridad, dividir más
 las órdenes y optimizar con el AG. Conviene presentar una **descomposición de la
 mejora** en el escenario base:
 
 | Paso | Configuración | Tardías | ΣT_j (h) | C_max (h) | Qué mide |
 |---|---|---|---|---|---|
-| 0 | FIFO por etapa, B = 4 (actual) | 5 | 322,9 | 700,0 | Línea base |
-| 1 | EDD, B = 4 | 4 | 355,8 | 825,2 | Cambiar solo la regla |
-| 2 | AG, B = 4 | 1–2 | ≈ 98–125 | ≈ 720–765 | Optimizar con la misma división |
-| 3 | EDD, B̄ = 10 | 0 | 0,0 | 650,1 | Dividir más con una regla simple |
-| 4 | AG, B̄ = 10 | 0 | 0,0 | ≈ 550–565 | Dividir más y optimizar |
+| 0 | FIFO por etapa, B = 7 (actual) | 5 | 378,7 | 596,8 | Línea base |
+| 1 | EDD, B = 7 | 4 | 392,7 | 698,8 | Cambiar solo la regla |
+| 2 | AG, B = 7 | Fase 3 | Fase 3 | Fase 3 | Optimizar con la misma división |
+| 3 | EDD, B̄ = 10 | 3 | 228,1 | 650,1 | Dividir más con una regla simple |
+| 4 | AG, B̄ = 10 | Fase 3 | Fase 3 | Fase 3 | Dividir más y optimizar |
 
-(Los pasos 2 y 4 son preliminares; en la Fase 3 se calculan con 30 réplicas.)
+Lectura de los pasos ya calculados:
 
-**Punto clave para la discusión:** con los datos corregidos, la regla EDD con 10
-sublotes iguales ya cumple todas las fechas de entrega del caso de estudio. Por eso
-hay que mostrar con claridad qué aporta el AG:
+- Cambiar solo la regla (FIFO → EDD) con la misma división no reduce la tardanza
+  total; reduce una orden tardía, pero alarga otras.
+- Dividir más las órdenes con una regla simple (EDD con 10 sublotes) reduce la
+  tardanza a 228 h, pero aún deja 3 órdenes tardías.
+- Los pasos 2 y 4 miden lo que aporta el AG; se calculan con 30 réplicas.
 
-- **Con la misma división que hoy usa la empresa (4 partes)**, la regla EDD no mejora
-  al sistema actual, mientras que el AG baja de 5 a 1–2 órdenes tardías.
-- **Con 10 sublotes**, el AG mantiene la tardanza en cero y reduce el makespan cerca de
-  un 14 % frente a la regla, lo que libera capacidad antes.
-- **Cuando el sistema está más exigido** (fechas más ajustadas o más demanda), la regla
-  deja órdenes tardías y el AG las reduce. Así se observó en la calibración con fechas
-  20 % más ajustadas (la regla deja 238 h de tardanza y el AG unas 70–80 h); los
-  escenarios de exigencia de la Fase 3 lo miden.
-- El AG parte de la mejor regla y nunca entrega una solución peor que ella.
+### Línea base en los escenarios de exigencia
 
-Para la empresa esto también es útil: una mejora inmediata y sin software es dividir
-más las órdenes y priorizar por fecha de entrega; el AG es el que garantiza el mejor
-resultado cuando la carga sube o las fechas se ajustan.
+| Escenario | Sistema actual (B = 7): tardías / ΣT_j | EDD con B̄ = 10: tardías / ΣT_j |
+|---|---|---|
+| Caso de estudio | 5 / 378,7 h | 3 / 228,1 h |
+| Fechas 10 % más ajustadas | 5 / 563,8 h | 4 / 389,8 h |
+| Fechas 20 % más ajustadas | 7 / 818,6 h | 6 / 628,6 h |
+| Demanda 10 % mayor | 5 / 644,8 h | 3 / 384,6 h |
+| Demanda 20 % mayor | 7 / 967,9 h | 6 / 594,5 h |
 
 ## 4. Estructura propuesta para la Fase 3
 
 1. **Representación del sistema actual.** Supuestos (FIFO por etapa, sublotes
    iguales, ECT), qué se conoce y qué no.
-2. **Calibración con el dato histórico.** Tabla 1, elección de B = 4 y sensibilidad
-   en 3 y 5. Limitaciones: el 45 % es una tasa histórica de largo plazo y la
+2. **Calibración con el dato histórico.** Tabla 1, elección de B = 7 y sensibilidad
+   en 6 y 8. Limitaciones: el 45 % es una tasa histórica de largo plazo y la
    instancia tiene 10 órdenes.
 3. **Indicadores de desempeño**, con su fórmula:
    - % de órdenes tardías (comparable directamente con el 45 % histórico);
@@ -131,15 +118,13 @@ resultado cuando la carga sube o las fechas se ajustan.
    - porcentaje de mejora de cada indicador.
 6. **Resultados del escenario base** y **descomposición de la mejora** (sección 3).
 7. **Análisis de sensibilidad:**
-   - *B* del sistema actual: 3, 4 y 5 (robustez frente al dato desconocido);
-   - B̄ del modelo propuesto: 4, 10 y 20 (cuánto conviene dividir);
-   - escenarios de exigencia: fechas de entrega 10 % y 30 % más ajustadas, y
-     demanda 10 % y 20 % mayor. No se usa la de fechas 20 % más ajustadas, porque
-     con ella se calibró el AG en la Fase 2;
+   - *B* del sistema actual: 6, 7 y 8 (robustez frente al dato desconocido);
+   - B̄ del modelo propuesto: 7, 10 y 20 (cuánto conviene dividir);
+   - escenarios de exigencia: fechas de entrega 10 % y 20 % más ajustadas, y
+     demanda 10 % y 20 % mayor;
    - opcional: robustez frente a tiempos de proceso con variación de ±10 %, en
      simulación Monte Carlo de la programación propuesta.
-8. **Discusión, limitaciones y recomendaciones para la empresa** (incluido el papel
-   de la regla EDD, sección 3).
+8. **Discusión, limitaciones y recomendaciones para la empresa.**
 
 El programa `fase3/experimentos_fase3.py` ya está ajustado a este diseño.
 
@@ -153,7 +138,7 @@ Con una conversación corta con el jefe de producción o el supervisor bastaría
   aproximadamente?
 - ¿Se espera a terminar toda la orden en una etapa antes de pasarla a la siguiente?
 
-Si la respuesta indica, por ejemplo, paquetes de unas 150 docenas (B ≈ 4 para una
+Si la respuesta indica, por ejemplo, paquetes de unas 85 docenas (B ≈ 7 para una
 orden de 600 docenas), coincide con la calibración y se puede citar como validación
 cualitativa. Si las órdenes de BD_HFS.xlsx son órdenes reales con fechas de
 terminación registradas, también se pueden comparar esas fechas con las simuladas.

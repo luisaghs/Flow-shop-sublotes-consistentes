@@ -62,12 +62,13 @@ def latex_a_omml(snippets):
 class Escritor:
     """Agrega contenido al final del documento con los estilos del borrador."""
 
-    def __init__(self, documento, omml, primer_figura=None):
+    def __init__(self, documento, omml, primer_figura=None, primer_tabla=1):
         self.d = documento
         self.omml = omml
         self.tabla_n = 0
         self.figura_n = 0
         self.primer_figura = primer_figura        # número forzado de la primera figura
+        self.primer_tabla = primer_tabla          # número de la primera tabla (valor mostrado)
         self._numeracion = self.d.part.numbering_part.element
         self._siguiente_num = max(int(n.get(qn('w:numId')))
                                   for n in self._numeracion.findall(qn('w:num'))) + 1
@@ -149,9 +150,9 @@ class Escritor:
             return r
         run(f'{tipo} ')
         if tipo == 'Tabla':
-            self.tabla_n += 1; n = self.tabla_n
+            self.tabla_n += 1; n = self.primer_tabla + self.tabla_n - 1
         else:
-            self.figura_n += 1; n = self.figura_n
+            self.figura_n += 1; n = (self.primer_figura or 1) + self.figura_n - 1
         instr = f' SEQ {tipo} \\* ARABIC ' + (f'\\r {reiniciar} ' if reiniciar else '')
         for tipo_f, texto in (('begin', None), ('instr', instr), ('separate', None),
                               ('num', str(n)), ('end', None)):
