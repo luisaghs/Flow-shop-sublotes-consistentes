@@ -16,7 +16,7 @@ Hoy se sabe:
 | Cómo se reparte cada orden entre las máquinas y cuántas docenas pasan juntas de una etapa a otra | **No** | — |
 
 El dato que falta pesa mucho: según cómo se represente la división de las órdenes,
-la FIFO simulada da desde 40 % hasta 100 % de órdenes tardías (Tabla 1).
+la FIFO simulada da desde 30 % hasta 100 % de órdenes tardías (Tabla 1).
 
 ## 2. Recomendación: no cambiar el objetivo; cambiar cómo se representa el sistema actual
 
@@ -43,62 +43,66 @@ En concreto:
 
 | *B* | Órdenes tardías | ΣT_j (h) | C_max (h) |
 |---|---|---|---|
-| 2 | 10 (100 %) | 3.134,6 | 1.016,7 |
-| 3 | 9 (90 %) | 1.695,0 | 815,1 |
-| 4 | 7 (70 %) | 899,3 | 700,0 |
-| 5 | 7 (70 %) | 652,0 | 655,6 |
-| 6 | 5 (50 %) | 456,7 | 617,1 |
-| **7** | **5 (50 %)** | **378,7** | **596,8** |
-| 8 | 4 (40 %) | 324,5 | 585,2 |
-| 10 | 4 (40 %) | 264,1 | 559,5 |
+| 2 | 10 (100 %) | 3.030,6 | 1.016,7 |
+| 3 | 9 (90 %) | 1.591,0 | 815,1 |
+| 4 | 7 (70 %) | 795,3 | 700,0 |
+| 5 | 7 (70 %) | 548,0 | 655,6 |
+| **6** | **4 (40 %)** | **393,8** | **617,1** |
+| 7 | 4 (40 %) | 345,7 | 596,8 |
+| 8 | 4 (40 %) | 297,5 | 585,2 |
+| 9 | 3 (30 %) | 276,5 | 575,7 |
+| 10 | 3 (30 %) | 257,7 | 559,5 |
 
 - Con 10 órdenes, el porcentaje de tardías solo puede tomar valores de 10 en 10. El
-  45 % histórico queda entre 50 % (B = 6 o 7) y 40 % (B = 8 a 10).
-- **Escenario base: B = 7**, con **sensibilidad en B = 6 (50 %) y B = 8 (40 %)**, que
-  rodean al valor histórico.
+  45 % histórico queda entre 70 % (B = 4 o 5) y 40 % (B = 6 a 8); el valor más
+  cercano es 40 %.
+- **Escenario base: B = 6**, el menor número de partes que da el porcentaje más
+  cercano al histórico. Elegir el menor es la opción conservadora: no le atribuye
+  al sistema actual más división de la necesaria.
+- **Sensibilidad en B = 5 (70 %) y B = 7 (40 %)**, que rodean al valor elegido.
 - Hay que decir en el documento que es una representación calibrada, no una
   observación directa de cómo se reparte el trabajo.
 
 ## 3. Dos fuentes de mejora
 
 El modelo propuesto usa B̄ = 10 sublotes de tamaño variable; el sistema actual,
-según la calibración, 7 partes iguales. Si solo se compara "actual contra
+según la calibración, 6 partes iguales. Si solo se compara "actual contra
 propuesto", la mejora mezcla tres cosas: cambiar la regla de prioridad, dividir más
 las órdenes y optimizar con el AG. Conviene presentar una **descomposición de la
 mejora** en el escenario base:
 
 | Paso | Configuración | Tardías | ΣT_j (h) | C_max (h) | Qué mide |
 |---|---|---|---|---|---|
-| 0 | FIFO por etapa, B = 7 (actual) | 5 | 378,7 | 596,8 | Línea base |
-| 1 | EDD, B = 7 | 4 | 392,7 | 698,8 | Cambiar solo la regla |
-| 2 | AG, B = 7 | Fase 3 | Fase 3 | Fase 3 | Optimizar con la misma división |
-| 3 | EDD, B̄ = 10 | 3 | 228,1 | 650,1 | Dividir más con una regla simple |
+| 0 | FIFO por etapa, B = 6 (actual) | 4 | 393,8 | 617,1 | Línea base |
+| 1 | EDD, B = 6 | 6 | 386,9 | 778,2 | Cambiar solo la regla |
+| 2 | AG, B = 6 | Fase 3 | Fase 3 | Fase 3 | Optimizar con la misma división |
+| 3 | EDD, B̄ = 10 | 2 | 99,0 | 681,3 | Dividir más con una regla simple |
 | 4 | AG, B̄ = 10 | Fase 3 | Fase 3 | Fase 3 | Dividir más y optimizar |
 
 Lectura de los pasos ya calculados:
 
-- Cambiar solo la regla (FIFO → EDD) con la misma división no reduce la tardanza
-  total; reduce una orden tardía, pero alarga otras.
+- Cambiar solo la regla (FIFO → EDD) con la misma división casi no cambia la
+  tardanza total (387 h frente a 394 h) y aumenta las órdenes tardías de 4 a 6.
 - Dividir más las órdenes con una regla simple (EDD con 10 sublotes) reduce la
-  tardanza a 228 h, pero aún deja 3 órdenes tardías.
+  tardanza a 99 h, pero aún deja 2 órdenes tardías y alarga el makespan.
 - Los pasos 2 y 4 miden lo que aporta el AG; se calculan con 30 réplicas.
 
 ### Línea base en los escenarios de exigencia
 
-| Escenario | Sistema actual (B = 7): tardías / ΣT_j | EDD con B̄ = 10: tardías / ΣT_j |
+| Escenario | Sistema actual (B = 6): tardías / ΣT_j | EDD con B̄ = 10: tardías / ΣT_j |
 |---|---|---|
-| Caso de estudio | 5 / 378,7 h | 3 / 228,1 h |
-| Fechas 10 % más ajustadas | 5 / 563,8 h | 4 / 389,8 h |
-| Fechas 20 % más ajustadas | 7 / 818,6 h | 6 / 628,6 h |
-| Demanda 10 % mayor | 5 / 644,8 h | 3 / 384,6 h |
-| Demanda 20 % mayor | 7 / 967,9 h | 6 / 594,5 h |
+| Caso de estudio | 4 / 393,8 h | 2 / 99,0 h |
+| Fechas 10 % más ajustadas | 7 / 592,2 h | 4 / 255,1 h |
+| Fechas 20 % más ajustadas | 8 / 868,3 h | 6 / 502,3 h |
+| Demanda 10 % mayor | 7 / 661,7 h | 3 / 233,0 h |
+| Demanda 20 % mayor | 7 / 1.018,0 h | 6 / 445,4 h |
 
 ## 4. Estructura propuesta para la Fase 3
 
 1. **Representación del sistema actual.** Supuestos (FIFO por etapa, sublotes
    iguales, ECT), qué se conoce y qué no.
-2. **Calibración con el dato histórico.** Tabla 1, elección de B = 7 y sensibilidad
-   en 6 y 8. Limitaciones: el 45 % es una tasa histórica de largo plazo y la
+2. **Calibración con el dato histórico.** Tabla 1, elección de B = 6 y sensibilidad
+   en 5 y 7. Limitaciones: el 45 % es una tasa histórica de largo plazo y la
    instancia tiene 10 órdenes.
 3. **Indicadores de desempeño**, con su fórmula:
    - % de órdenes tardías (comparable directamente con el 45 % histórico);
@@ -118,8 +122,8 @@ Lectura de los pasos ya calculados:
    - porcentaje de mejora de cada indicador.
 6. **Resultados del escenario base** y **descomposición de la mejora** (sección 3).
 7. **Análisis de sensibilidad:**
-   - *B* del sistema actual: 6, 7 y 8 (robustez frente al dato desconocido);
-   - B̄ del modelo propuesto: 7, 10 y 20 (cuánto conviene dividir);
+   - *B* del sistema actual: 5, 6 y 7 (robustez frente al dato desconocido);
+   - B̄ del modelo propuesto: 5, 6, 7, 10 y 20 (cuánto conviene dividir);
    - escenarios de exigencia: fechas de entrega 10 % y 20 % más ajustadas, y
      demanda 10 % y 20 % mayor;
    - opcional: robustez frente a tiempos de proceso con variación de ±10 %, en
@@ -138,8 +142,8 @@ Con una conversación corta con el jefe de producción o el supervisor bastaría
   aproximadamente?
 - ¿Se espera a terminar toda la orden en una etapa antes de pasarla a la siguiente?
 
-Si la respuesta indica, por ejemplo, paquetes de unas 85 docenas (B ≈ 7 para una
-orden de 600 docenas), coincide con la calibración y se puede citar como validación
+Si la respuesta indica, por ejemplo, paquetes de unas 90 docenas (B ≈ 6 para una
+orden promedio de 524 docenas), coincide con la calibración y se puede citar como validación
 cualitativa. Si las órdenes de BD_HFS.xlsx son órdenes reales con fechas de
 terminación registradas, también se pueden comparar esas fechas con las simuladas.
 

@@ -7,18 +7,19 @@ Sistema actual (representación calibrada): regla FIFO por etapa — en troquela
 las órdenes se atienden por orden de liberación y en cada etapa siguiente los
 sublotes se atienden en el orden en que llegan de la etapa anterior —, con cada
 orden dividida en B partes iguales y la máquina elegida por la regla ECT.
-B se calibró con la tasa histórica de incumplimiento (≈ 45 %): B = 6 y B = 7 dan
-50 % y B = 8 da 40 %. Escenario base: B = 7; sensibilidad: 6 y 8.
+B se calibró con la tasa histórica de incumplimiento (≈ 45 %): B = 4 y 5 dan
+70 % y B = 6 a 8 dan 40 %. Escenario base: B = 6, el menor número de partes con
+el porcentaje más cercano al histórico. Sensibilidad: 5 y 7 partes.
 
 Modelo propuesto: el algoritmo genético calibrado (final_sc_hfsagls_S2_4.py).
 
 Experimentos (todos con semillas nuevas, distintas de las de la Fase 2):
-  base       : AG con B̄ = 10 y AG con B = 7 (misma división que el sistema
+  base       : AG con B̄ = 10 y AG con B = 6 (misma división que el sistema
                actual), 30 réplicas cada uno (semillas 3001–3030).
-  sensib.    : AG con B = 6 y 8 (sistema actual con 6 y 8 partes) y AG con
+  sensib.    : AG con B = 5 y 7 (sistema actual con 5 y 7 partes) y AG con
                B̄ = 20, 10 réplicas (semillas 3001–3010).
   exigencia  : fechas de entrega 10 % y 20 % más ajustadas y demanda 10 % y 20 %
-               mayor; sistema actual (B = 7) frente a AG (B̄ = 10), 10 réplicas.
+               mayor; sistema actual (B = 6) frente a AG (B̄ = 10), 10 réplicas.
 
 Uso:
   python experimentos_fase3.py correr ruta/modelo.py ruta/BD_HFS.xlsx [--procesos 4] [--grupo base]
@@ -45,7 +46,8 @@ except ImportError:
     stats = None
 
 DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'salida_fase3')
-B_ACTUAL_BASE = 7
+B_ACTUAL_BASE = 6
+B_ACTUAL_SENS = (B_ACTUAL_BASE - 1, B_ACTUAL_BASE, B_ACTUAL_BASE + 1)
 SEM_BASE = list(range(3001, 3031))
 SEM_SENS = list(range(3001, 3011))
 
@@ -68,7 +70,7 @@ DESCRIPCION = {
 # Corridas del AG: (grupo, escenario, B del AG, semillas)
 PLAN = (
     [('base', 'base', 10, SEM_BASE), ('base', 'base', B_ACTUAL_BASE, SEM_BASE)]
-    + [('sensibilidad', 'base', B, SEM_SENS) for B in (6, 8, 20)]
+    + [('sensibilidad', 'base', B, SEM_SENS) for B in (B_ACTUAL_BASE - 1, B_ACTUAL_BASE + 1, 20)]
     + [('exigencia', e, 10, SEM_SENS) for e in ESCENARIOS if e != 'base']
 )
 
@@ -170,7 +172,7 @@ def correr(rm, rb, procesos, grupos=None):
         hechas = set(zip(prev['escenario'], prev['B'], prev['semilla']))
     tareas = [(g, e, B, s) for (g, e, B, sems) in PLAN if not grupos or g in grupos
               for s in sems if (e, B, s) not in hechas]
-    # Evitar duplicados (B = 5 y 7 de sensibilidad comparten semillas, no escenario-B)
+    # Evitar duplicados (tareas repetidas con el mismo escenario, B y semilla)
     tareas = list(dict.fromkeys(tareas))
     print(f"Corridas pendientes: {len(tareas)} | procesos: {procesos}", flush=True)
     if not tareas:
@@ -194,7 +196,7 @@ def deterministas(rm, rb):
     filas = []
     for e in ESCENARIOS:
         aplicar_escenario(M, base, e)
-        for B in (6, 7, 8, 10):
+        for B in B_ACTUAL_SENS + (10,):
             if e != 'base' and B != B_ACTUAL_BASE:
                 continue
             filas.append({'escenario': e, 'metodo': 'Actual (FIFO por etapa)', 'B': B,
@@ -290,7 +292,7 @@ def analizar(rm, rb):
     # 3. Sensibilidad a la representación del sistema actual
     filas = []
     g10 = ag[(ag.escenario == 'base') & (ag.B == 10)]
-    for B in (6, 7, 8):
+    for B in B_ACTUAL_SENS:
         a = act('base', B)
         gB = ag[(ag.escenario == 'base') & (ag.B == B)]
         filas.append([f'B = {B}', f"{_f(a.pct_tardias, 0)} % / {_f(a.suma_T)}",
@@ -303,7 +305,7 @@ def analizar(rm, rb):
 
     # 4. Sensibilidad al número de sublotes del modelo propuesto
     filas = []
-    for B in (6, 7, 8, 10, 20):
+    for B in B_ACTUAL_SENS + (10, 20):
         g = ag[(ag.escenario == 'base') & (ag.B == B)]
         if not g.empty:
             filas.append([B, len(g), _f(g.pct_tardias.mean(), 0) + ' %', _f(g.suma_T.mean()),
