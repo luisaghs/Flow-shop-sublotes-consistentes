@@ -198,7 +198,7 @@ def bloque_modelo():
           ('p', '**Dominio de las variables.**'),
           ('ecuacion', r'x_{jb}\in\{0,1,2,\dots\};\quad y_{ism},\,z_{ii^{\prime}sm}\in\{0,1\};\quad '
                        r'S_{is},\,C_{is},\,T_j,\,C_{\max}\ge 0', '', 16),
-          ('p', 'Como el modelo admite tardanza, el horizonte de 672 horas laborables no se impone '
+          ('p', 'Como el modelo admite tardanza, el horizonte de 553 horas laborables no se impone '
                 r'como una restricción dura: define el calendario en el que se miden $r_j$ y $d_j$, '
                 r'mientras que $H$ es solo una cota superior que activa o desactiva las '
                 'restricciones disyuntivas (5), (11) y (13).')]

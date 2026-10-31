@@ -104,8 +104,8 @@ El planteamiento sigue bien a Gürsoy Yılmaz y Yılmaz (2022). Para cerrarlo:
 5. **No solapamiento en etapas ≥ 2.** Está escrita con S_(i'1) y m ∈ M₁; debe ser
    S_i's ≥ C_is − H(1 − z_ii'sm), ∀ s ≥ 2, m ∈ M_s.
 6. **Restricción 6 de la Fase 1 (respetar el horizonte).** Como se permite la
-   tardanza, el modelo no puede exigir que todo termine antes de 672 h (la regla
-   EDD termina en 817 h). Aclarar que H es solo la constante grande del big-M y
+   tardanza, el modelo no puede exigir que todo termine antes de 553 h (la regla
+   EDD termina en 650 h). Aclarar que H es solo la constante grande del big-M y
    que el horizonte define el calendario, no una restricción dura.
 7. **Numerar las ecuaciones** (hoy aparecen "()") y explicar cada bloque con una
    frase, como ya se hizo con la de tiempo de proceso.
