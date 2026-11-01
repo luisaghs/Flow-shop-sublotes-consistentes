@@ -388,6 +388,20 @@ def calibracion(D):
     kw = [NOMBRE_F[f] for f, p in est['p_kruskal'].items() if p < 0.05]
     supuestos_ok = est['p_shapiro'] >= 0.05 and all(p >= 0.05 for p in est['p_levene'].values())
     lev_mal = [NOMBRE_F[f] for f, p in est['p_levene'].items() if p < 0.05]
+    fallas = []
+    if est['p_shapiro'] < 0.05:
+        fallas.append(f"los residuos no siguen una distribución normal (Shapiro-Wilk, p = {_p(est['p_shapiro'])})")
+    if lev_mal:
+        fallas.append(f'las varianzas no son homogéneas entre los niveles de {_lista(lev_mal)} (Levene, p < 0,05)')
+    txt_supuestos = ('Los residuos siguen una distribución normal (Shapiro-Wilk, p = '
+                     f"{_p(est['p_shapiro'])}), pero " + fallas[-1] + '; '
+                     if est['p_shapiro'] >= 0.05 and fallas else
+                     'No se cumplen todos los supuestos del ANOVA: ' + _lista(fallas) + '; ' if fallas else '')
+    solo_anova = [f for f, p in est['p_anova'].items() if p < 0.05 and est['p_kruskal'].get(f, 0) >= 0.05]
+    txt_difiere = ''.join(
+        f"La {NOMBRE_F[f]} resulta significativa en el ANOVA (p = {_p(est['p_anova'][f])}), pero no en "
+        f"Kruskal-Wallis (p = {_p(est['p_kruskal'][f])}), por lo que su efecto se considera débil. "
+        for f in solo_anova)
     inter = [r for r in an.itertuples() if '×' in str(r.Fuente) and r._6 == r._6 and r._6 < 0.05]
     txt_inter = ''
     if inter:
@@ -431,6 +445,7 @@ def calibracion(D):
     par = dec.get('parada')
     filas_par, ps = [], ''
     niv_par = sorted(int(r['sin_mejora']) for r in par['tablas']['real']) if par else []
+    tpar = sorted(par['tablas']['real'], key=lambda r: r['sin_mejora']) if par else []
     if par:
         for r in sorted(par['tablas']['real'], key=lambda r: r['sin_mejora']):
             filas_par.append([str(int(r['sin_mejora'])), n(r['T_prom'], 1), n(r['Tard'], 1),
@@ -465,12 +480,9 @@ def calibracion(D):
               + (f"; {_lista(nosig)} no lo {'tiene' if len(nosig) == 1 else 'tienen'}. " if nosig and sig else '. ')
               + txt_inter
               + ('Los supuestos de normalidad y homogeneidad de varianzas se cumplen. ' if supuestos_ok else
-                 (f"Los residuos siguen una distribución normal (Shapiro-Wilk, p = {_p(est['p_shapiro'])}), "
-                  f"pero las varianzas no son homogéneas entre los niveles de {_lista(lev_mal)} (Levene, "
-                  'p < 0,05); ' if est['p_shapiro'] >= 0.05 and lev_mal else
-                  'No se cumplen todos los supuestos del ANOVA (normalidad u homogeneidad de varianzas); ')
+                 txt_supuestos
                  + 'por eso el resultado se confirmó con la prueba no paramétrica de Kruskal-Wallis, que '
-                 f"identifica como significativos: {_lista(kw) if kw else 'ningún factor'}. ")
+                 f"identifica como significativos: {_lista(kw) if kw else 'ningún factor'}. " + txt_difiere)
               + 'La Figura {F:efectos} muestra los efectos principales y la Tabla {T:mejores} las mejores '
               'combinaciones.'),
         ('figura', f"Efectos principales sobre {nresp} (intervalos LSD al 95 %)",
@@ -492,9 +504,15 @@ def calibracion(D):
                f"{niv_par[niv_par.index(par['elegido']) + 1]} no mejora de forma significativa la tardanza "
                f"(Wilcoxon; {ps}), así que se prefiere el menor tiempo de cómputo. "
                if par['elegido'] != niv_par[-1] else
-               f"Se adopta {par['elegido']} generaciones sin mejora, porque reduce de forma significativa la "
-               f"tardanza frente a {_lista([str(v) for v in niv_par[:-1]])} (prueba de Wilcoxon de una cola; {ps}). "
-               'La prueba es de una cola porque, con la misma semilla, la corrida con el criterio mayor '
+               (f"Se adopta {par['elegido']} generaciones sin mejora. Con ambos criterios la tardanza es casi "
+                f"nula ({_lista([n(r['T_prom'], 2) for r in tpar])} h en promedio), y con {par['elegido']} el makespan "
+                f"promedio baja de {n(tpar[0]['C_prom'], 1)} a {n(tpar[-1]['C_prom'], 1)} h. La mejora es significativa "
+                'según el objetivo del modelo, que compara primero la tardanza y luego el makespan (prueba de '
+                f'Wilcoxon de una cola; {ps}). '
+                if abs(tpar[0]['T_prom'] - tpar[-1]['T_prom']) < 1.0 else
+                f"Se adopta {par['elegido']} generaciones sin mejora, porque reduce de forma significativa la "
+                f"tardanza frente a {_lista([str(v) for v in niv_par[:-1]])} (prueba de Wilcoxon de una cola; {ps}). ")
+               + 'La prueba es de una cola porque, con la misma semilla, la corrida con el criterio mayor '
                'continúa la de criterio menor y no puede terminar con una solución peor. Criterios más '
                'largos no se evaluaron. ')
               + 'La Tabla {T:final} resume la configuración final.'),

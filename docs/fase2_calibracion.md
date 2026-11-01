@@ -84,65 +84,65 @@ Mejores y peores combinaciones (promedio de 5 réplicas):
 
 | Población | p_c | p_m | ΣT_j prom. (h) | ΣT_j desv. (h) | Tardías prom. | C_max prom. (h) |
 |---|---|---|---|---|---|---|
-| **100** | **0,8** | **0,5** | **70,7** | **22,4** | **1,8** | **587,9** |
-| 100 | 0,9 | 0,5 | 71,7 | 21,5 | 1,8 | 591,2 |
-| 150 | 0,8 | 0,3 | 75,3 | 10,3 | 2,0 | 590,1 |
-| 150 | 0,9 | 0,1 | 81,8 | 36,0 | 2,0 | 593,7 |
-| 100 | 0,7 | 0,5 | 85,1 | 32,3 | 2,0 | 596,5 |
+| **150** | **0,9** | **0,5** | **0,28** | **0,63** | **0,2** | **597,3** |
+| 100 | 0,9 | 0,3 | 2,72 | 6,08 | 0,2 | 600,9 |
+| 150 | 0,9 | 0,1 | 4,04 | 5,62 | 0,4 | 600,6 |
+| 150 | 0,9 | 0,3 | 5,85 | 11,34 | 0,4 | 604,4 |
+| 150 | 0,8 | 0,3 | 7,78 | 17,18 | 0,6 | 609,2 |
 | … | | | | | | |
-| 100 | 0,9 | 0,1 | 176,4 | 28,6 | 2,6 | 631,2 |
-| 100 | 0,7 | 0,1 | 185,9 | 25,8 | 3,0 | 632,3 |
-| 50 | 0,8 | 0,1 | 193,9 | 26,0 | 3,0 | 637,7 |
+| 100 | 0,8 | 0,1 | 56,29 | 33,61 | 1,6 | 653,1 |
+| 50 | 0,8 | 0,1 | 63,19 | 16,17 | 2,0 | 660,1 |
+| 50 | 0,7 | 0,1 | 67,73 | 18,96 | 2,0 | 663,7 |
+
+41 de las 135 corridas llegaron a tardanza cero.
 
 ANOVA sobre la tardanza total:
 
 | Fuente | SC | gl | CM | F | p |
 |---|---|---|---|---|---|
-| Población | 28.162,3 | 2 | 14.081,1 | 7,83 | 0,0006 |
-| Prob. de cruce | 6.195,6 | 2 | 3.097,8 | 1,72 | 0,183 |
-| Prob. de mutación | 74.133,3 | 2 | 37.066,7 | 20,60 | < 0,0001 |
-| Población × cruce | 9.235,8 | 4 | 2.308,9 | 1,28 | 0,281 |
-| Población × mutación | 32.477,9 | 4 | 8.119,5 | 4,51 | 0,002 |
-| Cruce × mutación | 2.941,7 | 4 | 735,4 | 0,41 | 0,802 |
-| Error | 208.679,0 | 116 | 1.799,0 | | |
-| Total | 361.825,7 | 134 | | | |
+| Población | 12.509,2 | 2 | 6.254,6 | 18,80 | < 0,0001 |
+| Prob. de cruce | 2.604,8 | 2 | 1.302,4 | 3,91 | 0,023 |
+| Prob. de mutación | 24.596,7 | 2 | 12.298,3 | 36,96 | < 0,0001 |
+| Población × cruce | 1.859,7 | 4 | 464,9 | 1,40 | 0,239 |
+| Población × mutación | 5.475,5 | 4 | 1.368,9 | 4,11 | 0,004 |
+| Cruce × mutación | 1.586,5 | 4 | 396,6 | 1,19 | 0,318 |
+| Error | 38.595,7 | 116 | 332,7 | | |
+| Total | 87.228,2 | 134 | | | |
 
-- Los residuos son normales: Shapiro-Wilk W = 0,988, p = 0,272.
-- La varianza no es homogénea entre niveles de población (Levene p = 0,020) ni
-  de mutación (p = 0,026); por eso se confirma con Kruskal-Wallis:
-  población H = 11,2, p = 0,004; mutación H = 24,8, p < 0,0001; cruce H = 2,9,
-  p = 0,236. La conclusión es la misma que la del ANOVA.
-- Medias por nivel: población 50/100/150 → 142,1 / 118,9 / 107,3 h; mutación
-  0,1/0,3/0,5 → 154,1 / 116,5 / 97,7 h; cruce 0,7/0,8/0,9 → 129,7 / 125,0 /
-  113,6 h.
-- Más mutación reduce la tardanza, y su efecto depende del tamaño de la
-  población (interacción significativa).
-- **Se selecciona población 100, cruce 0,8 y mutación 0,5**, la combinación con
-  menor tardanza promedio. Frente a la configuración inicial del código
-  (150; 0,9; 0,5) la diferencia no es significativa (Wilcoxon, p = 0,19).
-- La mutación 0,5 quedó en el borde del rango probado; no se evaluaron niveles
-  mayores.
+- Los residuos no son normales (Shapiro-Wilk W = 0,975, p = 0,014) y la varianza no
+  es homogénea entre niveles de mutación (Levene p < 0,0001; población p = 0,059,
+  cruce p = 0,090). Ambas fallas se deben a que muchas corridas llegan a tardanza
+  cero, el mínimo posible.
+- Por eso la conclusión se confirma con Kruskal-Wallis: población H = 21,0,
+  p < 0,0001; mutación H = 28,0, p < 0,0001; cruce H = 4,6, p = 0,10. El efecto del
+  cruce, significativo en el ANOVA, es débil.
+- Medias por nivel: población 50/100/150 → 37,3 / 22,3 / 14,1 h; mutación
+  0,1/0,3/0,5 → 43,1 / 19,5 / 11,2 h; cruce 0,7/0,8/0,9 → 27,3 / 28,1 / 18,4 h.
+- **Se selecciona población 150, cruce 0,9 y mutación 0,5**, la combinación con
+  menor tardanza promedio (4 de 5 réplicas sin tardanza). Coincide con la
+  configuración inicial del código.
+- La combinación quedó en el borde del rango probado en los tres factores; no se
+  evaluaron niveles fuera del rango.
 
 ### 3.2 Experimento 2: criterio de parada (20 corridas)
 
 | Generaciones sin mejora | ΣT_j prom. (h) | ΣT_j desv. (h) | Tardías prom. | C_max prom. (h) | Generaciones prom. | Tiempo prom. |
 |---|---|---|---|---|---|---|
-| 50 | 99,4 | 56,8 | 2,2 | 599,7 | 507 | 3,5 min |
-| **100** | **71,2** | **39,8** | **2,1** | **588,0** | **781** | **5,1 min** |
+| 50 | 0,72 | 2,28 | 0,1 | 596,4 | 405 | 3,9 min |
+| **100** | **0,00** | **0,00** | **0,0** | **591,4** | **739** | **7,9 min** |
 
-- En 5 de las 10 réplicas, seguir hasta 100 generaciones sin mejora encontró una
-  solución mejor; en las otras 5 el resultado fue el mismo.
-- La mejora es significativa (Wilcoxon de una cola, p = 0,031). Con la prueba de
-  dos colas y solo 5 diferencias distintas de cero, el valor p mínimo posible
-  sería 0,0625.
+- Con 100 generaciones sin mejora las 10 réplicas quedan sin tardanza; con 50, una
+  queda con 7,2 h. El makespan promedio baja de 596,4 h a 591,4 h.
+- La mejora es significativa según el objetivo lexicográfico (primero ΣT_j, luego
+  C_max): Wilcoxon de una cola, p = 0,008.
 - **Se adopta 100 generaciones sin mejora.** No se evaluaron criterios mayores.
 
 ### 3.3 Configuración final del algoritmo genético
 
 | Parámetro | Valor | Origen |
 |---|---|---|
-| Tamaño de la población | 100 | Calibrado (exp. 1) |
-| Probabilidad de cruce | 0,8 | Calibrado (sin efecto significativo; forma parte de la mejor combinación) |
+| Tamaño de la población | 150 | Calibrado (exp. 1) |
+| Probabilidad de cruce | 0,9 | Calibrado (efecto débil; forma parte de la mejor combinación) |
 | Probabilidad de mutación | 0,5 | Calibrado (exp. 1) |
 | Criterio de parada | 100 generaciones sin mejora (máx. 1.000) | Calibrado (exp. 2) |
 | Torneo, prob. de intercambio, prob. de perturbación, desviación | 3; 0,30; 0,40; 0,15 | Fijos (valores del código) |
@@ -166,7 +166,7 @@ pip install pandas openpyxl matplotlib scipy
 cd fase2
 # Experimento 1 (≈ 65 min con 4 núcleos; ≈ 4 h con 1)
 python calibracion_ag.py diseno ruta/final_sc_hfsagls_S2_4.py ruta/BD_HFS.xlsx --instancia real
-# Experimento 2 (usa la mejor combinación del experimento 1, o --config 100,0.8,0.5)
+# Experimento 2 (usa la mejor combinación del experimento 1, o --config 150,0.9,0.5)
 python calibracion_ag.py parada ruta/final_sc_hfsagls_S2_4.py ruta/BD_HFS.xlsx --instancia real
 # Solo volver a generar el informe y las figuras
 python calibracion_ag.py analizar

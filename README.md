@@ -10,8 +10,8 @@ con **sublotes consistentes** (escenario 2 de Gürsoy Yılmaz & Yılmaz, 2022,
 
 **`final_sc_hfsagls_S2_4.py`** es el modelo final (algoritmo genético) y
 **`BD_HFS.xlsx`** los datos del caso de estudio. Con ellos se obtuvieron todos los
-resultados de la Fase 2. Los parámetros del AG son los calibrados (población 100,
-cruce 0,8, mutación 0,5, parada tras 100 generaciones sin mejora).
+resultados de la Fase 2. Los parámetros del AG son los calibrados (población 150,
+cruce 0,9, mutación 0,5, parada tras 100 generaciones sin mejora).
 
 La versión anterior (`final_sc_hfsagls.py`, cromosoma de tres niveles) se retiró;
 sigue disponible en el historial de git.

@@ -1,0 +1,315 @@
+=== diseño Sat Oct 31 23:33:32 UTC 2026
+
+EXPERIMENTO 1 — Caso de estudio: diseño factorial 27 combinaciones × 5 réplicas, presupuesto 30000 individuos por corrida
+  Corridas: 135 | ya hechas: 0 | pendientes: 135 | procesos: 4
+  [  1/135] poblacion=50 prob_cruce=0.7 prob_mutacion=0.1 semilla=1004 → ΣTj=68.056 Cmax=661.767 (90 s) | faltan ≈ 204 min
+  [  2/135] poblacion=50 prob_cruce=0.7 prob_mutacion=0.1 semilla=1001 → ΣTj=87.198 Cmax=673.111 (90 s) | faltan ≈ 101 min
+  [  3/135] poblacion=50 prob_cruce=0.7 prob_mutacion=0.1 semilla=1003 → ΣTj=46.178 Cmax=655.160 (90 s) | faltan ≈ 67 min
+  [  4/135] poblacion=50 prob_cruce=0.7 prob_mutacion=0.1 semilla=1002 → ΣTj=85.829 Cmax=672.320 (90 s) | faltan ≈ 50 min
+  [  5/135] poblacion=50 prob_cruce=0.7 prob_mutacion=0.1 semilla=1005 → ΣTj=51.405 Cmax=656.136 (88 s) | faltan ≈ 78 min
+  [  6/135] poblacion=50 prob_cruce=0.7 prob_mutacion=0.3 semilla=1003 → ΣTj=19.019 Cmax=630.019 (97 s) | faltan ≈ 67 min
+  [  7/135] poblacion=50 prob_cruce=0.7 prob_mutacion=0.3 semilla=1002 → ΣTj=20.575 Cmax=631.575 (97 s) | faltan ≈ 58 min
+  [  8/135] poblacion=50 prob_cruce=0.7 prob_mutacion=0.3 semilla=1001 → ΣTj=68.037 Cmax=663.834 (99 s) | faltan ≈ 50 min
+  [  9/135] poblacion=50 prob_cruce=0.7 prob_mutacion=0.3 semilla=1004 → ΣTj=32.410 Cmax=641.637 (97 s) | faltan ≈ 64 min
+  [ 10/135] poblacion=50 prob_cruce=0.7 prob_mutacion=0.3 semilla=1005 → ΣTj=18.154 Cmax=629.154 (99 s) | faltan ≈ 60 min
+  [ 11/135] poblacion=50 prob_cruce=0.7 prob_mutacion=0.5 semilla=1002 → ΣTj=8.305 Cmax=619.305 (107 s) | faltan ≈ 56 min
+  [ 12/135] poblacion=50 prob_cruce=0.7 prob_mutacion=0.5 semilla=1001 → ΣTj=16.938 Cmax=627.938 (108 s) | faltan ≈ 51 min
+  [ 13/135] poblacion=50 prob_cruce=0.7 prob_mutacion=0.5 semilla=1003 → ΣTj=2.338 Cmax=613.338 (104 s) | faltan ≈ 59 min
+  [ 14/135] poblacion=50 prob_cruce=0.8 prob_mutacion=0.1 semilla=1001 → ΣTj=74.714 Cmax=668.923 (94 s) | faltan ≈ 56 min
+  [ 15/135] poblacion=50 prob_cruce=0.7 prob_mutacion=0.5 semilla=1004 → ΣTj=9.644 Cmax=620.644 (104 s) | faltan ≈ 52 min
+  [ 16/135] poblacion=50 prob_cruce=0.7 prob_mutacion=0.5 semilla=1005 → ΣTj=6.900 Cmax=617.900 (103 s) | faltan ≈ 50 min
+  [ 17/135] poblacion=50 prob_cruce=0.8 prob_mutacion=0.1 semilla=1002 → ΣTj=58.050 Cmax=652.281 (94 s) | faltan ≈ 55 min
+  [ 18/135] poblacion=50 prob_cruce=0.8 prob_mutacion=0.1 semilla=1003 → ΣTj=40.673 Cmax=648.783 (92 s) | faltan ≈ 52 min
+  [ 19/135] poblacion=50 prob_cruce=0.8 prob_mutacion=0.1 semilla=1004 → ΣTj=82.415 Cmax=670.612 (92 s) | faltan ≈ 49 min
+  [ 20/135] poblacion=50 prob_cruce=0.8 prob_mutacion=0.1 semilla=1005 → ΣTj=60.108 Cmax=659.716 (93 s) | faltan ≈ 47 min
+  [ 21/135] poblacion=50 prob_cruce=0.8 prob_mutacion=0.3 semilla=1001 → ΣTj=72.968 Cmax=669.312 (103 s) | faltan ≈ 52 min
+  [ 22/135] poblacion=50 prob_cruce=0.8 prob_mutacion=0.3 semilla=1002 → ΣTj=32.563 Cmax=643.563 (103 s) | faltan ≈ 50 min
+  [ 23/135] poblacion=50 prob_cruce=0.8 prob_mutacion=0.3 semilla=1003 → ΣTj=15.886 Cmax=626.886 (103 s) | faltan ≈ 48 min
+  [ 24/135] poblacion=50 prob_cruce=0.8 prob_mutacion=0.3 semilla=1004 → ΣTj=45.143 Cmax=649.645 (102 s) | faltan ≈ 46 min
+  [ 25/135] poblacion=50 prob_cruce=0.8 prob_mutacion=0.3 semilla=1005 → ΣTj=41.090 Cmax=646.908 (103 s) | faltan ≈ 50 min
+  [ 26/135] poblacion=50 prob_cruce=0.8 prob_mutacion=0.5 semilla=1002 → ΣTj=0.000 Cmax=594.509 (109 s) | faltan ≈ 49 min
+  [ 27/135] poblacion=50 prob_cruce=0.8 prob_mutacion=0.5 semilla=1001 → ΣTj=27.523 Cmax=638.523 (111 s) | faltan ≈ 46 min
+  [ 28/135] poblacion=50 prob_cruce=0.8 prob_mutacion=0.5 semilla=1003 → ΣTj=50.936 Cmax=652.058 (109 s) | faltan ≈ 45 min
+  [ 29/135] poblacion=50 prob_cruce=0.8 prob_mutacion=0.5 semilla=1004 → ΣTj=23.182 Cmax=634.182 (110 s) | faltan ≈ 48 min
+  [ 30/135] poblacion=50 prob_cruce=0.9 prob_mutacion=0.1 semilla=1001 → ΣTj=34.095 Cmax=642.962 (100 s) | faltan ≈ 46 min
+  [ 31/135] poblacion=50 prob_cruce=0.8 prob_mutacion=0.5 semilla=1005 → ΣTj=0.000 Cmax=606.535 (108 s) | faltan ≈ 45 min
+  [ 32/135] poblacion=50 prob_cruce=0.9 prob_mutacion=0.1 semilla=1002 → ΣTj=47.995 Cmax=656.578 (102 s) | faltan ≈ 43 min
+  [ 33/135] poblacion=50 prob_cruce=0.9 prob_mutacion=0.1 semilla=1003 → ΣTj=77.791 Cmax=667.599 (101 s) | faltan ≈ 46 min
+  [ 34/135] poblacion=50 prob_cruce=0.9 prob_mutacion=0.1 semilla=1004 → ΣTj=53.607 Cmax=655.676 (102 s) | faltan ≈ 44 min
+  [ 35/135] poblacion=50 prob_cruce=0.9 prob_mutacion=0.1 semilla=1005 → ΣTj=54.901 Cmax=654.933 (103 s) | faltan ≈ 43 min
+  [ 36/135] poblacion=50 prob_cruce=0.9 prob_mutacion=0.3 semilla=1001 → ΣTj=43.992 Cmax=651.432 (107 s) | faltan ≈ 42 min
+  [ 37/135] poblacion=50 prob_cruce=0.9 prob_mutacion=0.3 semilla=1002 → ΣTj=42.403 Cmax=649.123 (111 s) | faltan ≈ 44 min
+  [ 38/135] poblacion=50 prob_cruce=0.9 prob_mutacion=0.3 semilla=1003 → ΣTj=25.355 Cmax=636.355 (111 s) | faltan ≈ 43 min
+  [ 39/135] poblacion=50 prob_cruce=0.9 prob_mutacion=0.3 semilla=1004 → ΣTj=26.604 Cmax=637.604 (110 s) | faltan ≈ 42 min
+  [ 40/135] poblacion=50 prob_cruce=0.9 prob_mutacion=0.3 semilla=1005 → ΣTj=62.967 Cmax=664.130 (109 s) | faltan ≈ 40 min
+  [ 41/135] poblacion=50 prob_cruce=0.9 prob_mutacion=0.5 semilla=1001 → ΣTj=8.953 Cmax=619.953 (117 s) | faltan ≈ 43 min
+  [ 42/135] poblacion=50 prob_cruce=0.9 prob_mutacion=0.5 semilla=1002 → ΣTj=14.932 Cmax=625.932 (115 s) | faltan ≈ 41 min
+  [ 43/135] poblacion=50 prob_cruce=0.9 prob_mutacion=0.5 semilla=1003 → ΣTj=19.718 Cmax=630.718 (113 s) | faltan ≈ 40 min
+  [ 44/135] poblacion=50 prob_cruce=0.9 prob_mutacion=0.5 semilla=1004 → ΣTj=0.000 Cmax=601.752 (112 s) | faltan ≈ 39 min
+  [ 45/135] poblacion=100 prob_cruce=0.7 prob_mutacion=0.1 semilla=1001 → ΣTj=0.000 Cmax=602.130 (88 s) | faltan ≈ 40 min
+  [ 46/135] poblacion=100 prob_cruce=0.7 prob_mutacion=0.1 semilla=1002 → ΣTj=76.849 Cmax=667.553 (89 s) | faltan ≈ 39 min
+  [ 47/135] poblacion=100 prob_cruce=0.7 prob_mutacion=0.1 semilla=1003 → ΣTj=41.521 Cmax=649.829 (88 s) | faltan ≈ 38 min
+  [ 48/135] poblacion=50 prob_cruce=0.9 prob_mutacion=0.5 semilla=1005 → ΣTj=0.000 Cmax=606.615 (115 s) | faltan ≈ 37 min
+  [ 49/135] poblacion=100 prob_cruce=0.7 prob_mutacion=0.1 semilla=1004 → ΣTj=37.781 Cmax=648.781 (89 s) | faltan ≈ 38 min
+  [ 50/135] poblacion=100 prob_cruce=0.7 prob_mutacion=0.1 semilla=1005 → ΣTj=44.431 Cmax=648.282 (88 s) | faltan ≈ 37 min
+  [ 51/135] poblacion=100 prob_cruce=0.7 prob_mutacion=0.3 semilla=1001 → ΣTj=0.000 Cmax=592.633 (97 s) | faltan ≈ 36 min
+  [ 52/135] poblacion=100 prob_cruce=0.7 prob_mutacion=0.3 semilla=1002 → ΣTj=25.098 Cmax=636.098 (96 s) | faltan ≈ 35 min
+  [ 53/135] poblacion=100 prob_cruce=0.7 prob_mutacion=0.3 semilla=1003 → ΣTj=25.097 Cmax=636.097 (98 s) | faltan ≈ 36 min
+  [ 54/135] poblacion=100 prob_cruce=0.7 prob_mutacion=0.3 semilla=1004 → ΣTj=27.413 Cmax=638.413 (98 s) | faltan ≈ 35 min
+  [ 55/135] poblacion=100 prob_cruce=0.7 prob_mutacion=0.3 semilla=1005 → ΣTj=0.208 Cmax=611.208 (97 s) | faltan ≈ 34 min
+  [ 56/135] poblacion=100 prob_cruce=0.7 prob_mutacion=0.5 semilla=1001 → ΣTj=11.179 Cmax=622.179 (107 s) | faltan ≈ 34 min
+  [ 57/135] poblacion=100 prob_cruce=0.7 prob_mutacion=0.5 semilla=1002 → ΣTj=0.000 Cmax=575.339 (104 s) | faltan ≈ 34 min
+  [ 58/135] poblacion=100 prob_cruce=0.7 prob_mutacion=0.5 semilla=1003 → ΣTj=0.000 Cmax=578.926 (105 s) | faltan ≈ 33 min
+  [ 59/135] poblacion=100 prob_cruce=0.7 prob_mutacion=0.5 semilla=1004 → ΣTj=3.970 Cmax=614.970 (104 s) | faltan ≈ 33 min
+  [ 60/135] poblacion=100 prob_cruce=0.7 prob_mutacion=0.5 semilla=1005 → ΣTj=31.325 Cmax=642.325 (106 s) | faltan ≈ 32 min
+  [ 61/135] poblacion=100 prob_cruce=0.8 prob_mutacion=0.1 semilla=1001 → ΣTj=79.061 Cmax=668.675 (93 s) | faltan ≈ 32 min
+  [ 62/135] poblacion=100 prob_cruce=0.8 prob_mutacion=0.1 semilla=1002 → ΣTj=0.000 Cmax=600.889 (94 s) | faltan ≈ 31 min
+  [ 63/135] poblacion=100 prob_cruce=0.8 prob_mutacion=0.1 semilla=1003 → ΣTj=77.137 Cmax=669.553 (93 s) | faltan ≈ 31 min
+  [ 64/135] poblacion=100 prob_cruce=0.8 prob_mutacion=0.1 semilla=1004 → ΣTj=75.210 Cmax=669.952 (92 s) | faltan ≈ 30 min
+  [ 65/135] poblacion=100 prob_cruce=0.8 prob_mutacion=0.1 semilla=1005 → ΣTj=50.054 Cmax=656.385 (95 s) | faltan ≈ 30 min
+  [ 66/135] poblacion=100 prob_cruce=0.8 prob_mutacion=0.3 semilla=1001 → ΣTj=30.897 Cmax=641.897 (103 s) | faltan ≈ 30 min
+  [ 67/135] poblacion=100 prob_cruce=0.8 prob_mutacion=0.3 semilla=1002 → ΣTj=42.535 Cmax=650.945 (102 s) | faltan ≈ 29 min
+  [ 68/135] poblacion=100 prob_cruce=0.8 prob_mutacion=0.3 semilla=1003 → ΣTj=0.000 Cmax=604.968 (103 s) | faltan ≈ 29 min
+  [ 69/135] poblacion=100 prob_cruce=0.8 prob_mutacion=0.3 semilla=1004 → ΣTj=10.600 Cmax=621.600 (103 s) | faltan ≈ 29 min
+  [ 70/135] poblacion=100 prob_cruce=0.8 prob_mutacion=0.3 semilla=1005 → ΣTj=0.000 Cmax=605.695 (103 s) | faltan ≈ 28 min
+  [ 71/135] poblacion=100 prob_cruce=0.8 prob_mutacion=0.5 semilla=1001 → ΣTj=0.000 Cmax=595.553 (110 s) | faltan ≈ 27 min
+  [ 72/135] poblacion=100 prob_cruce=0.8 prob_mutacion=0.5 semilla=1002 → ΣTj=41.320 Cmax=649.211 (109 s) | faltan ≈ 27 min
+  [ 73/135] poblacion=100 prob_cruce=0.8 prob_mutacion=0.5 semilla=1003 → ΣTj=9.662 Cmax=620.662 (112 s) | faltan ≈ 27 min
+  [ 74/135] poblacion=100 prob_cruce=0.8 prob_mutacion=0.5 semilla=1004 → ΣTj=0.000 Cmax=585.303 (111 s) | faltan ≈ 26 min
+  [ 75/135] poblacion=100 prob_cruce=0.8 prob_mutacion=0.5 semilla=1005 → ΣTj=0.000 Cmax=580.128 (111 s) | faltan ≈ 26 min
+  [ 76/135] poblacion=100 prob_cruce=0.9 prob_mutacion=0.1 semilla=1001 → ΣTj=0.000 Cmax=595.626 (105 s) | faltan ≈ 25 min
+  [ 77/135] poblacion=100 prob_cruce=0.9 prob_mutacion=0.1 semilla=1002 → ΣTj=72.227 Cmax=663.817 (105 s) | faltan ≈ 25 min
+  [ 78/135] poblacion=100 prob_cruce=0.9 prob_mutacion=0.1 semilla=1003 → ΣTj=10.492 Cmax=621.492 (106 s) | faltan ≈ 25 min
+  [ 79/135] poblacion=100 prob_cruce=0.9 prob_mutacion=0.1 semilla=1004 → ΣTj=40.805 Cmax=648.874 (105 s) | faltan ≈ 24 min
+  [ 80/135] poblacion=100 prob_cruce=0.9 prob_mutacion=0.1 semilla=1005 → ΣTj=39.334 Cmax=650.334 (108 s) | faltan ≈ 24 min
+  [ 81/135] poblacion=100 prob_cruce=0.9 prob_mutacion=0.3 semilla=1001 → ΣTj=0.000 Cmax=585.846 (110 s) | faltan ≈ 24 min
+  [ 82/135] poblacion=100 prob_cruce=0.9 prob_mutacion=0.3 semilla=1002 → ΣTj=0.000 Cmax=585.678 (112 s) | faltan ≈ 23 min
+  [ 83/135] poblacion=100 prob_cruce=0.9 prob_mutacion=0.3 semilla=1003 → ΣTj=0.000 Cmax=598.153 (111 s) | faltan ≈ 22 min
+  [ 84/135] poblacion=100 prob_cruce=0.9 prob_mutacion=0.3 semilla=1004 → ΣTj=13.596 Cmax=624.596 (112 s) | faltan ≈ 22 min
+  [ 85/135] poblacion=100 prob_cruce=0.9 prob_mutacion=0.3 semilla=1005 → ΣTj=0.000 Cmax=610.393 (112 s) | faltan ≈ 22 min
+  [ 86/135] poblacion=100 prob_cruce=0.9 prob_mutacion=0.5 semilla=1001 → ΣTj=29.183 Cmax=638.722 (119 s) | faltan ≈ 21 min
+  [ 87/135] poblacion=100 prob_cruce=0.9 prob_mutacion=0.5 semilla=1002 → ΣTj=0.000 Cmax=568.729 (118 s) | faltan ≈ 21 min
+  [ 88/135] poblacion=100 prob_cruce=0.9 prob_mutacion=0.5 semilla=1003 → ΣTj=34.739 Cmax=645.739 (119 s) | faltan ≈ 20 min
+  [ 89/135] poblacion=100 prob_cruce=0.9 prob_mutacion=0.5 semilla=1004 → ΣTj=22.313 Cmax=633.313 (117 s) | faltan ≈ 20 min
+  [ 90/135] poblacion=150 prob_cruce=0.7 prob_mutacion=0.1 semilla=1001 → ΣTj=40.882 Cmax=650.188 (93 s) | faltan ≈ 20 min
+  [ 91/135] poblacion=100 prob_cruce=0.9 prob_mutacion=0.5 semilla=1005 → ΣTj=0.000 Cmax=584.342 (120 s) | faltan ≈ 19 min
+  [ 92/135] poblacion=150 prob_cruce=0.7 prob_mutacion=0.1 semilla=1002 → ΣTj=58.391 Cmax=658.922 (94 s) | faltan ≈ 19 min
+  [ 93/135] poblacion=150 prob_cruce=0.7 prob_mutacion=0.1 semilla=1003 → ΣTj=57.111 Cmax=657.375 (90 s) | faltan ≈ 18 min
+  [ 94/135] poblacion=150 prob_cruce=0.7 prob_mutacion=0.1 semilla=1004 → ΣTj=0.000 Cmax=596.850 (89 s) | faltan ≈ 18 min
+  [ 95/135] poblacion=150 prob_cruce=0.7 prob_mutacion=0.1 semilla=1005 → ΣTj=55.084 Cmax=657.984 (89 s) | faltan ≈ 17 min
+  [ 96/135] poblacion=150 prob_cruce=0.7 prob_mutacion=0.3 semilla=1001 → ΣTj=0.000 Cmax=589.616 (97 s) | faltan ≈ 17 min
+  [ 97/135] poblacion=150 prob_cruce=0.7 prob_mutacion=0.3 semilla=1002 → ΣTj=0.000 Cmax=583.477 (95 s) | faltan ≈ 17 min
+  [ 98/135] poblacion=150 prob_cruce=0.7 prob_mutacion=0.3 semilla=1003 → ΣTj=28.094 Cmax=639.094 (95 s) | faltan ≈ 16 min
+  [ 99/135] poblacion=150 prob_cruce=0.7 prob_mutacion=0.3 semilla=1004 → ΣTj=7.148 Cmax=618.148 (95 s) | faltan ≈ 16 min
+  [100/135] poblacion=150 prob_cruce=0.7 prob_mutacion=0.3 semilla=1005 → ΣTj=30.765 Cmax=641.765 (97 s) | faltan ≈ 15 min
+  [101/135] poblacion=150 prob_cruce=0.7 prob_mutacion=0.5 semilla=1001 → ΣTj=21.962 Cmax=632.962 (106 s) | faltan ≈ 15 min
+  [102/135] poblacion=150 prob_cruce=0.7 prob_mutacion=0.5 semilla=1002 → ΣTj=24.452 Cmax=635.452 (105 s) | faltan ≈ 14 min
+  [103/135] poblacion=150 prob_cruce=0.7 prob_mutacion=0.5 semilla=1003 → ΣTj=9.735 Cmax=620.113 (107 s) | faltan ≈ 14 min
+  [104/135] poblacion=150 prob_cruce=0.7 prob_mutacion=0.5 semilla=1004 → ΣTj=2.512 Cmax=613.512 (106 s) | faltan ≈ 13 min
+  [105/135] poblacion=150 prob_cruce=0.7 prob_mutacion=0.5 semilla=1005 → ΣTj=24.659 Cmax=635.659 (107 s) | faltan ≈ 13 min
+  [106/135] poblacion=150 prob_cruce=0.8 prob_mutacion=0.1 semilla=1001 → ΣTj=0.000 Cmax=596.788 (96 s) | faltan ≈ 13 min
+  [107/135] poblacion=150 prob_cruce=0.8 prob_mutacion=0.1 semilla=1002 → ΣTj=64.973 Cmax=661.221 (97 s) | faltan ≈ 12 min
+  [108/135] poblacion=150 prob_cruce=0.8 prob_mutacion=0.1 semilla=1003 → ΣTj=14.103 Cmax=625.103 (98 s) | faltan ≈ 12 min
+  [109/135] poblacion=150 prob_cruce=0.8 prob_mutacion=0.1 semilla=1005 → ΣTj=0.000 Cmax=597.342 (95 s) | faltan ≈ 11 min
+  [110/135] poblacion=150 prob_cruce=0.8 prob_mutacion=0.1 semilla=1004 → ΣTj=58.394 Cmax=659.479 (96 s) | faltan ≈ 11 min
+  [111/135] poblacion=150 prob_cruce=0.8 prob_mutacion=0.3 semilla=1001 → ΣTj=0.000 Cmax=588.080 (102 s) | faltan ≈ 10 min
+  [112/135] poblacion=150 prob_cruce=0.8 prob_mutacion=0.3 semilla=1002 → ΣTj=0.000 Cmax=595.467 (105 s) | faltan ≈ 10 min
+  [113/135] poblacion=150 prob_cruce=0.8 prob_mutacion=0.3 semilla=1003 → ΣTj=38.504 Cmax=647.869 (105 s) | faltan ≈ 10 min
+  [114/135] poblacion=150 prob_cruce=0.8 prob_mutacion=0.3 semilla=1004 → ΣTj=0.000 Cmax=603.072 (106 s) | faltan ≈ 9 min
+  [115/135] poblacion=150 prob_cruce=0.8 prob_mutacion=0.3 semilla=1005 → ΣTj=0.379 Cmax=611.379 (106 s) | faltan ≈ 9 min
+  [116/135] poblacion=150 prob_cruce=0.8 prob_mutacion=0.5 semilla=1001 → ΣTj=29.356 Cmax=640.356 (110 s) | faltan ≈ 8 min
+  [117/135] poblacion=150 prob_cruce=0.8 prob_mutacion=0.5 semilla=1002 → ΣTj=8.709 Cmax=619.709 (110 s) | faltan ≈ 8 min
+  [118/135] poblacion=150 prob_cruce=0.8 prob_mutacion=0.5 semilla=1003 → ΣTj=7.124 Cmax=618.124 (110 s) | faltan ≈ 7 min
+  [119/135] poblacion=150 prob_cruce=0.8 prob_mutacion=0.5 semilla=1004 → ΣTj=0.000 Cmax=588.800 (108 s) | faltan ≈ 7 min
+  [120/135] poblacion=150 prob_cruce=0.8 prob_mutacion=0.5 semilla=1005 → ΣTj=0.000 Cmax=591.922 (109 s) | faltan ≈ 6 min
+  [121/135] poblacion=150 prob_cruce=0.9 prob_mutacion=0.1 semilla=1001 → ΣTj=11.517 Cmax=622.517 (103 s) | faltan ≈ 6 min
+  [122/135] poblacion=150 prob_cruce=0.9 prob_mutacion=0.1 semilla=1002 → ΣTj=0.000 Cmax=591.499 (103 s) | faltan ≈ 6 min
+  [123/135] poblacion=150 prob_cruce=0.9 prob_mutacion=0.1 semilla=1003 → ΣTj=8.676 Cmax=619.676 (104 s) | faltan ≈ 5 min
+  [124/135] poblacion=150 prob_cruce=0.9 prob_mutacion=0.1 semilla=1004 → ΣTj=0.000 Cmax=583.177 (104 s) | faltan ≈ 5 min
+  [125/135] poblacion=150 prob_cruce=0.9 prob_mutacion=0.1 semilla=1005 → ΣTj=0.000 Cmax=586.050 (103 s) | faltan ≈ 4 min
+  [126/135] poblacion=150 prob_cruce=0.9 prob_mutacion=0.3 semilla=1001 → ΣTj=25.971 Cmax=636.971 (109 s) | faltan ≈ 4 min
+  [127/135] poblacion=150 prob_cruce=0.9 prob_mutacion=0.3 semilla=1002 → ΣTj=0.000 Cmax=578.886 (108 s) | faltan ≈ 3 min
+  [128/135] poblacion=150 prob_cruce=0.9 prob_mutacion=0.3 semilla=1003 → ΣTj=0.000 Cmax=585.905 (110 s) | faltan ≈ 3 min
+  [129/135] poblacion=150 prob_cruce=0.9 prob_mutacion=0.3 semilla=1004 → ΣTj=0.000 Cmax=605.727 (110 s) | faltan ≈ 3 min
+  [130/135] poblacion=150 prob_cruce=0.9 prob_mutacion=0.3 semilla=1005 → ΣTj=3.273 Cmax=614.273 (111 s) | faltan ≈ 2 min
+  [131/135] poblacion=150 prob_cruce=0.9 prob_mutacion=0.5 semilla=1001 → ΣTj=0.000 Cmax=586.930 (115 s) | faltan ≈ 2 min
+  [132/135] poblacion=150 prob_cruce=0.9 prob_mutacion=0.5 semilla=1002 → ΣTj=1.403 Cmax=612.403 (115 s) | faltan ≈ 1 min
+  [133/135] poblacion=150 prob_cruce=0.9 prob_mutacion=0.5 semilla=1003 → ΣTj=0.000 Cmax=601.014 (112 s) | faltan ≈ 1 min
+  [134/135] poblacion=150 prob_cruce=0.9 prob_mutacion=0.5 semilla=1004 → ΣTj=0.000 Cmax=600.071 (112 s) | faltan ≈ 0 min
+  [135/135] poblacion=150 prob_cruce=0.9 prob_mutacion=0.5 semilla=1005 → ΣTj=0.000 Cmax=586.186 (111 s) | faltan ≈ 0 min
+# Calibración de los parámetros del algoritmo genético
+
+Instancias de calibración: Caso de estudio. Si hay más de una, la configuración se elige por su posición promedio.
+
+## Caso de estudio
+
+Respuesta analizada: **tardanza total ΣTj**.
+
+Combinaciones ordenadas por ΣTj promedio y luego por Cmax promedio (10 primeras):
+
+| Población | P. cruce | P. mutación | Corridas | ΣTj prom (h) | ΣTj desv | Tardías prom | Cmax prom (h) | Cmax desv | Tiempo prom (s) |
+|---|---|---|---|---|---|---|---|---|---|
+| 150 | 0.900 | 0.500 | 5 | 0.281 | 0.627 | 0.200 | 597.320 | 10.961 | 113.071 |
+| 100 | 0.900 | 0.300 | 5 | 2.719 | 6.080 | 0.200 | 600.933 | 16.714 | 111.362 |
+| 150 | 0.900 | 0.100 | 5 | 4.039 | 5.621 | 0.400 | 600.584 | 18.989 | 103.337 |
+| 150 | 0.900 | 0.300 | 5 | 5.849 | 11.338 | 0.400 | 604.353 | 23.201 | 109.498 |
+| 150 | 0.800 | 0.300 | 5 | 7.776 | 17.178 | 0.600 | 609.173 | 23.303 | 104.846 |
+| 50 | 0.900 | 0.500 | 5 | 8.720 | 8.827 | 0.600 | 616.994 | 12.420 | 114.373 |
+| 50 | 0.700 | 0.500 | 5 | 8.825 | 5.304 | 1.000 | 619.825 | 5.304 | 105.211 |
+| 150 | 0.800 | 0.500 | 5 | 9.038 | 12.041 | 0.600 | 611.782 | 21.460 | 109.385 |
+| 100 | 0.700 | 0.500 | 5 | 9.295 | 13.134 | 0.600 | 606.748 | 28.862 | 105.119 |
+| 100 | 0.800 | 0.500 | 5 | 10.196 | 17.895 | 0.600 | 606.171 | 28.674 | 110.820 |
+
+ANOVA sobre tardanza total ΣTj:
+
+| Fuente | SC | gl | CM | F | valor p |
+|---|---|---|---|---|---|
+| Población | 12509.1997 | 2 | 6254.5998 | 18.7983 | 8.48e-08 |
+| Prob. de cruce | 2604.8372 | 2 | 1302.4186 | 3.9144 | 0.0226 |
+| Prob. de mutación | 24596.6922 | 2 | 12298.3461 | 36.9628 | 3.81e-13 |
+| Población × Prob. de cruce | 1859.7461 | 4 | 464.9365 | 1.3974 | 0.2392 |
+| Población × Prob. de mutación | 5475.4518 | 4 | 1368.8629 | 4.1141 | 0.0037 |
+| Prob. de cruce × Prob. de mutación | 1586.5309 | 4 | 396.6327 | 1.1921 | 0.3180 |
+| Error | 38595.7318 | 116 | 332.7218 | — | — |
+| Total | 87228.1896 | 134 | — | — | — |
+
+- Normalidad de residuos (Shapiro-Wilk): W = 0.9750, p = 0.01362.
+- Población: Levene p = 0.05892; Kruskal-Wallis H = 20.954, p = 2.817e-05.
+- Prob. de cruce: Levene p = 0.08998; Kruskal-Wallis H = 4.596, p = 0.1005.
+- Prob. de mutación: Levene p = 1.158e-05; Kruskal-Wallis H = 27.969, p = 8.446e-07.
+
+## Selección combinada
+
+Posición de cada combinación en cada instancia (1 = mejor) y posición promedio (10 primeras):
+
+| poblacion | prob_cruce | prob_mutacion | pos_real | T_real | C_real | pos_prom |
+|---|---|---|---|---|---|---|
+| 150 | 0.90 | 0.50 | 1 | 0.28 | 597.32 | 1.00 |
+| 100 | 0.90 | 0.30 | 2 | 2.72 | 600.93 | 2.00 |
+| 150 | 0.90 | 0.10 | 3 | 4.04 | 600.58 | 3.00 |
+| 150 | 0.90 | 0.30 | 4 | 5.85 | 604.35 | 4.00 |
+| 150 | 0.80 | 0.30 | 5 | 7.78 | 609.17 | 5.00 |
+| 50 | 0.90 | 0.50 | 6 | 8.72 | 616.99 | 6.00 |
+| 50 | 0.70 | 0.50 | 7 | 8.82 | 619.82 | 7.00 |
+| 150 | 0.80 | 0.50 | 8 | 9.04 | 611.78 | 8.00 |
+| 100 | 0.70 | 0.50 | 9 | 9.29 | 606.75 | 9.00 |
+| 100 | 0.80 | 0.50 | 10 | 10.20 | 606.17 | 10.00 |
+
+- Mejor combinación del diseño: población = 150, cruce = 0.9, mutación = 0.5.
+- Factores significativos en al menos una instancia: Población, Prob. de cruce, Prob. de mutación.
+- La mejor combinación está en el borde para: Población, Prob. de cruce, Prob. de mutación.
+
+No se evaluaron niveles fuera del rango del diseño; se adopta la mejor combinación dentro de ese rango.
+
+**Configuración seleccionada: población = 150, cruce = 0.9, mutación = 0.5.**
+
+
+Informe guardado en /home/user/Flow-shop-sublotes-consistentes/fase2/salida_calibracion/informe_calibracion.md
+=== parada Sun Nov  1 00:32:11 UTC 2026
+
+EXPERIMENTO 2 — Caso de estudio: criterio de parada [50, 100] generaciones sin mejora, configuración {'poblacion': 150, 'prob_cruce': 0.9, 'prob_mutacion': 0.5}, 10 réplicas
+  Corridas: 20 | ya hechas: 0 | pendientes: 20 | procesos: 4
+  [  1/20] sin_mejora=50 semilla=1103 → ΣTj=0.000 Cmax=593.710 (160 s) | faltan ≈ 51 min
+  [  2/20] sin_mejora=50 semilla=1101 → ΣTj=0.000 Cmax=595.870 (165 s) | faltan ≈ 25 min
+  [  3/20] sin_mejora=50 semilla=1102 → ΣTj=0.000 Cmax=605.308 (224 s) | faltan ≈ 21 min
+  [  4/20] sin_mejora=50 semilla=1104 → ΣTj=0.000 Cmax=581.871 (352 s) | faltan ≈ 24 min
+  [  5/20] sin_mejora=50 semilla=1107 → ΣTj=0.000 Cmax=593.129 (154 s) | faltan ≈ 19 min
+  [  6/20] sin_mejora=50 semilla=1105 → ΣTj=0.000 Cmax=598.416 (270 s) | faltan ≈ 17 min
+  [  7/20] sin_mejora=50 semilla=1106 → ΣTj=0.000 Cmax=594.077 (270 s) | faltan ≈ 13 min
+  [  8/20] sin_mejora=50 semilla=1109 → ΣTj=0.000 Cmax=586.283 (197 s) | faltan ≈ 14 min
+  [  9/20] sin_mejora=50 semilla=1110 → ΣTj=0.000 Cmax=597.003 (183 s) | faltan ≈ 13 min
+  [ 10/20] sin_mejora=100 semilla=1101 → ΣTj=0.000 Cmax=595.870 (203 s) | faltan ≈ 11 min
+  [ 11/20] sin_mejora=50 semilla=1108 → ΣTj=7.209 Cmax=618.209 (359 s) | faltan ≈ 10 min
+  [ 12/20] sin_mejora=100 semilla=1104 → ΣTj=0.000 Cmax=581.871 (392 s) | faltan ≈ 11 min
+  [ 13/20] sin_mejora=100 semilla=1103 → ΣTj=0.000 Cmax=586.477 (572 s) | faltan ≈ 11 min
+  [ 14/20] sin_mejora=100 semilla=1102 → ΣTj=0.000 Cmax=593.918 (613 s) | faltan ≈ 8 min
+  [ 15/20] sin_mejora=100 semilla=1105 → ΣTj=0.000 Cmax=595.921 (637 s) | faltan ≈ 7 min
+  [ 16/20] sin_mejora=100 semilla=1106 → ΣTj=0.000 Cmax=594.077 (343 s) | faltan ≈ 6 min
+  [ 17/20] sin_mejora=100 semilla=1107 → ΣTj=0.000 Cmax=591.858 (384 s) | faltan ≈ 5 min
+  [ 18/20] sin_mejora=100 semilla=1110 → ΣTj=0.000 Cmax=596.591 (293 s) | faltan ≈ 3 min
+  [ 19/20] sin_mejora=100 semilla=1108 → ΣTj=0.000 Cmax=599.684 (626 s) | faltan ≈ 2 min
+  [ 20/20] sin_mejora=100 semilla=1109 → ΣTj=0.000 Cmax=577.398 (674 s) | faltan ≈ 0 min
+# Calibración de los parámetros del algoritmo genético
+
+Instancias de calibración: Caso de estudio. Si hay más de una, la configuración se elige por su posición promedio.
+
+## Caso de estudio
+
+Respuesta analizada: **tardanza total ΣTj**.
+
+Combinaciones ordenadas por ΣTj promedio y luego por Cmax promedio (10 primeras):
+
+| Población | P. cruce | P. mutación | Corridas | ΣTj prom (h) | ΣTj desv | Tardías prom | Cmax prom (h) | Cmax desv | Tiempo prom (s) |
+|---|---|---|---|---|---|---|---|---|---|
+| 150 | 0.900 | 0.500 | 5 | 0.281 | 0.627 | 0.200 | 597.320 | 10.961 | 113.071 |
+| 100 | 0.900 | 0.300 | 5 | 2.719 | 6.080 | 0.200 | 600.933 | 16.714 | 111.362 |
+| 150 | 0.900 | 0.100 | 5 | 4.039 | 5.621 | 0.400 | 600.584 | 18.989 | 103.337 |
+| 150 | 0.900 | 0.300 | 5 | 5.849 | 11.338 | 0.400 | 604.353 | 23.201 | 109.498 |
+| 150 | 0.800 | 0.300 | 5 | 7.776 | 17.178 | 0.600 | 609.173 | 23.303 | 104.846 |
+| 50 | 0.900 | 0.500 | 5 | 8.720 | 8.827 | 0.600 | 616.994 | 12.420 | 114.373 |
+| 50 | 0.700 | 0.500 | 5 | 8.825 | 5.304 | 1.000 | 619.825 | 5.304 | 105.211 |
+| 150 | 0.800 | 0.500 | 5 | 9.038 | 12.041 | 0.600 | 611.782 | 21.460 | 109.385 |
+| 100 | 0.700 | 0.500 | 5 | 9.295 | 13.134 | 0.600 | 606.748 | 28.862 | 105.119 |
+| 100 | 0.800 | 0.500 | 5 | 10.196 | 17.895 | 0.600 | 606.171 | 28.674 | 110.820 |
+
+ANOVA sobre tardanza total ΣTj:
+
+| Fuente | SC | gl | CM | F | valor p |
+|---|---|---|---|---|---|
+| Población | 12509.1997 | 2 | 6254.5998 | 18.7983 | 8.48e-08 |
+| Prob. de cruce | 2604.8372 | 2 | 1302.4186 | 3.9144 | 0.0226 |
+| Prob. de mutación | 24596.6922 | 2 | 12298.3461 | 36.9628 | 3.81e-13 |
+| Población × Prob. de cruce | 1859.7461 | 4 | 464.9365 | 1.3974 | 0.2392 |
+| Población × Prob. de mutación | 5475.4518 | 4 | 1368.8629 | 4.1141 | 0.0037 |
+| Prob. de cruce × Prob. de mutación | 1586.5309 | 4 | 396.6327 | 1.1921 | 0.3180 |
+| Error | 38595.7318 | 116 | 332.7218 | — | — |
+| Total | 87228.1896 | 134 | — | — | — |
+
+- Normalidad de residuos (Shapiro-Wilk): W = 0.9750, p = 0.01362.
+- Población: Levene p = 0.05892; Kruskal-Wallis H = 20.954, p = 2.817e-05.
+- Prob. de cruce: Levene p = 0.08998; Kruskal-Wallis H = 4.596, p = 0.1005.
+- Prob. de mutación: Levene p = 1.158e-05; Kruskal-Wallis H = 27.969, p = 8.446e-07.
+
+## Selección combinada
+
+Posición de cada combinación en cada instancia (1 = mejor) y posición promedio (10 primeras):
+
+| poblacion | prob_cruce | prob_mutacion | pos_real | T_real | C_real | pos_prom |
+|---|---|---|---|---|---|---|
+| 150 | 0.90 | 0.50 | 1 | 0.28 | 597.32 | 1.00 |
+| 100 | 0.90 | 0.30 | 2 | 2.72 | 600.93 | 2.00 |
+| 150 | 0.90 | 0.10 | 3 | 4.04 | 600.58 | 3.00 |
+| 150 | 0.90 | 0.30 | 4 | 5.85 | 604.35 | 4.00 |
+| 150 | 0.80 | 0.30 | 5 | 7.78 | 609.17 | 5.00 |
+| 50 | 0.90 | 0.50 | 6 | 8.72 | 616.99 | 6.00 |
+| 50 | 0.70 | 0.50 | 7 | 8.82 | 619.82 | 7.00 |
+| 150 | 0.80 | 0.50 | 8 | 9.04 | 611.78 | 8.00 |
+| 100 | 0.70 | 0.50 | 9 | 9.29 | 606.75 | 9.00 |
+| 100 | 0.80 | 0.50 | 10 | 10.20 | 606.17 | 10.00 |
+
+- Mejor combinación del diseño: población = 150, cruce = 0.9, mutación = 0.5.
+- Factores significativos en al menos una instancia: Población, Prob. de cruce, Prob. de mutación.
+- La mejor combinación está en el borde para: Población, Prob. de cruce, Prob. de mutación.
+
+No se evaluaron niveles fuera del rango del diseño; se adopta la mejor combinación dentro de ese rango.
+
+**Configuración seleccionada: población = 150, cruce = 0.9, mutación = 0.5.**
+
+## Criterio de parada
+
+Configuración: {'poblacion': 150, 'prob_cruce': 0.9, 'prob_mutacion': 0.5}
+
+Caso de estudio:
+
+| Gen. sin mejora | Corridas | ΣTj prom (h) | ΣTj desv | Tardías prom | Cmax prom (h) | Cmax desv | Tiempo prom (s) | Generaciones prom |
+|---|---|---|---|---|---|---|---|---|
+| 50 | 10 | 0.721 | 2.280 | 0.100 | 596.388 | 9.981 | 233.415 | 405.000 |
+| 100 | 10 | 0.000 | 0.000 | 0.000 | 591.367 | 7.155 | 473.679 | 739.400 |
+
+- 50 → 100 generaciones sin mejora: Wilcoxon de una cola p = 0.007812 (mejora significativa).
+
+**Criterio de parada recomendado: 100 generaciones sin mejora** (mejora de forma significativa frente a los niveles menores; no se evaluaron niveles mayores).
+
+
+Informe guardado en /home/user/Flow-shop-sublotes-consistentes/fase2/salida_calibracion/informe_calibracion.md
+=== FIN Sun Nov  1 01:05:57 UTC 2026

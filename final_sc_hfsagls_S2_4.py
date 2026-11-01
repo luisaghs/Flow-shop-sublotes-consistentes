@@ -95,10 +95,10 @@ ALISTAMIENTO_MIN_POR_ETAPA = {'Troquelado': 4.98}
 # ---------------------------------------------------------------------------
 
 GA_PARAMS = {
-    'poblacion'    : 100,   # tamaño de la población (calibrado)
+    'poblacion'    : 150,   # tamaño de la población (calibrado)
     'generaciones' : 1000,  # máximo de generaciones
     'sin_mejora'   : 100,   # parada tras 100 generaciones sin mejora (calibrado)
-    'prob_cruce'   : 0.80,  # probabilidad de cruce (calibrado)
+    'prob_cruce'   : 0.90,  # probabilidad de cruce (calibrado)
     'prob_mutacion': 0.50,  # probabilidad de mutar cada hijo (calibrado)
     'prob_mut_pos' : 0.30,  # probabilidad de intercambio de posiciones (nivel 2)
     'prob_mut_prop': 0.40,  # probabilidad de perturbar los tamaños de una orden (nivel 1)

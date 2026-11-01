@@ -1,0 +1,1 @@
+{'poblacion': 150, 'prob_cruce': 0.9, 'prob_mutacion': 0.5}

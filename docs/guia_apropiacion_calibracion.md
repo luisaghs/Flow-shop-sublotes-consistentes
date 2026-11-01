@@ -28,12 +28,12 @@ Este documento los guía en las tres.
 | Semillas comunes | La réplica r usa la semilla 1000 + r en las 27 combinaciones | Es un bloqueo: las combinaciones se comparan con el mismo "azar" y la diferencia se debe a los parámetros |
 | Respuesta | Tardanza total ΣT_j | Es el objetivo del modelo; el makespan se usa como criterio secundario |
 | Análisis | ANOVA con efectos principales e interacciones dobles | Identifica qué factores afectan la tardanza |
-| Supuestos | Normalidad (Shapiro-Wilk) y varianzas iguales (Levene) | El ANOVA los requiere; los residuos son normales (p = 0,27), pero la varianza no fue homogénea en población y mutación (Levene, p < 0,05) |
+| Supuestos | Normalidad (Shapiro-Wilk) y varianzas iguales (Levene) | El ANOVA los requiere. No se cumplen del todo: 41 de 135 corridas llegaron a tardanza cero, lo que tuerce la distribución (Shapiro-Wilk, p = 0,014) y reduce la dispersión con mutación alta (Levene, p < 0,001) |
 | Prueba no paramétrica | Kruskal-Wallis | Confirma el ANOVA sin suponer normalidad ni varianzas iguales |
-| Resultado | Población (p = 0,0006), mutación (p < 0,0001) y su interacción (p = 0,002) son significativas; el cruce no (p = 0,18) | Más población y más mutación reducen la tardanza; el efecto de la mutación depende del tamaño de la población |
-| Selección | Población 100, cruce 0,8 y mutación 0,5 (ΣT_j promedio 70,7 h) | Es la combinación con menor tardanza promedio; con cruce 0,9 el resultado es prácticamente igual (71,7 h) |
-| Rango | La mutación 0,5 quedó en el borde del rango | No se evaluaron niveles fuera del rango; se adoptó la mejor combinación dentro de él. Es una limitación que conviene reconocer |
-| Criterio de parada | 50 y 100 generaciones sin mejora, 10 réplicas (semillas 1101–1110) | Con 100 la tardanza baja de 99,4 h a 71,2 h (−28 %) y nunca empeora; Wilcoxon de una cola, p = 0,031. Cuesta unos 1,6 min más por corrida |
+| Resultado | Población y mutación son significativas en el ANOVA y en Kruskal-Wallis (p < 0,0001); también su interacción (p = 0,004). El cruce es significativo en el ANOVA (p = 0,023) pero no en Kruskal-Wallis (p = 0,10) | Más población y más mutación reducen la tardanza; el efecto del cruce es débil |
+| Selección | Población 150, cruce 0,9 y mutación 0,5 (ΣT_j promedio 0,28 h; 4 de 5 réplicas sin tardanza) | Es la combinación con menor tardanza promedio |
+| Rango | La mejor combinación quedó en el borde del rango en los tres factores | No se evaluaron niveles fuera del rango; se adoptó la mejor combinación dentro de él. Es una limitación que conviene reconocer |
+| Criterio de parada | 50 y 100 generaciones sin mejora, 10 réplicas (semillas 1101–1110) | Con 100 todas las réplicas quedan sin tardanza (con 50, una queda en 7,2 h) y el makespan promedio baja de 596,4 h a 591,4 h; Wilcoxon de una cola sobre el objetivo lexicográfico, p = 0,008. Cuesta unos 4 min más por corrida |
 | Prueba de una cola | Se probó si 100 mejora a 50 (no si son distintos) | Con la misma semilla, la corrida de 100 continúa la de 50: no puede terminar peor, así que la dirección se conoce de antemano |
 
 **Ejercicio:** cada integrante explica la tabla anterior en voz alta a otra persona
@@ -60,7 +60,7 @@ cd fase2
 python verificar_reproduccion.py ruta/final_sc_hfsagls_S2_4.py ruta/BD_HFS.xlsx
 ```
 
-El script repite las 5 corridas de la configuración elegida (100; 0,8; 0,5) y las
+El script repite las 5 corridas de la configuración elegida (150; 0,9; 0,5) y las
 compara con las guardadas. El resultado esperado es "5 de 5 corridas reproducidas
 exactamente". Con `--combinacion 50,0.7,0.1` pueden probar cualquier otra combinación.
 
@@ -102,8 +102,8 @@ general* con los tres factores y sus interacciones dobles: deben obtener la mism
 Hacerlo con la herramienta que dominan es la mejor forma de poder defenderlo.
 
 **Ejercicio:** calculen a mano la SC de la población con las tres medias por nivel
-(142,06; 118,90 y 107,32 h), la media general (122,76 h) y n = 45 por nivel:
-SC = 45 · Σ (media_nivel − media general)² ≈ 28.162.
+(37,32; 22,31 y 14,07 h), la media general (24,57 h) y n = 45 por nivel:
+SC = 45 · Σ (media_nivel − media general)² ≈ 12.509.
 
 El programa que arma este Excel es `fase2/anova_excel.py`.
 
@@ -121,17 +121,20 @@ El programa que arma este Excel es `fase2/anova_excel.py`.
   tiempo sin cambiar la conclusión.
 - **No se cumplió la homogeneidad de varianzas, ¿el ANOVA es válido?** Por eso se
   confirmó con Kruskal-Wallis, que no requiere ese supuesto y dio la misma conclusión.
-- **¿Por qué la probabilidad de cruce es 0,8 si no fue significativa?** Se eligió la
-  combinación completa con menor tardanza promedio. Como el cruce no influye de forma
-  significativa, con 0,9 el resultado es prácticamente el mismo (70,7 h frente a 71,7 h).
-- **La mutación quedó en el borde del rango (0,5), ¿cómo saben que es la mejor?** No se
-  sabe fuera del rango: el estudio se limitó a los niveles usuales en la literatura y se
-  adoptó la mejor combinación dentro de ellos. Se reconoce como limitación; tasas de
-  mutación mucho mayores acercan el AG a una búsqueda aleatoria.
+- **El ANOVA dice que el cruce es significativo y Kruskal-Wallis que no, ¿cuál vale?**
+  Como no se cumplen los supuestos del ANOVA, la conclusión se apoya en Kruskal-Wallis:
+  el efecto del cruce es débil. No cambia la elección, que es la combinación completa
+  con menor tardanza promedio.
+- **¿No se cumplen los supuestos, el ANOVA sirve?** El diseño es balanceado y tiene 45
+  corridas por nivel, condiciones en que el ANOVA tolera bien estas fallas; además, la
+  conclusión se confirmó con Kruskal-Wallis. Las fallas se deben a que muchas corridas
+  llegan a tardanza cero, el mínimo posible.
+- **La mejor combinación quedó en el borde del rango (150; 0,9; 0,5), ¿cómo saben que es
+  la mejor?** No se sabe fuera del rango: el estudio se limitó a los niveles usuales en la
+  literatura y se adoptó la mejor combinación dentro de ellos. Se reconoce como limitación.
 - **¿Por qué una prueba de una cola en el criterio de parada?** Con la misma semilla, la
   corrida con 100 generaciones sin mejora es la de 50 continuada, así que no puede
-  terminar peor; solo cabe preguntar si mejora. Con la prueba de dos colas y solo 5
-  diferencias distintas de cero, el valor p mínimo posible era 0,0625.
+  terminar peor; solo cabe preguntar si mejora.
 - **¿Los resultados se pueden repetir?** Sí: con las mismas semillas, cada corrida da
   exactamente el mismo resultado (sección 2).
 
