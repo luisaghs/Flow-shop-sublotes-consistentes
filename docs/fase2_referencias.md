@@ -36,6 +36,8 @@ cada referencia (año, volumen, páginas) antes de incluirla en la lista final.*
   (3.ª ed.). Springer.
 - Mitchell, S., O'Sullivan, M., & Dunning, I. (2011). *PuLP: A linear programming
   toolkit for Python*. The University of Auckland.
+- Law, A. M. (2015). *Simulation modeling and analysis* (5.ª ed.). McGraw-Hill.
+  (Citado en la Fase 3.)
 - Montgomery, D. C. (2017). *Design and analysis of experiments* (9.ª ed.). Wiley.
 - Naderi, B., Gohari, S., & Yazdani, M. (2014). Hybrid flexible flowshop problems:
   Models and solution methods. *Applied Mathematical Modelling, 38*(24), 5767–5780.
@@ -49,5 +51,8 @@ cada referencia (año, volumen, páginas) antes de incluirla en la lista final.*
 - ✔ Ruiz, R., & Vázquez-Rodríguez, J. A. (2010). The hybrid flow shop scheduling
   problem. *European Journal of Operational Research, 205*(1), 1–18.
   https://doi.org/10.1016/j.ejor.2009.09.024
+- Sargent, R. G. (2013). Verification and validation of simulation models.
+  *Journal of Simulation, 7*(1), 12–24. https://doi.org/10.1057/jos.2012.20
+  (Citado en la Fase 3.)
 - Wilcoxon, F. (1945). Individual comparisons by ranking methods. *Biometrics Bulletin,
   1*(6), 80–83.

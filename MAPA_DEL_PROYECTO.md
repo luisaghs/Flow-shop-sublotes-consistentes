@@ -6,9 +6,9 @@
 |---|---|
 | `final_sc_hfsagls_S2_4.py` | **El modelo**: el algoritmo genético final, con los parámetros calibrados. Es el código del trabajo de grado. |
 | `BD_HFS.xlsx` | **Los datos** del caso de estudio: tiempos, órdenes y calendario. |
-| `docs/Trabajo_de_Grado_con_Fase_2_sintetizada.docx` | **El documento** del trabajo de grado con la Fase 2 redactada (versión recomendada, ≈ 13 páginas). |
+| `docs/Trabajo_de_Grado_con_Fases_2_y_3.docx` | **El documento** del trabajo de grado: Fase 1 actualizada y Fases 2 y 3 redactadas. |
 
-Todo lo demás son pruebas, experimentos y resultados que respaldan lo que dice la Fase 2.
+Todo lo demás son pruebas, experimentos y resultados que respaldan lo que dicen las Fases 2 y 3.
 
 ---
 
@@ -18,7 +18,7 @@ Todo lo demás son pruebas, experimentos y resultados que respaldan lo que dice 
 
 | Archivo | Qué es | ¿Lo usan? |
 |---|---|---|
-| `Trabajo_de_Grado_con_Fase_2_sintetizada.docx` | Borrador con la Fase 2 sintetizada | **Sí, versión recomendada** |
+| `Trabajo_de_Grado_con_Fases_2_y_3.docx` | Borrador con la Fase 1 actualizada y las Fases 2 y 3 redactadas | **Sí** |
 | `fase2_referencias.md` | Referencias nuevas que cita la Fase 2 | Sí, para completar la bibliografía (verificarlas) |
 | `fase3_guia_metodologica.md` | Propuesta para la Fase 3 | Sí, para la Fase 3 |
 | `guia_apropiacion_calibracion.md` | Cómo entender, reproducir y declarar la calibración | Sí, para prepararse |
@@ -35,6 +35,7 @@ Todo lo demás son pruebas, experimentos y resultados que respaldan lo que dice 
 | 4.2.4 Rehacer el ANOVA en Excel | `anova_excel.py` | `salida_calibracion/anova_calibracion_excel.xlsx` |
 | 4.2.5 Programación obtenida | `solucion_final.py` | `salida_solucion/` (`replicas.csv`, `mejor_solucion.json`, `gantt_solucion.png`) |
 | Comprobar que la calibración se repite igual | `verificar_reproduccion.py` | Se imprime en pantalla |
+| 4.3 Fase 3: comparación con el sistema actual | `fase3/experimentos_fase3.py` | `fase3/salida_fase3/` (`informe_fase3.md`, `corridas_ag.csv`, `deterministas.csv`, `comparacion_base.png`) |
 
 Todos los programas de `fase2/` usan el modelo `final_sc_hfsagls_S2_4.py` y `BD_HFS.xlsx`; no son otros modelos.
 
@@ -69,6 +70,8 @@ de modo que **con la misma semilla se obtiene exactamente el mismo resultado**.
 | Calibración: diseño factorial (27 combinaciones) | 4.2.4 | **1001 a 1005** | La réplica r usa 1000 + r en todas las combinaciones |
 | Calibración: criterio de parada | 4.2.4 | **1101 a 1110** | 10 réplicas por criterio (50 y 100 generaciones sin mejora) |
 | Programación obtenida (10 réplicas) | 4.2.5 | **1201 a 1210** | **La programación propuesta es la de la semilla 1203** |
+| Fase 3: escenario base (AG con B̄ = 10 y con B = 6) | 4.3 | **3001 a 3030** | 30 réplicas por configuración |
+| Fase 3: sensibilidad y escenarios de exigencia | 4.3 | **3001 a 3010** | 10 réplicas por caso |
 | Valor por defecto del modelo | — | **1203** | Al ejecutar `final_sc_hfsagls_S2_4.py` se obtiene la programación propuesta |
 
 **Importante:**
@@ -82,7 +85,6 @@ de modo que **con la misma semilla se obtiene exactamente el mismo resultado**.
   Para obtener otra réplica, cambien el valor de `'semilla'` en `GA_PARAMS`.
 - La validación con instancias reducidas se corrió con los parámetros calibrados
   (`python validacion_milp.py ag ...` repite solo el AG).
-- Las semillas de la Fase 3 (3001–3030) están en `docs/fase3_guia_metodologica.md`.
 
 ---
 
@@ -101,4 +103,5 @@ python anova_excel.py
 python verificar_reproduccion.py ../final_sc_hfsagls_S2_4.py ../BD_HFS.xlsx
 cd ..
 python fase2/solucion_final.py final_sc_hfsagls_S2_4.py BD_HFS.xlsx 10
+python fase3/experimentos_fase3.py correr final_sc_hfsagls_S2_4.py BD_HFS.xlsx   # Fase 3 (≈ 3 h)
 ```
