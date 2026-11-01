@@ -1,0 +1,139 @@
+Corridas pendientes: 120 | procesos: 4
+[  1/120] base B=10 semilla=3001 → tardías=0 ΣT=0.0 Cmax=591.7 (294 s) | faltan ≈ 586 min
+[  2/120] base B=10 semilla=3003 → tardías=0 ΣT=0.0 Cmax=598.0 (503 s) | faltan ≈ 496 min
+[  3/120] base B=10 semilla=3004 → tardías=0 ΣT=0.0 Cmax=578.2 (584 s) | faltan ≈ 380 min
+[  4/120] base B=10 semilla=3002 → tardías=0 ΣT=0.0 Cmax=593.2 (594 s) | faltan ≈ 288 min
+[  5/120] base B=10 semilla=3005 → tardías=0 ΣT=0.0 Cmax=574.3 (410 s) | faltan ≈ 270 min
+[  6/120] base B=10 semilla=3008 → tardías=1 ΣT=5.1 Cmax=616.1 (232 s) | faltan ≈ 262 min
+[  7/120] base B=10 semilla=3009 → tardías=0 ΣT=0.0 Cmax=573.2 (201 s) | faltan ≈ 244 min
+[  8/120] base B=10 semilla=3007 → tardías=0 ΣT=0.0 Cmax=580.9 (382 s) | faltan ≈ 226 min
+[  9/120] base B=10 semilla=3006 → tardías=0 ΣT=0.0 Cmax=562.1 (516 s) | faltan ≈ 210 min
+[ 10/120] base B=10 semilla=3011 → tardías=0 ΣT=0.0 Cmax=598.0 (270 s) | faltan ≈ 216 min
+[ 11/120] base B=10 semilla=3010 → tardías=0 ΣT=0.0 Cmax=594.9 (489 s) | faltan ≈ 218 min
+[ 12/120] base B=10 semilla=3012 → tardías=0 ΣT=0.0 Cmax=593.5 (393 s) | faltan ≈ 204 min
+[ 13/120] base B=10 semilla=3013 → tardías=0 ΣT=0.0 Cmax=588.3 (469 s) | faltan ≈ 204 min
+[ 14/120] base B=10 semilla=3014 → tardías=0 ΣT=0.0 Cmax=579.8 (436 s) | faltan ≈ 203 min
+[ 15/120] base B=10 semilla=3016 → tardías=0 ΣT=0.0 Cmax=594.7 (252 s) | faltan ≈ 188 min
+[ 16/120] base B=10 semilla=3017 → tardías=0 ΣT=0.0 Cmax=587.9 (172 s) | faltan ≈ 180 min
+[ 17/120] base B=10 semilla=3020 → tardías=0 ΣT=0.0 Cmax=588.9 (213 s) | faltan ≈ 189 min
+[ 18/120] base B=10 semilla=3018 → tardías=0 ΣT=0.0 Cmax=592.8 (294 s) | faltan ≈ 180 min
+[ 19/120] base B=10 semilla=3015 → tardías=0 ΣT=0.0 Cmax=592.0 (600 s) | faltan ≈ 170 min
+[ 20/120] base B=10 semilla=3019 → tardías=0 ΣT=0.0 Cmax=590.5 (462 s) | faltan ≈ 173 min
+[ 21/120] base B=10 semilla=3023 → tardías=1 ΣT=22.9 Cmax=633.9 (227 s) | faltan ≈ 168 min
+[ 22/120] base B=10 semilla=3022 → tardías=0 ΣT=0.0 Cmax=590.5 (246 s) | faltan ≈ 160 min
+[ 23/120] base B=10 semilla=3021 → tardías=1 ΣT=0.6 Cmax=611.6 (443 s) | faltan ≈ 163 min
+[ 24/120] base B=10 semilla=3027 → tardías=0 ΣT=0.0 Cmax=591.6 (284 s) | faltan ≈ 174 min
+[ 25/120] base B=10 semilla=3025 → tardías=1 ΣT=16.2 Cmax=627.2 (488 s) | faltan ≈ 167 min
+[ 26/120] base B=10 semilla=3024 → tardías=0 ΣT=0.0 Cmax=602.2 (596 s) | faltan ≈ 161 min
+[ 27/120] base B=10 semilla=3026 → tardías=0 ΣT=0.0 Cmax=582.5 (606 s) | faltan ≈ 158 min
+[ 28/120] base B=6 semilla=3001 → tardías=3 ΣT=105.8 Cmax=691.3 (120 s) | faltan ≈ 158 min
+[ 29/120] base B=10 semilla=3029 → tardías=0 ΣT=0.0 Cmax=572.7 (369 s) | faltan ≈ 157 min
+[ 30/120] base B=10 semilla=3030 → tardías=0 ΣT=0.0 Cmax=583.7 (395 s) | faltan ≈ 153 min
+[ 31/120] base B=10 semilla=3028 → tardías=0 ΣT=0.0 Cmax=584.0 (524 s) | faltan ≈ 150 min
+[ 32/120] base B=6 semilla=3002 → tardías=2 ΣT=86.1 Cmax=682.5 (344 s) | faltan ≈ 148 min
+[ 33/120] base B=6 semilla=3003 → tardías=2 ΣT=90.4 Cmax=682.6 (222 s) | faltan ≈ 142 min
+[ 34/120] base B=6 semilla=3004 → tardías=3 ΣT=103.0 Cmax=669.4 (276 s) | faltan ≈ 141 min
+[ 35/120] base B=6 semilla=3006 → tardías=2 ΣT=91.6 Cmax=683.5 (142 s) | faltan ≈ 136 min
+[ 36/120] base B=6 semilla=3007 → tardías=2 ΣT=108.0 Cmax=691.9 (251 s) | faltan ≈ 135 min
+[ 37/120] base B=6 semilla=3005 → tardías=2 ΣT=87.8 Cmax=682.6 (347 s) | faltan ≈ 130 min
+[ 38/120] base B=6 semilla=3011 → tardías=2 ΣT=92.9 Cmax=681.8 (143 s) | faltan ≈ 130 min
+[ 39/120] base B=6 semilla=3009 → tardías=2 ΣT=96.5 Cmax=688.6 (273 s) | faltan ≈ 126 min
+[ 40/120] base B=6 semilla=3010 → tardías=2 ΣT=94.7 Cmax=683.6 (165 s) | faltan ≈ 121 min
+[ 41/120] base B=6 semilla=3008 → tardías=2 ΣT=74.3 Cmax=680.5 (330 s) | faltan ≈ 118 min
+[ 42/120] base B=6 semilla=3015 → tardías=2 ΣT=86.0 Cmax=677.1 (167 s) | faltan ≈ 119 min
+[ 43/120] base B=6 semilla=3014 → tardías=2 ΣT=103.1 Cmax=689.0 (220 s) | faltan ≈ 115 min
+[ 44/120] base B=6 semilla=3012 → tardías=2 ΣT=98.0 Cmax=688.5 (294 s) | faltan ≈ 113 min
+[ 45/120] base B=6 semilla=3013 → tardías=2 ΣT=96.0 Cmax=685.9 (303 s) | faltan ≈ 109 min
+[ 46/120] base B=6 semilla=3017 → tardías=2 ΣT=103.4 Cmax=686.7 (108 s) | faltan ≈ 106 min
+[ 47/120] base B=6 semilla=3016 → tardías=2 ΣT=90.7 Cmax=683.9 (217 s) | faltan ≈ 105 min
+[ 48/120] base B=6 semilla=3018 → tardías=2 ΣT=94.1 Cmax=667.2 (199 s) | faltan ≈ 103 min
+[ 49/120] base B=6 semilla=3022 → tardías=2 ΣT=78.0 Cmax=684.1 (161 s) | faltan ≈ 103 min
+[ 50/120] base B=6 semilla=3019 → tardías=2 ΣT=113.4 Cmax=676.5 (339 s) | faltan ≈ 100 min
+[ 51/120] base B=6 semilla=3020 → tardías=2 ΣT=92.2 Cmax=685.7 (331 s) | faltan ≈ 97 min
+[ 52/120] base B=6 semilla=3024 → tardías=3 ΣT=77.0 Cmax=683.3 (116 s) | faltan ≈ 96 min
+[ 53/120] base B=6 semilla=3021 → tardías=2 ΣT=88.0 Cmax=684.1 (348 s) | faltan ≈ 93 min
+[ 54/120] base B=6 semilla=3025 → tardías=3 ΣT=107.7 Cmax=670.1 (180 s) | faltan ≈ 91 min
+[ 55/120] base B=6 semilla=3023 → tardías=2 ΣT=74.5 Cmax=677.4 (243 s) | faltan ≈ 89 min
+[ 56/120] base B=6 semilla=3026 → tardías=2 ΣT=84.7 Cmax=676.9 (131 s) | faltan ≈ 86 min
+[ 57/120] base B=6 semilla=3027 → tardías=2 ΣT=87.0 Cmax=681.9 (150 s) | faltan ≈ 84 min
+[ 58/120] base B=6 semilla=3028 → tardías=2 ΣT=88.6 Cmax=683.3 (166 s) | faltan ≈ 83 min
+[ 59/120] base B=6 semilla=3029 → tardías=2 ΣT=82.9 Cmax=682.4 (148 s) | faltan ≈ 80 min
+[ 60/120] base B=5 semilla=3001 → tardías=5 ΣT=407.1 Cmax=655.1 (158 s) | faltan ≈ 79 min
+[ 61/120] base B=5 semilla=3003 → tardías=4 ΣT=413.8 Cmax=653.9 (112 s) | faltan ≈ 77 min
+[ 62/120] base B=5 semilla=3002 → tardías=5 ΣT=428.3 Cmax=647.0 (195 s) | faltan ≈ 75 min
+[ 63/120] base B=5 semilla=3005 → tardías=5 ΣT=414.7 Cmax=654.4 (88 s) | faltan ≈ 73 min
+[ 64/120] base B=6 semilla=3030 → tardías=2 ΣT=77.4 Cmax=675.6 (346 s) | faltan ≈ 71 min
+[ 65/120] base B=5 semilla=3004 → tardías=4 ΣT=419.6 Cmax=652.5 (214 s) | faltan ≈ 69 min
+[ 66/120] base B=5 semilla=3006 → tardías=4 ΣT=411.1 Cmax=655.4 (108 s) | faltan ≈ 67 min
+[ 67/120] base B=5 semilla=3009 → tardías=5 ΣT=422.1 Cmax=648.4 (103 s) | faltan ≈ 66 min
+[ 68/120] base B=5 semilla=3010 → tardías=5 ΣT=421.9 Cmax=666.7 (104 s) | faltan ≈ 64 min
+[ 69/120] base B=5 semilla=3008 → tardías=5 ΣT=388.7 Cmax=653.2 (224 s) | faltan ≈ 63 min
+[ 70/120] base B=5 semilla=3007 → tardías=4 ΣT=350.6 Cmax=663.2 (261 s) | faltan ≈ 61 min
+[ 71/120] base B=7 semilla=3001 → tardías=1 ΣT=29.1 Cmax=640.1 (282 s) | faltan ≈ 61 min
+[ 72/120] base B=7 semilla=3002 → tardías=1 ΣT=35.7 Cmax=646.7 (264 s) | faltan ≈ 59 min
+[ 73/120] base B=7 semilla=3004 → tardías=1 ΣT=40.8 Cmax=651.8 (276 s) | faltan ≈ 58 min
+[ 74/120] base B=7 semilla=3003 → tardías=1 ΣT=41.1 Cmax=652.1 (405 s) | faltan ≈ 57 min
+[ 75/120] base B=7 semilla=3005 → tardías=1 ΣT=41.6 Cmax=652.6 (260 s) | faltan ≈ 56 min
+[ 76/120] base B=7 semilla=3006 → tardías=1 ΣT=23.2 Cmax=634.2 (288 s) | faltan ≈ 54 min
+[ 77/120] base B=7 semilla=3007 → tardías=1 ΣT=43.8 Cmax=654.8 (210 s) | faltan ≈ 52 min
+[ 78/120] base B=7 semilla=3010 → tardías=1 ΣT=33.9 Cmax=644.9 (182 s) | faltan ≈ 52 min
+[ 79/120] base B=7 semilla=3009 → tardías=1 ΣT=44.5 Cmax=655.5 (226 s) | faltan ≈ 50 min
+[ 80/120] base B=7 semilla=3008 → tardías=1 ΣT=43.3 Cmax=654.3 (331 s) | faltan ≈ 49 min
+[ 81/120] fechas_-10 B=10 semilla=3002 → tardías=4 ΣT=228.1 Cmax=672.1 (98 s) | faltan ≈ 47 min
+[ 82/120] fechas_-10 B=10 semilla=3001 → tardías=1 ΣT=38.4 Cmax=594.0 (508 s) | faltan ≈ 47 min
+[ 83/120] fechas_-10 B=10 semilla=3004 → tardías=2 ΣT=57.9 Cmax=609.5 (320 s) | faltan ≈ 46 min
+[ 84/120] fechas_-10 B=10 semilla=3006 → tardías=2 ΣT=27.2 Cmax=582.6 (201 s) | faltan ≈ 45 min
+[ 85/120] fechas_-10 B=10 semilla=3003 → tardías=2 ΣT=70.6 Cmax=618.5 (528 s) | faltan ≈ 43 min
+[ 86/120] fechas_-10 B=10 semilla=3005 → tardías=2 ΣT=81.0 Cmax=621.9 (517 s) | faltan ≈ 42 min
+[ 87/120] fechas_-10 B=10 semilla=3007 → tardías=1 ΣT=39.4 Cmax=595.0 (296 s) | faltan ≈ 41 min
+[ 88/120] fechas_-10 B=10 semilla=3009 → tardías=3 ΣT=125.6 Cmax=644.8 (171 s) | faltan ≈ 39 min
+[ 89/120] fechas_-20 B=10 semilla=3001 → tardías=4 ΣT=176.9 Cmax=607.8 (271 s) | faltan ≈ 39 min
+[ 90/120] fechas_-10 B=10 semilla=3008 → tardías=1 ΣT=37.3 Cmax=592.9 (576 s) | faltan ≈ 38 min
+[ 91/120] fechas_-10 B=10 semilla=3010 → tardías=1 ΣT=36.4 Cmax=592.0 (571 s) | faltan ≈ 37 min
+[ 92/120] fechas_-20 B=10 semilla=3002 → tardías=4 ΣT=152.9 Cmax=598.8 (569 s) | faltan ≈ 36 min
+[ 93/120] fechas_-20 B=10 semilla=3003 → tardías=5 ΣT=296.5 Cmax=635.9 (506 s) | faltan ≈ 35 min
+[ 94/120] fechas_-20 B=10 semilla=3004 → tardías=4 ΣT=130.5 Cmax=595.0 (511 s) | faltan ≈ 34 min
+[ 95/120] fechas_-20 B=10 semilla=3006 → tardías=5 ΣT=170.0 Cmax=596.7 (339 s) | faltan ≈ 32 min
+[ 96/120] fechas_-20 B=10 semilla=3005 → tardías=6 ΣT=363.7 Cmax=648.6 (588 s) | faltan ≈ 32 min
+[ 97/120] fechas_-20 B=10 semilla=3008 → tardías=5 ΣT=242.6 Cmax=624.0 (163 s) | faltan ≈ 30 min
+[ 98/120] fechas_-20 B=10 semilla=3007 → tardías=4 ΣT=229.4 Cmax=615.2 (383 s) | faltan ≈ 28 min
+[ 99/120] fechas_-20 B=10 semilla=3009 → tardías=6 ΣT=393.1 Cmax=649.7 (271 s) | faltan ≈ 27 min
+[100/120] demanda_+10 B=10 semilla=3001 → tardías=2 ΣT=79.6 Cmax=672.5 (379 s) | faltan ≈ 26 min
+[101/120] demanda_+10 B=10 semilla=3002 → tardías=1 ΣT=44.6 Cmax=655.6 (399 s) | faltan ≈ 25 min
+[102/120] demanda_+10 B=10 semilla=3003 → tardías=1 ΣT=40.0 Cmax=651.0 (392 s) | faltan ≈ 24 min
+[103/120] fechas_-20 B=10 semilla=3010 → tardías=5 ΣT=167.6 Cmax=605.2 (566 s) | faltan ≈ 22 min
+[104/120] demanda_+10 B=10 semilla=3004 → tardías=2 ΣT=65.5 Cmax=660.2 (246 s) | faltan ≈ 21 min
+[105/120] demanda_+10 B=10 semilla=3007 → tardías=1 ΣT=50.0 Cmax=661.0 (210 s) | faltan ≈ 20 min
+[106/120] demanda_+10 B=10 semilla=3006 → tardías=2 ΣT=53.1 Cmax=644.7 (337 s) | faltan ≈ 19 min
+[107/120] demanda_+10 B=10 semilla=3005 → tardías=2 ΣT=46.8 Cmax=655.8 (493 s) | faltan ≈ 17 min
+[108/120] demanda_+10 B=10 semilla=3008 → tardías=2 ΣT=64.2 Cmax=668.5 (368 s) | faltan ≈ 16 min
+[109/120] demanda_+10 B=10 semilla=3009 → tardías=2 ΣT=59.7 Cmax=656.0 (381 s) | faltan ≈ 15 min
+[110/120] demanda_+20 B=10 semilla=3002 → tardías=4 ΣT=266.0 Cmax=753.9 (235 s) | faltan ≈ 13 min
+[111/120] demanda_+10 B=10 semilla=3010 → tardías=1 ΣT=46.7 Cmax=657.7 (408 s) | faltan ≈ 12 min
+[112/120] demanda_+20 B=10 semilla=3003 → tardías=3 ΣT=184.0 Cmax=724.6 (212 s) | faltan ≈ 11 min
+[113/120] demanda_+20 B=10 semilla=3001 → tardías=4 ΣT=268.0 Cmax=750.6 (500 s) | faltan ≈ 9 min
+[114/120] demanda_+20 B=10 semilla=3004 → tardías=3 ΣT=253.4 Cmax=748.7 (572 s) | faltan ≈ 8 min
+[115/120] demanda_+20 B=10 semilla=3005 → tardías=3 ΣT=192.8 Cmax=729.9 (570 s) | faltan ≈ 7 min
+[116/120] demanda_+20 B=10 semilla=3007 → tardías=3 ΣT=251.2 Cmax=748.2 (415 s) | faltan ≈ 5 min
+[117/120] demanda_+20 B=10 semilla=3006 → tardías=3 ΣT=192.1 Cmax=721.7 (488 s) | faltan ≈ 4 min
+[118/120] demanda_+20 B=10 semilla=3010 → tardías=3 ΣT=177.2 Cmax=718.0 (310 s) | faltan ≈ 3 min
+[119/120] demanda_+20 B=10 semilla=3009 → tardías=3 ΣT=180.8 Cmax=720.2 (468 s) | faltan ≈ 1 min
+[120/120] demanda_+20 B=10 semilla=3008 → tardías=3 ΣT=175.4 Cmax=723.6 (601 s) | faltan ≈ 0 min
+Traceback (most recent call last):
+  File "/home/user/Flow-shop-sublotes-consistentes/fase3/experimentos_fase3.py", line 384, in <module>
+  File "/home/user/Flow-shop-sublotes-consistentes/fase3/experimentos_fase3.py", line 380, in main
+    rm, rb = os.path.abspath(a.modelo), os.path.abspath(a.bd)
+    ^^^^^^^^^^^^^^^^
+  File "/home/user/Flow-shop-sublotes-consistentes/fase3/experimentos_fase3.py", line 341, in analizar
+    grafico_base(ag, a6)
+    ~~~~~~~~~~~~^^^^^^^^
+  File "/home/user/Flow-shop-sublotes-consistentes/fase3/experimentos_fase3.py", line 360, in grafico_base
+    try:
+  File "/usr/local/lib/python3.13/dist-packages/matplotlib/_api/deprecation.py", line 477, in wrapper
+    return func(*args, **kwargs)
+  File "/usr/local/lib/python3.13/dist-packages/matplotlib/__init__.py", line 1531, in inner
+    return func(
+        ax,
+        *map(cbook.sanitize_sequence, args),
+        **{k: cbook.sanitize_sequence(v) for k, v in kwargs.items()})
+TypeError: Axes.boxplot() got an unexpected keyword argument 'labels'. Did you mean 'label'?

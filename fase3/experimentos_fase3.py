@@ -357,7 +357,10 @@ def grafico_base(ag, a6):
         for g, et in ((g6, f'AG, B = {B_ACTUAL_BASE}'), (g10, 'AG, B̄ = 10')):
             if not g.empty:
                 datos.append(g[col].values); etiquetas.append(et)
-        ax.boxplot(datos, labels=etiquetas, widths=0.5)
+        try:
+            ax.boxplot(datos, tick_labels=etiquetas, widths=0.5)     # matplotlib ≥ 3.9
+        except TypeError:
+            ax.boxplot(datos, labels=etiquetas, widths=0.5)
         ax.axhline(a6[col], color='#E15759', ls='--', lw=1.5, label=f'Sistema actual (B = {B_ACTUAL_BASE})')
         ax.set_title(tit, fontsize=10); ax.grid(axis='y', ls=':', alpha=0.5)
     axes[0].legend(fontsize=8)
