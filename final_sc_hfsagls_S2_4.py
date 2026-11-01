@@ -90,7 +90,7 @@ ALISTAMIENTO_MIN_POR_ETAPA = {'Troquelado': 4.98}
 # ---------------------------------------------------------------------------
 # 3. PARÁMETROS DEL ALGORITMO GENÉTICO
 #    Calibrados en la Fase 2 (sección 4.2.4): diseño factorial 3³ de población,
-#    cruce y mutación, ampliación del rango y comparación del criterio de parada
+#    cruce y mutación, y comparación del criterio de parada
 #    (ver fase2/calibracion_ag.py y fase2/salida_calibracion/).
 # ---------------------------------------------------------------------------
 
