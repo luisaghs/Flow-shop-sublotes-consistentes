@@ -67,7 +67,7 @@ Las etapas se toman en el orden en que aparecen en la hoja de tiempos.
 | `fase2/salida_calibracion/anova_calibracion_excel.xlsx` | ANOVA de la calibración calculado con fórmulas de Excel (lo arma `fase2/anova_excel.py`) |
 | `fase2/verificar_reproduccion.py` | Repite corridas de la calibración y comprueba que dan los mismos resultados |
 | `docs/guia_apropiacion_calibracion.md` | Cómo entender, reproducir y declarar la calibración |
-| `docs/Trabajo_de_Grado_con_Fases_2_y_3.docx` | Borrador con la Fase 1 actualizada y las Fases 2 y 3 redactadas (incluye el pseudocódigo del AG) |
+| `docs/Trabajo_de_Grado_con_Fases_2_y_3.docx` | Borrador con la Fase 1 actualizada, las Fases 2 y 3, el análisis de resultados, las conclusiones y las recomendaciones |
 | `fase3/experimentos_fase3.py`, `fase3/salida_fase3/` | Fase 3: comparación del AG con el sistema actual (B = 6), sensibilidad y escenarios de exigencia |
 | `docs/fase2_referencias.md` | Referencias nuevas citadas en la Fase 2 (verificar antes de usar) |
 | `docs/fase2_docx/` | Generador del documento (`generar_fase2_sintesis.py`) y utilidades |

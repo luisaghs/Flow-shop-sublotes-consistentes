@@ -660,8 +660,10 @@ def main():
     M, rep, mejor, indic, tam, util, al = G.datos_solucion(ruta_modelo, ruta_bd)
     D = datos_documento(M, rep)
     from fase3_doc import fase3
+    from capitulos_finales import capitulos
     bloques = modelo() + algoritmo(D) + validacion() + calibracion(D) + \
-        solucion(M, rep, mejor, indic, tam, util, al, D) + fase3(M)
+        solucion(M, rep, mejor, indic, tam, util, al, D) + fase3(M) + \
+        capitulos(M, ruta_bd, indic, rep, D, _datos_validacion()[1])
     bloques = L.resolver_referencias(bloques, tabla_ini=5, figura_ini=3)
     bloques = L.matematizar(bloques)
     d = docx.Document(borrador)

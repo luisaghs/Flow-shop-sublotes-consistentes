@@ -6,7 +6,7 @@
 |---|---|
 | `final_sc_hfsagls_S2_4.py` | **El modelo**: el algoritmo genético final, con los parámetros calibrados. Es el código del trabajo de grado. |
 | `BD_HFS.xlsx` | **Los datos** del caso de estudio: tiempos, órdenes y calendario. |
-| `docs/Trabajo_de_Grado_con_Fases_2_y_3.docx` | **El documento** del trabajo de grado: Fase 1 actualizada y Fases 2 y 3 redactadas. |
+| `docs/Trabajo_de_Grado_con_Fases_2_y_3.docx` | **El documento** del trabajo de grado: Fase 1 actualizada, Fases 2 y 3, análisis de resultados, conclusiones y recomendaciones. |
 
 Todo lo demás son pruebas, experimentos y resultados que respaldan lo que dicen las Fases 2 y 3.
 
@@ -18,7 +18,7 @@ Todo lo demás son pruebas, experimentos y resultados que respaldan lo que dicen
 
 | Archivo | Qué es | ¿Lo usan? |
 |---|---|---|
-| `Trabajo_de_Grado_con_Fases_2_y_3.docx` | Borrador con la Fase 1 actualizada y las Fases 2 y 3 redactadas | **Sí** |
+| `Trabajo_de_Grado_con_Fases_2_y_3.docx` | Borrador con la Fase 1 actualizada, las Fases 2 y 3, el análisis de resultados, las conclusiones y las recomendaciones | **Sí** |
 | `fase2_referencias.md` | Referencias nuevas que cita la Fase 2 | Sí, para completar la bibliografía (verificarlas) |
 | `fase3_guia_metodologica.md` | Propuesta para la Fase 3 | Sí, para la Fase 3 |
 | `guia_apropiacion_calibracion.md` | Cómo entender, reproducir y declarar la calibración | Sí, para prepararse |

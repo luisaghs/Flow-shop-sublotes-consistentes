@@ -261,29 +261,11 @@ def fase3(M):
          {'etiqueta': 'exig', 'anchos': [3100, 1700, 1700, 1300, 1038], 'tam': 9,
           'alineacion': ['l', 'c', 'c', 'c', 'c']}),
 
-        ('h3', 'Discusión'),
-        ('p', 'Los resultados indican que la programación propuesta mejora de forma clara el cumplimiento '
-              f"de las entregas: en el caso de estudio pasa de {n(a.pct_tardias, 0)} % de órdenes tardías "
-              f"con el sistema actual a {n(g10.pct_tardias.mean(), 1)} % en promedio, sin empeorar el "
-              'makespan ni el tiempo de flujo. La mejora se explica por la combinación de dividir las '
-              'órdenes en sublotes consistentes de tamaño variable y decidir con el algoritmo el tamaño de '
-              'esos sublotes y su secuencia en cada etapa; ninguno de los dos cambios por separado alcanza '
-              'el mismo resultado.'),
-        ('p', '**Limitaciones.** El sistema actual se representa con un modelo calibrado con la tasa '
-              'histórica de incumplimiento, no con una observación directa de cómo se dividen las órdenes; '
-              'el análisis de sensibilidad muestra que la conclusión se mantiene en el rango plausible. '
-              f'La evaluación usa un conjunto de {n_ord} órdenes, tiempos estándar deterministas y no '
-              'considera tiempos de transporte entre etapas, ausencias ni fallas de máquinas, por lo que '
-              'el desempeño en planta puede diferir del calculado. Además, el algoritmo aumenta el número '
-              'de alistamientos en troquelado, aspecto que la empresa debe considerar al programar.'),
-        ('p', '**Recomendaciones para la empresa.** (i) Probar la programación propuesta en un periodo '
-              'piloto, comparando las fechas reales de terminación con las programadas; (ii) registrar en '
-              'cuántas partes se divide cada orden y cuándo termina cada parte, para validar la '
-              'representación del sistema actual; (iii) mantener el límite de 10 sublotes por orden y '
-              'definir el tamaño de los sublotes con el modelo; y (iv) programar los cambios de referencia '
-              'en troquelado considerando el aumento de alistamientos.'),
+        ('h3', 'Síntesis de resultados'),
         ('p', 'En síntesis, frente al sistema de programación actual, el modelo propuesto reduce la tardanza '
               f"total en {n(-r10['suma_T']['cambio'], 1)} % en el caso de estudio y entre "
               f'{n(min(mej_ex), 0)} % y {n(max(mej_ex), 0)} % en los escenarios de mayor exigencia, lo que '
-              'cumple el tercer objetivo específico.'),
+              'cumple el tercer objetivo específico. La interpretación de estos resultados, sus '
+              'limitaciones y sus implicaciones para la empresa se presentan en el capítulo de análisis '
+              'de resultados.'),
     ]

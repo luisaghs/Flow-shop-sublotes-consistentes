@@ -96,6 +96,10 @@ class Escritor:
                 r.font.size = Pt(tam)
 
     # ── bloques ──
+    def h1(self, texto):
+        p = self.d.add_paragraph(texto, style='Heading 1')
+        p.paragraph_format.page_break_before = True          # cada capítulo en página nueva
+
     def h2(self, texto):
         self.d.add_paragraph(texto, style='Heading 2')
 
@@ -448,7 +452,9 @@ def recolectar_latex(bloques):
 def escribir(escritor, bloques):
     for b in bloques:
         tipo, args = b[0], b[1:]
-        if tipo == 'h2':
+        if tipo == 'h1':
+            escritor.h1(*args)
+        elif tipo == 'h2':
             escritor.h2(*args)
         elif tipo == 'h3':
             escritor.h3(*args)
