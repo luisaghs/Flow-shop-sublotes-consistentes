@@ -457,10 +457,12 @@ def calibracion(D):
         ('p', r'El número de sublotes $\overline{B}$ define cuánto se divide cada orden. La Tabla '
               '{T:bbar} muestra su efecto en la instancia real con las reglas de despacho: sin '
               'división todas las órdenes resultan tardías, y la tardanza baja a medida que el '
-              r'trabajo se reparte entre las máquinas paralelas. Se adopta $\overline{B}=10$, con '
-              f"sublotes promedio entre {D['sub_min']} y {D['sub_max']}. [[Confirmar con la práctica de "
-              'la planta el tamaño habitual de los paquetes que pasan entre puestos.]] El efecto de este '
-              'parámetro se analiza en la Fase 3.'),
+              r'trabajo se reparte entre las máquinas paralelas. Se adopta $\overline{B}=10$ como número '
+              f"máximo de sublotes por orden, con sublotes promedio entre {D['sub_min']} y {D['sub_max']}. "
+              'Aunque una división mayor puede reducir aún más la tardanza, cada sublote adicional implica '
+              'más transferencias entre etapas, más registros y más seguimiento en planta, lo que '
+              'incrementa la complejidad logística y de control de la producción (Gürsoy Yılmaz y '
+              'Yılmaz, 2022); por esa razón no se contemplan más de 10 sublotes por orden.'),
         ('tabla', 'Tardanza total (h) y órdenes tardías de las reglas de despacho según el número '
                   'de sublotes por orden', ['B̄', 'FIFO', 'EDD', 'CR', 'SPT'], D['filas_bbar'],
          {'etiqueta': 'bbar', 'anchos': [1238, 1900, 1900, 1900, 1900]}),

@@ -18,7 +18,9 @@ cada referencia (año, volumen, páginas) antes de incluirla en la lista final.*
   scheduling problem by considering equal and consistent sublots under machine
   capability and limited waiting time constraint. *Computers & Industrial Engineering,
   173*, 108745. https://doi.org/10.1016/j.cie.2022.108745
-  (En el borrador aparece como "Yilmas 2022" y "Gürsoy y Yilmaz (2022)"; unificar.)
+  (En el borrador aparece como "Yilmas 2022" y "Gürsoy y Yilmaz (2022)"; unificar. La Fase 2
+  lo cita también para no usar más de 10 sublotes por orden por la complejidad logística:
+  verificar en el artículo la sección o página que lo respalda.)
 - Huangfu, Q., & Hall, J. A. J. (2018). Parallelizing the dual revised simplex method.
   *Mathematical Programming Computation, 10*(1), 119–142.
   https://doi.org/10.1007/s12532-017-0130-5

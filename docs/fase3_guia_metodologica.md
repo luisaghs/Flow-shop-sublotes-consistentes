@@ -123,7 +123,9 @@ Lectura de los pasos ya calculados:
 6. **Resultados del escenario base** y **descomposición de la mejora** (sección 3).
 7. **Análisis de sensibilidad:**
    - *B* del sistema actual: 5, 6 y 7 (robustez frente al dato desconocido);
-   - B̄ del modelo propuesto: 5, 6, 7, 10 y 20 (cuánto conviene dividir);
+   - B̄ del modelo propuesto: 5, 6, 7 y 10 (cuánto conviene dividir; no se
+     contemplan más de 10 sublotes por la complejidad logística y de control que
+     implican, Gürsoy Yılmaz y Yılmaz, 2022);
    - escenarios de exigencia: fechas de entrega 10 % y 20 % más ajustadas, y
      demanda 10 % y 20 % mayor;
    - opcional: robustez frente a tiempos de proceso con variación de ±10 %, en

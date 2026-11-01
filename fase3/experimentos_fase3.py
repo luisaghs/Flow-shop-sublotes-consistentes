@@ -16,8 +16,9 @@ Modelo propuesto: el algoritmo genético calibrado (final_sc_hfsagls_S2_4.py).
 Experimentos (todos con semillas nuevas, distintas de las de la Fase 2):
   base       : AG con B̄ = 10 y AG con B = 6 (misma división que el sistema
                actual), 30 réplicas cada uno (semillas 3001–3030).
-  sensib.    : AG con B = 5 y 7 (sistema actual con 5 y 7 partes) y AG con
-               B̄ = 20, 10 réplicas (semillas 3001–3010).
+  sensib.    : AG con B = 5 y 7 (sistema actual con 5 y 7 partes), 10 réplicas
+               (semillas 3001–3010). No se evalúan más de 10 sublotes por orden por
+               la complejidad logística y de control que implican.
   exigencia  : fechas de entrega 10 % y 20 % más ajustadas y demanda 10 % y 20 %
                mayor; sistema actual (B = 6) frente a AG (B̄ = 10), 10 réplicas.
 
@@ -70,7 +71,7 @@ DESCRIPCION = {
 # Corridas del AG: (grupo, escenario, B del AG, semillas)
 PLAN = (
     [('base', 'base', 10, SEM_BASE), ('base', 'base', B_ACTUAL_BASE, SEM_BASE)]
-    + [('sensibilidad', 'base', B, SEM_SENS) for B in (B_ACTUAL_BASE - 1, B_ACTUAL_BASE + 1, 20)]
+    + [('sensibilidad', 'base', B, SEM_SENS) for B in (B_ACTUAL_BASE - 1, B_ACTUAL_BASE + 1)]
     + [('exigencia', e, 10, SEM_SENS) for e in ESCENARIOS if e != 'base']
 )
 
@@ -305,7 +306,7 @@ def analizar(rm, rb):
 
     # 4. Sensibilidad al número de sublotes del modelo propuesto
     filas = []
-    for B in B_ACTUAL_SENS + (10, 20):
+    for B in B_ACTUAL_SENS + (10,):
         g = ag[(ag.escenario == 'base') & (ag.B == B)]
         if not g.empty:
             filas.append([B, len(g), _f(g.pct_tardias.mean(), 0) + ' %', _f(g.suma_T.mean()),
