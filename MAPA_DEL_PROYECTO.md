@@ -68,17 +68,17 @@ de modo que **con la misma semilla se obtiene exactamente el mismo resultado**.
 | Verificación del decodificador | 4.2.3 | 1 | Para generar los 200 cromosomas aleatorios |
 | Calibración: diseño factorial (27 combinaciones) | 4.2.4 | **1001 a 1005** | La réplica r usa 1000 + r en todas las combinaciones |
 | Calibración: criterio de parada | 4.2.4 | **1101 a 1110** | 10 réplicas por criterio (50 y 100 generaciones sin mejora) |
-| Programación obtenida (10 réplicas) | 4.2.5 | **1201 a 1210** | **La programación propuesta es la de la semilla 1201** |
-| Valor por defecto del modelo | — | **1201** | Al ejecutar `final_sc_hfsagls_S2_4.py` se obtiene la programación propuesta |
+| Programación obtenida (10 réplicas) | 4.2.5 | **1201 a 1210** | **La programación propuesta es la de la semilla 1203** |
+| Valor por defecto del modelo | — | **1203** | Al ejecutar `final_sc_hfsagls_S2_4.py` se obtiene la programación propuesta |
 
 **Importante:**
 
 - Las semillas de la solución final (1201–1210) son distintas de las de la calibración,
   así que la programación propuesta no se obtuvo con las mismas corridas usadas para
   ajustar los parámetros.
-- El modelo ya trae la semilla 1201: al ejecutar `python final_sc_hfsagls_S2_4.py` se
-  obtiene exactamente la programación del documento (ΣTj = 44,99 h, Cmax = 576,42 h,
-  2 órdenes tardías).
+- El modelo ya trae la semilla 1203: al ejecutar `python final_sc_hfsagls_S2_4.py` se
+  obtiene exactamente la programación del documento (ΣTj = 0 h, sin órdenes tardías,
+  Cmax = 571,96 h).
   Para obtener otra réplica, cambien el valor de `'semilla'` en `GA_PARAMS`.
 - La validación con instancias reducidas se corrió con los parámetros calibrados
   (`python validacion_milp.py ag ...` repite solo el AG).
