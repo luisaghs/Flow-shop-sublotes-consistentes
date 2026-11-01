@@ -19,8 +19,12 @@ cada referencia (año, volumen, páginas) antes de incluirla en la lista final.*
   capability and limited waiting time constraint. *Computers & Industrial Engineering,
   173*, 108745. https://doi.org/10.1016/j.cie.2022.108745
   (En el borrador aparece como "Yilmas 2022" y "Gürsoy y Yilmaz (2022)"; unificar. La Fase 2
-  lo cita también para no usar más de 10 sublotes por orden por la complejidad logística:
-  verificar en el artículo la sección o página que lo respalda.)
+  lo cita para el límite de 10 sublotes por orden. Verificado en el artículo: p. 2
+  (los sublotes variables dificultan programaciones aplicables; iguales y consistentes
+  son los usados en talleres reales), Tabla 3, p. 11 (niveles de 2, 6 y 10 sublotes por
+  lote) y p. 16 (recomienda controlar y fijar de antemano el número de sublotes). El
+  artículo no afirma que más de 10 sublotes aumente la complejidad logística; esa
+  parte se presenta como criterio de la planta.)
 - Huangfu, Q., & Hall, J. A. J. (2018). Parallelizing the dual revised simplex method.
   *Mathematical Programming Computation, 10*(1), 119–142.
   https://doi.org/10.1007/s12532-017-0130-5

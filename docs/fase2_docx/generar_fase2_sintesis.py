@@ -459,10 +459,14 @@ def calibracion(D):
               'división todas las órdenes resultan tardías, y la tardanza baja a medida que el '
               r'trabajo se reparte entre las máquinas paralelas. Se adopta $\overline{B}=10$ como número '
               f"máximo de sublotes por orden, con sublotes promedio entre {D['sub_min']} y {D['sub_max']}. "
-              'Aunque una división mayor puede reducir aún más la tardanza, cada sublote adicional implica '
-              'más transferencias entre etapas, más registros y más seguimiento en planta, lo que '
-              'incrementa la complejidad logística y de control de la producción (Gürsoy Yılmaz y '
-              'Yılmaz, 2022); por esa razón no se contemplan más de 10 sublotes por orden.'),
+              'Este límite coincide con el mayor número de sublotes por lote evaluado por Gürsoy Yılmaz y '
+              'Yılmaz (2022) en un flow shop híbrido (2, 6 y 10 sublotes), quienes además recomiendan '
+              'controlar y fijar de antemano el número de sublotes en sistemas de varias etapas, por su '
+              'efecto significativo en la calidad de las soluciones. Aunque una división mayor puede '
+              'reducir aún más la tardanza (Tabla {T:bbar}), en la planta cada sublote adicional implica '
+              'más transferencias entre etapas, más registros y más seguimiento, lo que incrementa la '
+              'complejidad logística y de control de la producción; por esa razón no se contemplan más '
+              'de 10 sublotes por orden.'),
         ('tabla', 'Tardanza total (h) y órdenes tardías de las reglas de despacho según el número '
                   'de sublotes por orden', ['B̄', 'FIFO', 'EDD', 'CR', 'SPT'], D['filas_bbar'],
          {'etiqueta': 'bbar', 'anchos': [1238, 1900, 1900, 1900, 1900]}),
