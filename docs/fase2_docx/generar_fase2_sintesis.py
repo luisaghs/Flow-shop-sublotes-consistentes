@@ -172,7 +172,11 @@ def algoritmo(D):
         ('p', r'donde $\delta_{jb}\in\{0,1\}$. Así, todo cromosoma cumple las restricciones (2) y (3). '
               'En el ejemplo, J1 reparte 21 docenas: las partes enteras de (2,10; 7,35; 6,30; 5,25) '
               'suman 20 y la unidad restante va al sublote 2, de modo que los tamaños son (3, 9, 7, 6) '
-              'docenas.'),
+              'docenas. La Figura {F:crom} representa este cromosoma: arriba, los tamaños de los sublotes '
+              '(nivel 1), y abajo, su orden en cada etapa (nivel 2).'),
+        ('figura', 'Representación del cromosoma del ejemplo con dos órdenes',
+         os.path.join(os.path.dirname(os.path.abspath(__file__)), 'figuras', 'cromosoma_ejemplo.png'),
+         15.0, 'crom'),
         ('h4', 'Decodificación y aptitud'),
         ('p', r'El decodificador programa las etapas en orden. En cada etapa toma los sublotes en el '
               r'orden $O_s$ y, para cada uno, calcula en cada máquina el inicio posible a partir del '
@@ -414,6 +418,23 @@ def calibracion(D):
                          [f'{nom(r.Fuente)} (p = {_p(r._6)})' for r in inter]) + '. ')
     nresp = 'la tardanza total' if y == 'suma_T' else 'el makespan'
     de_resp = 'de la tardanza total' if y == 'suma_T' else 'del makespan'
+    # Figura de la interacción población × mutación, si es significativa
+    txt_fig_inter = []
+    if any('Población' in str(r.Fuente) and 'mutación' in str(r.Fuente) for r in inter):
+        cd = pd.read_csv(os.path.join(C, 'corridas_diseno.csv'))
+        tt = cd.pivot_table(index='poblacion', columns='prob_mutacion', values='suma_T', aggfunc='mean')
+        pmin, pmax, mmin, mmax = tt.index.min(), tt.index.max(), tt.columns.min(), tt.columns.max()
+        txt_fig_inter = [
+            ('p', 'La Figura {F:inter} muestra la interacción entre la población y la probabilidad de '
+                  f'mutación: con una población de {pmin}, pasar de una mutación de {n(mmin, 1)} a '
+                  f'{n(mmax, 1)} reduce la tardanza promedio de {n(tt.loc[pmin, mmin], 1)} h a '
+                  f'{n(tt.loc[pmin, mmax], 1)} h, mientras que con una población de {pmax} la reduce de '
+                  f'{n(tt.loc[pmax, mmin], 1)} h a {n(tt.loc[pmax, mmax], 1)} h. Una población pequeña depende '
+                  'más de la mutación para explorar nuevas soluciones; una grande ya explora por sí sola.'),
+            ('figura', 'Interacción entre el tamaño de la población y la probabilidad de mutación '
+                       '(tardanza total promedio)',
+             os.path.join(os.path.dirname(os.path.abspath(__file__)), 'figuras', 'interaccion_pob_mut.png'),
+             12.0, 'inter')]
     top = rr.head(5)
     filas_top = [[int(r.poblacion), n(r.prob_cruce, 1), n(r.prob_mutacion, 1), n(r.T_prom, 1),
                   n(r.T_desv, 1), n(r.Tard, 1), n(r.C_prom, 1)] for r in top.itertuples()]
@@ -493,6 +514,7 @@ def calibracion(D):
               'combinaciones.'),
         ('figura', f"Efectos principales sobre {nresp} (intervalos LSD al 95 %)",
          os.path.join(C, 'efectos_principales.png'), 15.5, 'efectos'),
+    ] + (txt_fig_inter if txt_fig_inter else []) + [
         ('tabla', 'Mejores combinaciones del diseño factorial',
          ['Población', 'p_c', 'p_m', 'ΣT_j prom. (h)', 'ΣT_j desv. (h)', 'Tardías prom.', 'C_max prom. (h)'],
          filas_top, {'etiqueta': 'mejores', 'anchos': [1150, 700, 700, 1500, 1500, 1500, 1788],
@@ -655,28 +677,33 @@ def datos_documento(M, rep):
 
 
 def main():
-    from correcciones_fase1 import corregir_fase1, insertar_figura1
+    from correcciones_fase1 import corregir_fase1, insertar_figura1, insertar_figura_ocupacion
+    import figuras_documento as FD
     borrador, salida, ruta_modelo, ruta_bd = sys.argv[1:5]
     M, rep, mejor, indic, tam, util, al = G.datos_solucion(ruta_modelo, ruta_bd)
     D = datos_documento(M, rep)
+    import figuras_documento as FD
+    from fase3_doc import F as _F3
+    figs = FD.generar(M, indic, ruta_bd, _F3.B_ACTUAL_BASE)
     from fase3_doc import fase3
     from capitulos_finales import capitulos
     bloques = modelo() + algoritmo(D) + validacion() + calibracion(D) + \
         solucion(M, rep, mejor, indic, tam, util, al, D) + fase3(M) + \
         capitulos(M, ruta_bd, indic, rep, D, _datos_validacion()[1])
-    bloques = L.resolver_referencias(bloques, tabla_ini=5, figura_ini=3)
+    bloques = L.resolver_referencias(bloques, tabla_ini=5, figura_ini=4)
     bloques = L.matematizar(bloques)
     d = docx.Document(borrador)
     for h in corregir_fase1(d, ruta_bd):
         print('Fase 1 corregida:', h)
     print('Fase 1:', insertar_figura1(d))
+    print('Fase 1:', insertar_figura_ocupacion(d, figs['ocupacion']))
     L.quitar_desde(d, 'Construcción del modelo matemático')
     omml = L.latex_a_omml(L.recolectar_latex(bloques))
-    esc = L.Escritor(d, omml, primer_figura=3, primer_tabla=5)
+    esc = L.Escritor(d, omml, primer_figura=4, primer_tabla=5)
     L.escribir(esc, bloques)
     L.normalizar_orden(d)
     d.save(salida)
-    print(f'Tablas: 5–{4 + esc.tabla_n} | Figuras: 3–{2 + esc.figura_n} | Guardado en {salida}')
+    print(f'Tablas: 5–{4 + esc.tabla_n} | Figuras: 4–{3 + esc.figura_n} | Guardado en {salida}')
 
 
 if __name__ == '__main__':

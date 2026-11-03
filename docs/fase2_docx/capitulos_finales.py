@@ -153,6 +153,17 @@ def capitulos(M, ruta_bd, indic, rep, D, val_info):
          ['Orden', 'r_j', 'd_j', 'Actual: inicio troquelado', 'Actual: C_j', 'Actual: T_j',
           'Propuesta: C_j', 'Propuesta: holgura d_j − C_j'], filas_ord,
          {'etiqueta': 'orden_comp', 'anchos': [800, 700, 700, 1350, 1100, 1100, 1250, 1838], 'tam': 9}),
+        ('p', 'La Figura {F:comp} representa la misma comparación: para cada orden, el punto naranja es su '
+              'terminación con el sistema actual, el azul su terminación con la programación propuesta y la '
+              'línea negra su fecha de entrega. Con el sistema actual, '
+              + _lista([f"{j}" for j in sorted(tard_a, key=lambda j: M.DUE_DATE[j])])
+              + ' quedan a la derecha de su fecha de entrega; con la programación propuesta, '
+              + ('todas las órdenes quedan a la izquierda.' if ip['suma_Ti'] <= 1e-6 else
+                 'la mayoría quedan a la izquierda.')),
+        ('figura', 'Terminación de cada orden con el sistema actual y con la programación propuesta, frente '
+                   'a su fecha de entrega',
+         os.path.join(os.path.dirname(os.path.abspath(__file__)), 'figuras', 'comparacion_ordenes.png'),
+         15.0, 'comp'),
         ('p', 'La programación propuesta, en cambio, adelanta las órdenes con entregas cercanas y retrasa '
               f"las que tienen holgura: todas terminan a tiempo, con márgenes entre {n(holg_ord[0])} h "
               f"({jmin}) y {n(holg_ord[-1])} h. A esto se suma el efecto de los sublotes: al dividir cada "

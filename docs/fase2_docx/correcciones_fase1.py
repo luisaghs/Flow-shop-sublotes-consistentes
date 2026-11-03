@@ -120,20 +120,35 @@ FIGURA1 = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'fase1_
                        'diagrama_proceso.png')
 
 
-def insertar_figura1(documento, ruta_png=FIGURA1):
-    """Inserta la Figura 1 (diagrama de flujo del sistema) después del párrafo que la anuncia."""
+def insertar_figura(documento, texto_ancla, titulo, ruta_png, numero, ancho_cm=15.0):
+    """Inserta una figura (rótulo e imagen) después del párrafo que contiene texto_ancla."""
     import lib_docx as L
-    ancla = next((p for p in documento.paragraphs
-                  if 'La figura 1 presenta el sistema estudiado' in p.text), None)
+    ancla = next((p for p in documento.paragraphs if texto_ancla in p.text), None)
     if ancla is None:
-        raise ValueError('No se encontró el párrafo que anuncia la Figura 1.')
+        raise ValueError(f'No se encontró el párrafo: «{texto_ancla[:50]}…»')
     cuerpo = documento.element.body
     antes = len(cuerpo)
-    esc = L.Escritor(documento, {}, primer_figura=1)
-    esc.figura('Diagrama de flujo del sistema productivo estudiado', os.path.abspath(ruta_png), 15.0)
+    esc = L.Escritor(documento, {}, primer_figura=numero)
+    esc.figura(titulo, os.path.abspath(ruta_png), ancho_cm)
     nuevos = [el for el in list(cuerpo)[antes - 1:] if not el.tag.endswith('sectPr')]
     pos = ancla._p
     for el in nuevos:
         pos.addnext(el)
         pos = el
+    return ancla
+
+
+def insertar_figura1(documento, ruta_png=FIGURA1):
+    """Figura 1: diagrama de flujo del sistema, después del párrafo que la anuncia."""
+    insertar_figura(documento, 'La figura 1 presenta el sistema estudiado',
+                    'Diagrama de flujo del sistema productivo estudiado', ruta_png, 1, 15.0)
     return 'Figura 1: diagrama de flujo del sistema'
+
+
+def insertar_figura_ocupacion(documento, ruta_png):
+    """Figura 3: ocupación por etapa (la Figura 2, ventanas de tiempo, la anuncia el borrador)."""
+    texto = 'las cuatro etapas tienen capacidad para procesar todas las ordenes dentro del horizonte de tiempo disponible'
+    ancla = insertar_figura(documento, texto, 'Ocupación de las máquinas de cada etapa en el horizonte de '
+                            'planeación', ruta_png, 3, 14.0)
+    _reemplazar_en_parrafo(ancla, texto + '.', texto + ' (Figura 3).')
+    return 'Figura 3: ocupación por etapa'
