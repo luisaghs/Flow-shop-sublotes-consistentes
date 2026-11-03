@@ -9,6 +9,8 @@ Los valores de carga se calculan con el mismo método de la Tabla 4 del borrador
 (carga por máquina = Σ_j Q_j / R_p, con R_p la suma de los ritmos de las
 máquinas de la etapa) a partir de BD_HFS.xlsx.
 """
+import os
+
 import pandas as pd
 
 ETAPAS = ['Troquelado', 'Ensamble', 'Costura', 'Volteado']
@@ -112,3 +114,26 @@ def corregir_fase1(documento, ruta_bd):
     if pendientes:
         raise ValueError('No se encontraron estos textos de la Fase 1: ' + ' | '.join(pendientes))
     return hechos
+
+
+FIGURA1 = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'fase1_figuras',
+                       'diagrama_proceso.png')
+
+
+def insertar_figura1(documento, ruta_png=FIGURA1):
+    """Inserta la Figura 1 (diagrama de flujo del sistema) después del párrafo que la anuncia."""
+    import lib_docx as L
+    ancla = next((p for p in documento.paragraphs
+                  if 'La figura 1 presenta el sistema estudiado' in p.text), None)
+    if ancla is None:
+        raise ValueError('No se encontró el párrafo que anuncia la Figura 1.')
+    cuerpo = documento.element.body
+    antes = len(cuerpo)
+    esc = L.Escritor(documento, {}, primer_figura=1)
+    esc.figura('Diagrama de flujo del sistema productivo estudiado', os.path.abspath(ruta_png), 15.0)
+    nuevos = [el for el in list(cuerpo)[antes - 1:] if not el.tag.endswith('sectPr')]
+    pos = ancla._p
+    for el in nuevos:
+        pos.addnext(el)
+        pos = el
+    return 'Figura 1: diagrama de flujo del sistema'

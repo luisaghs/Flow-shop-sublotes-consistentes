@@ -655,7 +655,7 @@ def datos_documento(M, rep):
 
 
 def main():
-    from correcciones_fase1 import corregir_fase1
+    from correcciones_fase1 import corregir_fase1, insertar_figura1
     borrador, salida, ruta_modelo, ruta_bd = sys.argv[1:5]
     M, rep, mejor, indic, tam, util, al = G.datos_solucion(ruta_modelo, ruta_bd)
     D = datos_documento(M, rep)
@@ -669,6 +669,7 @@ def main():
     d = docx.Document(borrador)
     for h in corregir_fase1(d, ruta_bd):
         print('Fase 1 corregida:', h)
+    print('Fase 1:', insertar_figura1(d))
     L.quitar_desde(d, 'Construcción del modelo matemático')
     omml = L.latex_a_omml(L.recolectar_latex(bloques))
     esc = L.Escritor(d, omml, primer_figura=3, primer_tabla=5)

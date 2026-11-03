@@ -23,7 +23,7 @@ Todo lo demás son pruebas, experimentos y resultados que respaldan lo que dicen
 | `fase3_guia_metodologica.md` | Propuesta para la Fase 3 | Sí, para la Fase 3 |
 | `guia_apropiacion_calibracion.md` | Cómo entender, reproducir y declarar la calibración | Sí, para prepararse |
 | `fase2_guia_metodologica.md`, `fase2_validacion_milp.md`, `fase2_calibracion.md` | Notas de trabajo previas a la redacción | Solo de consulta |
-| `fase2_docx/`, `fase2_figuras/` | Programas que generan el documento Word (Fase 1 actualizada y Fase 2) y el diagrama de flujo | No (herramientas internas) |
+| `fase2_docx/`, `fase1_figuras/`, `fase2_figuras/` | Programas que generan el documento Word y los diagramas de flujo (Figura 1 del sistema y diagrama del AG) | No (herramientas internas) |
 
 ### Código y resultados (`fase2/`), por sección del documento
 
