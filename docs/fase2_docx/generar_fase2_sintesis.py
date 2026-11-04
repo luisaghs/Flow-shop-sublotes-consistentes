@@ -302,14 +302,18 @@ def validacion():
 
     # --- Tabla de instancias (definiciones de validacion_milp.py)
     etapas = ['Troquelado', 'Ensamble', 'Costura', 'Volteado']
-    filas_inst = []
-    for nombre, ordenes, b_max, maq in V.INSTANCIAS:
-        conj = 'A' if maq == V.MAQ_A else 'B'
-        filas_inst.append([nombre, f"{ordenes[0][0]}–{ordenes[-1][0]}", str(b_max),
-                           str(int(v.loc[nombre, 'Sublotes'])),
-                           '-'.join(str(len(maq[e])) for e in etapas) + f' ({conj})',
-                           ', '.join(n(o[4], 0) for o in ordenes)])
     o_txt = _lista([f"{j} = {p} ({q} docenas, r = {n(r, 0)} h)" for j, p, q, r, _ in V.ORDENES_BASE])
+    d_b = {o[0]: o[4] for o in V.ORDENES_B}
+    filas_ord = [[j, p, str(q), n(r, 0), n(d, 0), n(d_b[j], 0)] for j, p, q, r, d in V.ORDENES_BASE]
+    js_val = [o[0] for o in V.ORDENES_BASE]
+    filas_dis = []
+    for nombre, ordenes, b_max, maq in V.INSTANCIAS:
+        incl = {o[0] for o in ordenes}
+        filas_dis.append([nombre] + ['●' if j in incl else '' for j in js_val]
+                         + [str(b_max) + (' (sin dividir)' if b_max == 1 else ''), str(len(ordenes) * b_max),
+                            'A' if maq == V.MAQ_A else 'B'])
+    n_a = sum(len(V.MAQ_A[e]) for e in etapas)
+    n_b = sum(len(V.MAQ_B[e]) for e in etapas)
     maqA = _lista([f"{_lista(V.MAQ_A[e])} ({e.lower()})" for e in etapas])
     extraB = _lista([f"{m} en {e.lower()}" for e in etapas for m in V.MAQ_B[e] if m not in V.MAQ_A[e]])
 
@@ -380,22 +384,30 @@ def validacion():
               'con los del algoritmo. La validación busca responder tres preguntas: ¿el modelo matemático está '
               'bien formulado?, ¿el algoritmo genético encuentra el óptimo? y ¿hasta qué tamaño puede usarse el '
               'método exacto?'),
-        ('p', '**Instancias.** Se construyeron nueve instancias con los tiempos estándar reales de la empresa, '
-              'cinco órdenes de pocas docenas y un subconjunto de las máquinas de cada etapa. La Figura '
-              '{F:inst_fig} resume su composición: las órdenes de prueba, las máquinas disponibles y qué '
-              'órdenes, cuántos sublotes y qué conjunto de máquinas usa cada instancia. Su diseño busca poner a '
-              'prueba los elementos del modelo: en ensamble se incluyeron máquinas de tres velocidades (M5, '
-              'lenta; M12, intermedia; M16, rápida); dos órdenes comparten la referencia C01, para comprobar '
-              'que el alistamiento solo se aplica cuando cambia la referencia; y las instancias I1 e I2 repiten '
-              'las órdenes de I6 e I9 sin dividirlas, para medir el efecto de los sublotes. Se definieron, '
-              'además, dos configuraciones de máquinas: el conjunto A, más reducido, permite demostrar el óptimo '
-              'en instancias con más sublotes, y el conjunto B incorpora una máquina de velocidad intermedia en '
-              'ensamble y una segunda máquina de costura, con lo que pone a prueba la asignación entre máquinas '
-              'no relacionadas, como ocurre en la planta. Como el conjunto B tiene más capacidad, se le '
-              'asignaron fechas de entrega más ajustadas, para que la tardanza óptima fuera mayor que cero.'),
-        ('figura', 'Composición de las instancias de validación: órdenes, máquinas e instancias',
-         os.path.join(os.path.dirname(os.path.abspath(__file__)), 'figuras', 'instancias_validacion.png'),
-         15.0, 'inst_fig'),
+        ('p', '**Órdenes.** Se construyeron nueve instancias con los tiempos estándar reales de la empresa, '
+              'a partir de las cinco órdenes de prueba de la Tabla {T:ord_val}. Dos de ellas, J1 y J4, tienen '
+              'la misma referencia (C01), para comprobar que el alistamiento solo se aplica cuando cambia la '
+              'referencia. Cada orden tiene dos fechas de entrega, según la configuración de máquinas con que '
+              'se resuelva.'),
+        ('tabla', 'Órdenes de prueba de la validación',
+         ['Orden', 'Referencia', 'Cantidad (docenas)', 'r_j (h)', 'd_j con el conjunto A (h)',
+          'd_j con el conjunto B (h)'], filas_ord,
+         {'etiqueta': 'ord_val', 'anchos': [1000, 1300, 1500, 1100, 1969, 1969], 'alineacion': ['c'] * 6}),
+        ('p', f'**Máquinas.** Se definieron dos configuraciones de máquinas. El conjunto A tiene '
+              f'{NUM_TXT(n_a)} máquinas: {maqA}. El conjunto B agrega {extraB}, para un total de {NUM_TXT(n_b)}. En ensamble se '
+              'incluyeron siempre máquinas de velocidades distintas (M5, lenta; M12, intermedia; M16, rápida). '
+              'El conjunto A, más reducido, permite demostrar el óptimo en instancias con más sublotes, y el '
+              'conjunto B pone a prueba la asignación entre máquinas no relacionadas, como ocurre en la planta. '
+              'Como el conjunto B tiene más capacidad, se le asignaron fechas de entrega más ajustadas, para que '
+              'la tardanza óptima fuera mayor que cero.'),
+        ('p', '**Instancias.** La Tabla {T:inst} indica qué órdenes, cuántos sublotes por orden y qué '
+              'configuración de máquinas usa cada instancia. El tamaño crece de 4 a 15 sublotes, y las '
+              'instancias I1 e I2 repiten las órdenes de I6 e I9 sin dividirlas, para medir el efecto de los '
+              'sublotes.'),
+        ('tabla', 'Diseño de las instancias de validación (● orden incluida)',
+         ['Instancia'] + js_val + ['Sublotes por orden', 'Sublotes totales', 'Máquinas'], filas_dis,
+         {'etiqueta': 'inst', 'anchos': [1100] + [700] * len(js_val) + [1500, 1400, 1338],
+          'alineacion': ['c'] * (4 + len(js_val))}),
         ('p', '**Procedimiento.** Cada instancia se resolvió de forma exacta con el solver HiGHS. Como el '
               'objetivo es lexicográfico, se resolvió en dos fases: primero se minimizó la tardanza total y '
               'luego el makespan, sin empeorar la tardanza, con un límite de 10 minutos por fase. Sobre las '
