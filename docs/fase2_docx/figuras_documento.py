@@ -197,99 +197,104 @@ def generar(M, indic, ruta_bd, B_actual):
 
 
 def instancias_validacion():
-    """Fase 2: órdenes, máquinas e instancias de la validación en una sola figura."""
+    """Fase 2: órdenes, configuraciones de máquinas y diseño de las instancias de la validación."""
     sys.path.insert(0, os.path.join(RAIZ, 'fase2'))
     import validacion_milp as V
     from matplotlib.patches import Rectangle
-    AMAR = '#eda100'
-    refs = []
-    for o in V.ORDENES_BASE:
-        if o[1] not in refs:
-            refs.append(o[1])
-    col_ref = dict(zip(refs, (AZUL, NARANJA, AGUA, AMAR)))
-    d_b = {o[0]: o[4] for o in V.ORDENES_B}
+    NAVY, AZ, CLARO, GRIS = '#1F4E79', '#2E75B6', '#DCE6F2', '#BFBFBF'
     F = 'serif'
-    fig, ax = plt.subplots(figsize=(7.4, 8.4))
+    d_b = {o[0]: o[4] for o in V.ORDENES_B}
+    fig, ax = plt.subplots(figsize=(7.4, 8.0))
     ax.set_xlim(0, 30)
-    ax.set_ylim(0, 34)
+    ax.set_ylim(-0.6, 33)
     ax.axis('off')
 
-    def titulo(y, t):
-        ax.text(0, y, t, fontsize=10, fontweight='bold', family=F, color=TINTA, va='center')
+    def txt(x, y, t, fs=8.5, ha='center', **kw):
+        ax.text(x, y, t, ha=ha, va='center', fontsize=fs, family=F, color=kw.pop('color', TINTA), **kw)
 
-    # --- 1. Órdenes
-    titulo(33.2, '1. Órdenes de prueba')
-    w, x0 = 5.6, 0.0
+    def regla(y, x0=0.3, x1=29.7, lw=0.8):
+        ax.plot([x0, x1], [y, y], color=TINTA, lw=lw)
+
+    # (a) Órdenes de prueba ---------------------------------------------------
+    txt(0.3, 32.4, '(a) Órdenes de prueba', fs=9.5, ha='left', fontweight='bold')
+    cols = [(2.0, 'Orden'), (6.9, 'Referencia'), (12.2, 'Cantidad (doc.)'), (17.0, '$r_j$ (h)'),
+            (21.4, '$d_j$ con A (h)'), (26.2, '$d_j$ con B (h)')]
+    regla(31.6, lw=1.0)
+    for x, t in cols:
+        txt(x, 31.05, t, fontweight='bold')
+    regla(30.5)
     for k, (j, p, q, r, d) in enumerate(V.ORDENES_BASE):
-        x = x0 + k * (w + 0.5)
-        c = col_ref[p]
-        ax.add_patch(FancyBboxPatch((x, 26.6), w, 5.6, boxstyle='round,pad=0,rounding_size=0.3',
-                                    fc='#F7F7F5', ec=c, lw=1.6))
-        ax.add_patch(Rectangle((x, 30.9), w, 1.3, fc=c, ec='none'))
-        ax.text(x + w / 2, 31.55, f'{j}', ha='center', va='center', fontsize=11, fontweight='bold',
-                family=F, color='white' if c in (AZUL, NARANJA) else TINTA)
-        lineas = [f'Ref. {p}', f'{q} docenas', f'r = {_coma(r, 0)} h',
-                  f'd = {_coma(d, 0)} h (A)', f'd = {_coma(d_b[j], 0)} h (B)']
-        for i, t in enumerate(lineas):
-            ax.text(x + w / 2, 30.2 - i * 0.78, t, ha='center', va='center', fontsize=8.3, family=F,
-                    color=TINTA, fontweight='bold' if i == 0 else 'normal')
-    ax.text(0, 25.8, 'Mismo color = misma referencia. J1 y J4 (C01) permiten comprobar que el alistamiento\n'
-                     'solo se aplica cuando cambia la referencia. d: fecha de entrega con el conjunto de máquinas A o B.',
-            fontsize=7.8, family=F, color=TINTA2, va='center')
+        y = 29.9 - k * 0.85
+        for (x, _), t in zip(cols, (j, p, q, _coma(r, 0), _coma(d, 0), _coma(d_b[j], 0))):
+            txt(x, y, str(t))
+    regla(29.9 - 4 * 0.85 - 0.5, lw=1.0)
 
-    # --- 2. Máquinas
-    titulo(24.45, '2. Máquinas por etapa')
+    # (b) Configuraciones de máquinas -----------------------------------------
+    yb = 24.6
+    txt(0.3, yb, '(b) Configuraciones de máquinas', fs=9.5, ha='left', fontweight='bold')
     etapas = ['Troquelado', 'Ensamble', 'Costura', 'Volteado']
-    vel = {'M5': 'lenta', 'M12': 'intermedia', 'M16': 'rápida'}
-    wc = 7.0
-    for k, e in enumerate(etapas):
-        x = k * (wc + 0.65)
-        ax.add_patch(FancyBboxPatch((x, 23.0), wc, 0.95, boxstyle='round,pad=0,rounding_size=0.2',
-                                    fc='#B4C7E7', ec='none'))
-        ax.text(x + wc / 2, 23.48, e, ha='center', va='center', fontsize=8.8, fontweight='bold', family=F)
-        maqs = V.MAQ_B[e]
-        for i, m in enumerate(maqs):
-            y = 21.9 - i * 1.25
-            solo_b = m not in V.MAQ_A[e]
-            ax.add_patch(FancyBboxPatch((x + 0.6, y - 0.45), wc - 1.2, 0.9,
-                                        boxstyle='round,pad=0,rounding_size=0.2',
-                                        fc='white' if solo_b else '#DCE6F2', ec=TINTA2, lw=1,
-                                        ls='--' if solo_b else '-'))
-            t = m + (f' ({vel[m]})' if m in vel else '')
-            ax.text(x + wc / 2, y, t, ha='center', va='center', fontsize=8, family=F, color=TINTA)
-    ax.text(0, 17.55, 'Recuadro relleno: máquina de los conjuntos A y B. Recuadro punteado: solo del conjunto B,\n'
-                      'que tiene más capacidad y por eso se usa con fechas de entrega más ajustadas.',
-            fontsize=7.8, family=F, color=TINTA2, va='center')
+    vel = {'M5': 'L', 'M12': 'I', 'M16': 'R'}
+    x_et = {e: 7.4 + k * 5.7 for k, e in enumerate(etapas)}
+    for e in etapas:
+        txt(x_et[e], yb - 1.0, e, fontweight='bold')
+    regla(yb - 1.55, x0=4.4)
+    filas_conj = [('Conjunto A', V.MAQ_A, yb - 2.75), ('Conjunto B', V.MAQ_B, yb - 5.15)]
+    for nombre, maq, y in filas_conj:
+        txt(0.4, y, nombre, ha='left', fontweight='bold')
+        txt(0.4, y - 0.7, f"{sum(len(maq[e]) for e in etapas)} máquinas", fs=7.8, ha='left', color=TINTA2)
+        for e in etapas:
+            ms = maq[e]
+            ancho = 1.85
+            x0 = x_et[e] - (len(ms) * ancho + (len(ms) - 1) * 0.2) / 2
+            for k, m in enumerate(ms):
+                nuevo = m not in V.MAQ_A[e]
+                x = x0 + k * (ancho + 0.2)
+                alto = 1.45 if m in vel else 1.1
+                ax.add_patch(Rectangle((x, y - alto / 2), ancho, alto, fc=NAVY if nuevo else CLARO, ec=NAVY,
+                                       lw=0.9))
+                txt(x + ancho / 2, y + (0.22 if m in vel else 0), m, fs=7.6, color='white' if nuevo else TINTA)
+                if m in vel:
+                    txt(x + ancho / 2, y - 0.38, vel[m], fs=6.6, color='white' if nuevo else TINTA2)
+    regla(yb - 6.35, x0=4.4)
+    ax.add_patch(Rectangle((4.6, yb - 7.25), 0.9, 0.55, fc=NAVY, ec=NAVY))
+    txt(5.8, yb - 6.97, 'máquina agregada en el conjunto B', fs=7.6, ha='left', color=TINTA2)
+    txt(17.0, yb - 6.97, 'Ensamble: L lenta · I intermedia · R rápida', fs=7.6, ha='left', color=TINTA2)
 
-    # --- 3. Instancias
-    titulo(16.3, '3. Instancias: qué órdenes y máquinas usa cada una')
-    cols_j = [o[0] for o in V.ORDENES_BASE]
-    xs = {'inst': 0.8, **{j: 5.0 + i * 2.3 for i, j in enumerate(cols_j)}, 'B': 17.6, 'sub': 21.3,
-          'maq': 25.6}
-    y0 = 15.0
-    for clave, t in (('inst', 'Instancia'), ('B', 'Sublotes\npor orden'), ('sub', 'Sublotes\ntotales'),
-                     ('maq', 'Máquinas')):
-        ax.text(xs[clave], y0, t, ha='center', va='center', fontsize=8, fontweight='bold', family=F)
-    for j in cols_j:
-        ax.text(xs[j], y0, j, ha='center', va='center', fontsize=8, fontweight='bold', family=F)
-    ax.plot([0, 30], [y0 - 0.65, y0 - 0.65], color=TINTA2, lw=0.8)
-    for i, (nom, ords, b, maq) in enumerate(V.INSTANCIAS):
-        y = y0 - 1.45 - i * 1.4
-        if i % 2 == 0:
-            ax.add_patch(Rectangle((0, y - 0.7), 30, 1.4, fc='#F4F4F2', ec='none', zorder=0))
-        ax.text(xs['inst'], y, nom, ha='center', va='center', fontsize=8.5, family=F, fontweight='bold')
+    # (c) Diseño de las instancias --------------------------------------------
+    yc = 15.6
+    txt(0.3, yc, '(c) Diseño de las instancias', fs=9.5, ha='left', fontweight='bold')
+    js = [o[0] for o in V.ORDENES_BASE]
+    xj = {j: 5.2 + k * 1.9 for k, j in enumerate(js)}
+    x_b, x_c, x_bar = 16.1, 19.4, 22.2
+    regla(yc - 0.55, lw=1.0)
+    txt(2.0, yc - 1.35, 'Instancia', fontweight='bold')
+    for j in js:
+        txt(xj[j], yc - 1.35, j, fontweight='bold')
+    txt(x_b, yc - 1.35, 'Sublotes\npor orden', fs=7.4, fontweight='bold', linespacing=1.0)
+    txt(x_c, yc - 1.35, 'Máq.', fontweight='bold')
+    txt(x_bar + 3.5, yc - 1.35, 'Sublotes totales', fontweight='bold')
+    regla(yc - 2.0)
+    max_sub = max(len(o) * b for _, o, b, _ in V.INSTANCIAS)
+    for k, (nom, ords, b, maq) in enumerate(V.INSTANCIAS):
+        y = yc - 2.6 - k * 1.2
+        txt(2.0, y, nom)
         incl = {o[0] for o in ords}
-        for o in V.ORDENES_BASE:
-            if o[0] in incl:
-                ax.scatter([xs[o[0]]], [y], s=70, color=col_ref[o[1]], edgecolor='white', lw=1, zorder=3)
-            else:
-                ax.scatter([xs[o[0]]], [y], s=22, facecolor='none', edgecolor='#BBBBBB', lw=0.8, zorder=3)
-        ax.text(xs['B'], y, f'{b}' + ('  (sin dividir)' if b == 1 else ''), ha='center', va='center',
-                fontsize=8.3, family=F)
-        ax.text(xs['sub'], y, f'{len(ords) * b}', ha='center', va='center', fontsize=8.3, family=F)
-        conj = 'A' if maq == V.MAQ_A else 'B'
-        ax.text(xs['maq'], y, f'Conjunto {conj}', ha='center', va='center', fontsize=8.3, family=F)
-    ax.text(0, y - 1.5, 'Punto de color: la orden forma parte de la instancia.\n'
-                        'I1 e I2 tienen las mismas órdenes que I6 e I9, pero sin dividirlas en sublotes.',
-            fontsize=7.8, family=F, color=TINTA2, va='center')
+        for j in js:
+            dentro = j in incl
+            ax.add_patch(Rectangle((xj[j] - 0.33, y - 0.33), 0.66, 0.66, fc=NAVY if dentro else 'white',
+                                   ec=NAVY if dentro else GRIS, lw=0.8))
+        txt(x_b, y, str(b))
+        txt(x_c, y, 'A' if maq == V.MAQ_A else 'B')
+        tot = len(ords) * b
+        largo = 6.3 * tot / max_sub
+        ax.add_patch(Rectangle((x_bar, y - 0.3), largo, 0.6, fc=AZ, ec='none'))
+        txt(x_bar + largo + 0.3, y, str(tot), fs=8, ha='left')
+    y_fin = yc - 2.6 - (len(V.INSTANCIAS) - 1) * 1.2 - 0.65
+    regla(y_fin, lw=1.0)
+    ax.add_patch(Rectangle((0.5, y_fin - 1.05), 0.55, 0.55, fc=NAVY, ec=NAVY))
+    txt(1.35, y_fin - 0.78, 'orden incluida en la instancia', fs=7.6, ha='left', color=TINTA2)
+    ax.add_patch(Rectangle((10.6, y_fin - 1.05), 0.55, 0.55, fc='white', ec=GRIS))
+    txt(11.45, y_fin - 0.78, 'no incluida', fs=7.6, ha='left', color=TINTA2)
+    txt(0.5, y_fin - 1.75, 'I1 e I2 tienen las mismas órdenes que I6 e I9, sin dividirlas en sublotes.', fs=7.6,
+        ha='left', color=TINTA2)
     return _guardar(fig, 'instancias_validacion.png')

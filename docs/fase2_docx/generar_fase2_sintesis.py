@@ -387,9 +387,12 @@ def validacion():
               'prueba los elementos del modelo: en ensamble se incluyeron máquinas de tres velocidades (M5, '
               'lenta; M12, intermedia; M16, rápida); dos órdenes comparten la referencia C01, para comprobar '
               'que el alistamiento solo se aplica cuando cambia la referencia; y las instancias I1 e I2 repiten '
-              'las órdenes de I6 e I9 sin dividirlas, para medir el efecto de los sublotes. Con el conjunto B, '
-              'que tiene más máquinas, se usaron fechas de entrega más ajustadas, para que la tardanza óptima '
-              'fuera mayor que cero.'),
+              'las órdenes de I6 e I9 sin dividirlas, para medir el efecto de los sublotes. Se definieron, '
+              'además, dos configuraciones de máquinas: el conjunto A, más reducido, permite demostrar el óptimo '
+              'en instancias con más sublotes, y el conjunto B incorpora una máquina de velocidad intermedia en '
+              'ensamble y una segunda máquina de costura, con lo que pone a prueba la asignación entre máquinas '
+              'no relacionadas, como ocurre en la planta. Como el conjunto B tiene más capacidad, se le '
+              'asignaron fechas de entrega más ajustadas, para que la tardanza óptima fuera mayor que cero.'),
         ('figura', 'Composición de las instancias de validación: órdenes, máquinas e instancias',
          os.path.join(os.path.dirname(os.path.abspath(__file__)), 'figuras', 'instancias_validacion.png'),
          15.0, 'inst_fig'),
