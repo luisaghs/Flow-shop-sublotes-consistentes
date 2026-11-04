@@ -19,6 +19,7 @@ Uso:
   python validacion_milp.py ruta/final_sc_hfsagls_S2_4.py ruta/BD_HFS.xlsx [I1,I2,...]
   python validacion_milp.py resumen        # une los resultados de todas las instancias
   python validacion_milp.py ag ruta/final_sc_hfsagls_S2_4.py
+  python validacion_milp.py gantt ruta/final_sc_hfsagls_S2_4.py ruta/BD_HFS.xlsx [I3,I5]
                                            # repite solo el AG con los parámetros actuales
 
 Requiere: pip install pulp highspy pandas openpyxl matplotlib
@@ -617,6 +618,30 @@ def solo_ag(ruta_modelo):
         fh.write('\n'.join(lineas) + '\n')
     consolidar()
 
+
+def gantt_desde_resultados(ruta_modelo, ruta_bd, nombre):
+    """Rehace el Gantt comparativo de una instancia con la solución exacta guardada
+    (programacion_milp_<nombre>.csv) y la mejor réplica del AG con los parámetros actuales."""
+    M = cargar_modulo(ruta_modelo)
+    t_min, etapas = tiempos_reales(M, ruta_bd)
+    _, ordenes, b_max, maquinas = next(x for x in INSTANCIAS if x[0] == nombre)
+    prog = pd.read_csv(os.path.join(DIR_SALIDA, f"programacion_milp_{nombre}.csv"))
+    sol = {'J': [o[0] for o in ordenes], 'ref': {o[0]: o[1] for o in ordenes},
+           'd': {o[0]: o[4] for o in ordenes}, 'sigma': SETUP_MIN / 60.0,
+           'Ms': {s: maquinas[etapas[s - 1]] for s in range(1, len(etapas) + 1)},
+           'ops': {(r['Orden'], int(r['Sublote']), int(r['Etapa'])):
+                   (r['Máquina'], float(r['Inicio (h)']), float(r['Fin (h)'])) for _, r in prog.iterrows()}}
+    _, res = correr_ag(M, os.path.join(DIR_SALIDA, f"{nombre}.xlsx"), b_max, SEMILLAS_AG)
+    mejor = min(res, key=lambda v: (round(v[0], 6), round(v[1], 6)))
+    ruta = os.path.join(DIR_SALIDA, f"gantt_milp_vs_ag_{nombre}.png")
+    graficar_comparacion(M, sol, mejor[3], ruta)
+    print(f"{nombre}: AG mejor ΣTj = {mejor[0]:.3f} | Cmax = {mejor[1]:.3f} → {ruta}")
+
+
+if __name__ == '__main__' and len(sys.argv) > 3 and sys.argv[1] == 'gantt':
+    for nom in (sys.argv[4].split(',') if len(sys.argv) > 4 else GRAFICAR):
+        gantt_desde_resultados(sys.argv[2], sys.argv[3], nom)
+    sys.exit()
 
 if __name__ == '__main__' and len(sys.argv) > 2 and sys.argv[1] == 'ag':
     solo_ag(sys.argv[2])
