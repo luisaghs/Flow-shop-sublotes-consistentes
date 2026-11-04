@@ -297,6 +297,8 @@ def validacion():
     v = pd.read_csv(os.path.join(G.SAL_VAL, 'resultados_validacion_todas.csv')).set_index('Instancia')
     _, info = _datos_validacion()
     inf = {i['inst']: i for i in info}
+    opt = lambda e: str(e).startswith('Óptimo')
+    r3 = lambda x: n(round(x, 4) + 1e-9, 3)          # misma cifra con distinta precisión del solver
 
     # --- Tabla de instancias (definiciones de validacion_milp.py)
     etapas = ['Troquelado', 'Ensamble', 'Costura', 'Volteado']
@@ -311,39 +313,25 @@ def validacion():
     maqA = _lista([f"{_lista(V.MAQ_A[e])} ({e.lower()})" for e in etapas])
     extraB = _lista([f"{m} en {e.lower()}" for e in etapas for m in V.MAQ_B[e] if m not in V.MAQ_A[e]])
 
-    # --- Tabla de resultados
-    def est(e, s):
-        e = str(e)
-        t = 'óptimo' if e.startswith('Óptimo') else ('sin solución' if e.startswith('Sin') else 'límite')
-        return f"{t} ({n(s, 0)})"
-
-    def form(f, r):
-        if pd.isna(r[f'{f} ΣTj']):
-            return est(r[f'{f} estado'], r[f'{f} s'])
-        r3 = lambda x: n(round(x, 4) + 1e-9, 3)          # misma cifra con distinta precisión del solver
-        return f"{r3(r[f'{f} ΣTj'])} / {r3(r[f'{f} Cmax'])} · {est(r[f'{f} estado'], r[f'{f} s'])}"
-
+    # --- Tabla de resultados (una columna para la mejor solución exacta)
     filas_res = []
     for nombre, r in v.iterrows():
-        filas_res.append([nombre, str(int(r['Sublotes'])), form('F1', r), form('F2', r),
-                          f"{n(r['Regla ΣTj'], 3)} ({r['Regla']})",
-                          f"{n(round(r['AG mejor ΣTj'], 4) + 1e-9, 3)} / {n(round(r['AG mejor Cmax'], 4) + 1e-9, 3)}",
-                          n(r['AG prom ΣTj'], 3),
-                          r['AG ≤ MILP en ΣTj'], n(r['AG s prom'], 1)])
+        i = inf[nombre]
+        hay = not (pd.isna(r['F1 ΣTj']) and pd.isna(r['F2 ΣTj']))
+        estado = 'óptima' if i['opt'] else ('mejor encontrada' if hay else 'sin solución')
+        filas_res.append([nombre, str(int(r['Sublotes'])),
+                          f"{r3(i['ref'][0])} / {r3(i['ref'][1])}" if hay else '—', estado,
+                          r3(r['Regla ΣTj']), f"{r3(i['ag'][0])} / {r3(i['ag'][1])}",
+                          n(r['AG prom ΣTj'], 3), r['AG ≤ MILP en ΣTj'], n(r['AG s prom'], 1)])
 
-    # --- Cifras para las conclusiones
-    opt = lambda e: str(e).startswith('Óptimo')
+    # --- Cifras para las respuestas
     ambos = [i for i, r in v.iterrows() if opt(r['F1 estado']) and opt(r['F2 estado'])
              and abs(r['F1 ΣTj'] - r['F2 ΣTj']) < 1e-3 and abs(r['F1 Cmax'] - r['F2 Cmax']) < 1e-3]
     solo_f2 = [i for i, r in v.iterrows() if opt(r['F2 estado']) and not opt(r['F1 estado'])
                and not pd.isna(r['F1 ΣTj']) and abs(r['F1 ΣTj'] - r['F2 ΣTj']) < 1e-3
                and abs(r['F1 Cmax'] - r['F2 Cmax']) < 1e-3]
     viol = int(v['F1 violaciones'].fillna(0).sum() + v['F2 violaciones'].fillna(0).sum())
-    con_f1 = [i for i, r in v.iterrows() if not pd.isna(r['F1 ΣTj'])]
-    igual_dec = [i for i in con_f1 if abs(v.loc[i, 'Decod. ΣTj'] - inf[i]['ref'][0]) < 1e-3
-                 and abs(v.loc[i, 'Decod. Cmax'] - inf[i]['ref'][1]) < 1e-3]
-    mayor_dec = [i for i in con_f1 if i not in igual_dec]
-    ej = mayor_dec[0] if mayor_dec else None
+    rat = v['F2 binarias'] / v['F1 binarias']
     con_opt = [i['inst'] for i in info if i['opt']]
     hits = sum(inf[i]['hits'] for i in con_opt)
     reps = sum(inf[i]['reps'] for i in con_opt)
@@ -353,9 +341,9 @@ def validacion():
              and inf[i]['ag'][1] > inf[i]['ref'][1] + 1e-3]
     f1_opt_max = max(int(v.loc[i, 'Sublotes']) for i, r in v.iterrows() if opt(r['F1 estado']))
     sin_f1 = [i for i, r in v.iterrows() if pd.isna(r['F1 ΣTj'])]
+    no_dem = [i for i in v.index if not inf[i]['opt']]
     t_ag = v['AG s prom'].max()
-    i_big = sin_f1[-1] if sin_f1 else v.index[-1]
-    rat = (v['F2 binarias'] / v['F1 binarias'])
+    i_big = no_dem[-1] if no_dem else v.index[-1]
     n_sub, n_maq = 100, 36
     bin_real = n_sub * n_maq + n_sub ** 2 * n_maq
     mejor_t = {i: min(inf[i]['ref'][0], inf[i]['ag'][0]) for i in inf}
@@ -365,110 +353,105 @@ def validacion():
 
     return [
         ('h3', 'Verificación y validación'),
-        ('p', 'Antes de usar el modelo en el caso de estudio se comprobaron dos cosas: que las programaciones '
-              'que produce cumplen todas las restricciones (verificación) y que sus resultados son correctos, '
-              'es decir, que el algoritmo genético encuentra soluciones óptimas o muy cercanas al óptimo '
+        ('p', 'Antes de aplicar el modelo al caso de estudio se respondieron dos preguntas: si las '
+              'programaciones que produce son factibles, es decir, si cumplen todas las restricciones '
+              '(verificación), y si son buenas, es decir, si se acercan a la mejor programación posible '
               '(validación).'),
-        ('p', '**Verificación.** Un verificador independiente revisó, en las programaciones producidas '
-              'por el decodificador, cada restricción del modelo: tamaños de sublote, asignación de '
-              'máquinas, tiempos de proceso, liberaciones, precedencia entre etapas, no solapamiento y '
-              'alistamientos. Se aplicó a 200 cromosomas aleatorios de la instancia real y a las seis '
-              'reglas de despacho, sin encontrar violaciones.'),
+
+        ('h4', 'Verificación'),
+        ('p', 'Se programó un verificador: un procedimiento que recibe una programación '
+              'ya terminada (la máquina, el inicio y el fin de cada sublote) y comprueba por su cuenta cada '
+              'restricción del modelo. Revisa que los sublotes de cada orden sumen su cantidad total, que cada '
+              'sublote se procese en una sola máquina por etapa, que los tiempos de proceso correspondan a los '
+              'tiempos estándar, que ningún sublote empiece antes de la liberación de su orden ni antes de '
+              'terminar la etapa anterior, que ninguna máquina procese dos sublotes a la vez y que se incluya '
+              'el alistamiento en troquelado cuando cambia la referencia. Como no reutiliza la lógica del '
+              'decodificador, detectaría un error de este. Se aplicó a las programaciones de 200 cromosomas '
+              'aleatorios de la instancia real y de las seis reglas de despacho, y también a las soluciones '
+              'del modelo exacto de la validación: en ningún caso se encontraron violaciones.'),
+
         ('h4', 'Validación con instancias reducidas'),
-        ('p', 'Para saber si el algoritmo encuentra buenas soluciones hay que compararlo con la mejor '
-              'solución posible, el óptimo. El modelo matemático lo puede calcular de forma exacta, pero '
-              'solo en problemas pequeños: a medida que aumentan los sublotes, el número de combinaciones '
-              'crece tan rápido que el solver deja de encontrar respuesta en un tiempo razonable. Por eso '
-              'la validación se hizo con instancias reducidas, en las que ambos métodos pueden compararse.'),
-        ('p', 'Se construyeron nueve instancias con los tiempos estándar reales de la empresa, cantidades '
-              'reducidas y un subconjunto de las máquinas de cada etapa (Tabla {T:inst}). En ensamble se '
-              'incluyeron siempre máquinas de velocidades distintas (M5, lenta; M12, intermedia; M16, '
-              'rápida), y dos órdenes de la misma referencia (C01), para comprobar que el alistamiento solo '
-              'se aplica cuando cambia la referencia. Las instancias I1 e I2 tienen las mismas órdenes que '
-              'I6 e I9, pero sin dividirlas en sublotes, lo que permite medir el efecto de la división.'),
+        ('p', 'Evaluar la calidad de las soluciones del algoritmo genético requiere compararlas con la '
+              'solución óptima del problema. El modelo matemático permite obtener ese óptimo de forma exacta, '
+              'pero solo en instancias pequeñas: a medida que aumenta el número de sublotes, las combinaciones '
+              'posibles de secuencia y asignación crecen de forma exponencial y el solver deja de encontrar una '
+              'solución en un tiempo razonable. Por esta razón, la validación se realizó con instancias '
+              'reducidas, en las que es posible resolver el modelo de forma exacta y contrastar sus resultados '
+              'con los del algoritmo. La validación busca responder tres preguntas: ¿el modelo matemático está '
+              'bien formulado?, ¿el algoritmo genético encuentra el óptimo? y ¿hasta qué tamaño puede usarse el '
+              'método exacto?'),
+        ('p', '**Instancias.** Se construyeron nueve instancias con los tiempos estándar reales de la empresa, '
+              'cantidades reducidas y un subconjunto de las máquinas de cada etapa (Tabla {T:inst}). En '
+              'ensamble se incluyeron siempre máquinas de velocidades distintas (M5, lenta; M12, intermedia; '
+              'M16, rápida), y dos órdenes de la misma referencia (C01), para comprobar que el alistamiento '
+              'solo se aplica cuando cambia la referencia. Las instancias I1 e I2 tienen las mismas órdenes '
+              'que I6 e I9, pero sin dividirlas en sublotes.'),
         ('tabla', 'Instancias de validación', ['Instancia', 'Órdenes', 'B̄', 'Sublotes',
                                                'Máquinas (T-E-C-V)', 'd_j (h)'], filas_inst,
          {'etiqueta': 'inst', 'anchos': [1100, 1100, 700, 1100, 2100, 2738],
           'alineacion': ['c', 'c', 'c', 'c', 'c', 'c']}),
         ('p', f'Las órdenes son {o_txt}. El conjunto de máquinas A está formado por {maqA}; el conjunto '
               f'B agrega {extraB}. Con el conjunto B, que tiene más capacidad, se usaron fechas de entrega '
-              'más ajustadas, para que la tardanza óptima fuera mayor que cero y las instancias '
-              'permitieran diferenciar entre los métodos.'),
-        ('p', '**Cómo se resolvieron.** Cada instancia se resolvió de forma exacta con el solver HiGHS, '
-              'usando dos formulaciones del modelo. La primera (F1) es el modelo matemático presentado en esta fase, '
-              'que decide qué sublote va inmediatamente antes de cada otro en cada máquina. La segunda (F2) '
-              'es una formulación equivalente que solo decide, para cada par de sublotes que comparten '
-              'máquina, cuál va primero (Naderi et al., 2014); necesita entre el '
-              f'{n(100 * rat.min(), 0)} % y el {n(100 * rat.max(), 0)} % de las variables binarias de F1 '
-              'y por eso resuelve más rápido. Si las dos formulaciones, construidas de manera distinta, '
-              'llegan al mismo óptimo, es una evidencia fuerte de que el modelo está bien planteado.'),
-        ('p', 'Como el objetivo es lexicográfico, cada instancia se resolvió en dos fases: primero se '
-              'minimizó la tardanza total y luego el makespan, sin empeorar la tardanza óptima, con un '
-              'límite de 10 minutos por fase. Sobre las mismas instancias se corrió el algoritmo genético, '
-              'sin modificaciones y con los parámetros calibrados en la sección 4.2.4, 10 veces con '
-              'semillas distintas. La Tabla {T:validacion} presenta los resultados.'),
-        ('tabla', 'Resultados de la validación: modelo exacto frente al algoritmo genético',
-         ['Inst.', 'Sub-lotes', 'F1: ΣT_j / C_max', 'F2: ΣT_j / C_max', 'Mejor regla ΣT_j',
-          'AG mejor ΣT_j / C_max', 'AG prom. ΣT_j', 'AG ≤ MILP', 'AG (s)'], filas_res,
-         {'etiqueta': 'validacion', 'anchos': [560, 640, 1700, 1700, 1000, 1150, 760, 680, 648],
-          'alineacion': ['c'] * 9, 'tam': 8}),
-        ('p', 'La tardanza total y el makespan se expresan en horas; entre paréntesis, el tiempo de cómputo '
-              'del solver en segundos. «Óptimo» indica que el solver demostró la optimalidad de las dos '
-              'fases; «límite», que se alcanzó el límite de tiempo con la mejor solución encontrada, y '
-              '«sin solución», que no encontró ninguna solución factible. La columna «AG ≤ MILP» indica en '
-              'cuántas de las 10 réplicas el algoritmo obtuvo una tardanza igual o menor que la mejor '
-              'solución exacta.'),
-        ('p', 'La Figura {F:gantt_val} compara, en la instancia I5, la programación óptima del modelo '
-              'exacto con la mejor del algoritmo genético. '
-              + ('Las dos programaciones son distintas, pues ordenan y asignan los sublotes de otra manera, '
-                 'pero alcanzan exactamente el mismo valor óptimo: '
-                 f"{n(inf['I5']['ref'][0], 3)} h de tardanza total y {n(inf['I5']['ref'][1], 3)} h de makespan. "
-                 'Es decir, el problema puede tener varias soluciones óptimas, y el algoritmo encontró una '
-                 'de ellas.' if igual_i5 else '')),
+              'más ajustadas, para que la tardanza óptima fuera mayor que cero.'),
+        ('p', '**Procedimiento.** Cada instancia se resolvió de forma exacta con el solver HiGHS. Como el '
+              'objetivo es lexicográfico, se resolvió en dos fases: primero se minimizó la tardanza total y '
+              'luego el makespan, sin empeorar la tardanza, con un límite de 10 minutos por fase. Sobre las '
+              'mismas instancias se corrió el algoritmo genético con los parámetros calibrados en la sección '
+              '4.2.4, 10 veces con semillas distintas. La Tabla {T:validacion} resume los resultados.'),
+        ('tabla', 'Resultados de la validación: solución exacta frente al algoritmo genético',
+         ['Inst.', 'Sub-lotes', 'Solución exacta ΣT_j / C_max', 'Estado', 'Mejor regla ΣT_j',
+          'AG mejor ΣT_j / C_max', 'AG prom. ΣT_j', 'Réplicas AG ≤ exacta', 'Tiempo AG (s)'], filas_res,
+         {'etiqueta': 'validacion', 'anchos': [560, 640, 1550, 1150, 900, 1450, 820, 920, 848],
+          'alineacion': ['c'] * 9, 'tam': 8.5}),
+        ('p', 'La tardanza total y el makespan se expresan en horas. «Óptima» indica que el solver demostró '
+              'que no existe una solución mejor, y «mejor encontrada», que alcanzó el límite de tiempo sin '
+              'demostrarlo' + ('; «sin solución», que no encontró ninguna programación factible' if any(
+                  f[3] == 'sin solución' for f in filas_res) else '') + '. La columna '
+              '«Réplicas AG ≤ exacta» indica en cuántas de las 10 réplicas el algoritmo obtuvo una tardanza '
+              'igual o menor que la solución exacta.'),
+
+        ('p', '**¿El modelo matemático está bien formulado? Sí.** '
+              + ('Ninguna solución del modelo exacto presentó violaciones de las restricciones. ' if viol == 0
+                 else '')
+              + 'Además, para confirmar los óptimos, se resolvió una segunda versión del modelo escrita de otra '
+              'forma (Naderi et al., 2014): en lugar de decidir qué sublote va inmediatamente antes de otro en '
+              'cada máquina, solo decide cuál de cada par de sublotes va primero, con lo que usa entre el '
+              f'{n(100 * rat.min(), 0)} % y el {n(100 * rat.max(), 0)} % de las variables binarias. Si dos '
+              'modelos escritos de manera distinta llegan al mismo óptimo, es muy poco probable que ambos '
+              'tengan el mismo error. '
+              + (f"Las dos versiones llegaron exactamente al mismo óptimo en {_lista(ambos)}" if ambos else '')
+              + (f", y en {_lista(solo_f2)} la segunda demostró el óptimo y el modelo del documento encontró "
+                 'esa misma solución' if solo_f2 else '') + '.'),
+        ('p', '**¿El algoritmo genético encuentra el óptimo? Sí.** En las '
+              f"{NUM_TXT(len(con_opt))} instancias con óptimo demostrado, la mejor de las 10 réplicas alcanzó "
+              f"la tardanza óptima en todos los casos, y {hits} de {reps} réplicas ({100 * hits / reps:.0f} %) "
+              f"la alcanzaron; la mayor diferencia promedio fue de solo {n(brecha[i_br], 2)} h ({i_br})."
+              + (f" La única diferencia con el óptimo fue el makespan de {dif_c[0]}, "
+                 f"{n(100 * (inf[dif_c[0]]['ag'][1] / inf[dif_c[0]]['ref'][1] - 1), 1)} % mayor con la misma "
+                 'tardanza.' if len(dif_c) == 1 else '')
+              + ' La Figura {F:gantt_val} compara las dos programaciones de la instancia I5. '
+              + ('Son distintas, porque ordenan y asignan los sublotes de otra manera, pero alcanzan '
+                 f"exactamente el mismo valor óptimo ({r3(inf['I5']['ref'][0])} h de tardanza y "
+                 f"{r3(inf['I5']['ref'][1])} h de makespan): el problema puede tener varias soluciones óptimas "
+                 'y el algoritmo encontró una de ellas.' if igual_i5 else '')),
         ('figura', 'Programación óptima del modelo exacto (arriba) y mejor programación del algoritmo '
                    'genético (abajo) en la instancia I5', g5, 15.5, 'gantt_val'),
-        ('p', 'Los resultados permiten las siguientes conclusiones:'),
-        ('viñetas', [
-            '**El modelo matemático está bien formulado.** '
-            + (f'Ninguna de las soluciones del modelo exacto presentó violaciones de las restricciones. '
-               if viol == 0 else '')
-            + (f"En las instancias en que las dos formulaciones demostraron la optimalidad ({_lista(ambos)}), "
-               'llegaron exactamente al mismo óptimo' if ambos else '')
-            + (f"; en {_lista(solo_f2)}, F2 demostró el óptimo y F1 encontró esa misma solución, aunque no "
-               'alcanzó a demostrar su optimalidad en el tiempo límite' if solo_f2 else '') + '.',
-            '**El algoritmo y el modelo representan el mismo problema.** Al pasar los tamaños y secuencias '
-            'de la solución exacta por el decodificador del algoritmo se obtuvieron exactamente los mismos '
-            f"tiempos en {_lista(igual_dec)}. "
-            + (f"En {_lista(mayor_dec)} el decodificador obtuvo un valor algo mayor con esas secuencias; en "
-               f"{ej}, por ejemplo, {n(v.loc[ej, 'Decod. ΣTj'], 3)} h frente a {n(inf[ej]['ref'][0], 3)} h. "
-               'La razón es la regla de asignación del decodificador: el modelo exacto puede enviar un '
-               'sublote a una máquina lenta de ensamble para dejar libre la rápida, que otro sublote '
-               'necesita poco después, mientras que el decodificador siempre elige la máquina en la que el '
-               'sublote termina primero. Aun así, el algoritmo alcanzó el óptimo en esas instancias con '
-               'otros cromosomas.' if mayor_dec else ''),
-            '**El algoritmo encuentra soluciones óptimas o muy cercanas al óptimo.** En las '
-            f"{NUM_TXT(len(con_opt))} instancias con tardanza óptima conocida, la mejor de las 10 réplicas "
-            f"alcanzó la tardanza óptima en todos los casos, y {hits} de {reps} réplicas "
-            f"({100 * hits / reps:.0f} %) la alcanzaron. La mayor diferencia promedio fue de "
-            f"{n(brecha[i_br], 2)} h ({i_br})."
-            + (f" El único caso en que no se alcanzó también el makespan óptimo fue {_lista(dif_c)}, con un "
-               f"makespan {n(100 * (inf[dif_c[0]]['ag'][1] / inf[dif_c[0]]['ref'][1] - 1), 1)} % mayor y la "
-               'misma tardanza.' if len(dif_c) == 1 else ''),
-            '**El método exacto no escala; el algoritmo sí.** La formulación F1 solo demostró la '
-            f"optimalidad hasta {f1_opt_max} sublotes"
-            + (f" y no encontró ninguna solución factible con {_lista([str(int(v.loc[i, 'Sublotes'])) for i in sin_f1])} "
-               'sublotes en 10 minutos' if sin_f1 else '')
-            + '. En cambio, el algoritmo resolvió cada instancia en menos de '
-            f"{int(t_ag) + 1} segundos y, en las más grandes, superó a la mejor solución del solver: en "
-            f"{i_big}, obtuvo {n(inf[i_big]['ag'][0], 3)} h frente a {n(inf[i_big]['ref'][0], 3)} h. La "
-            f"instancia real, con {n_sub} sublotes y {n_maq} máquinas, implicaría "
-            f"{n(bin_real, 0)} variables binarias en F1, muy por encima de lo que el método exacto puede "
-            'resolver; por eso se usa el algoritmo genético.',
-            '**Dividir en sublotes reduce la tardanza.** Con las mismas cuatro órdenes, la mejor tardanza '
-            f"encontrada es de {n(mejor_t['I1'], 2)} h sin dividirlas (I1), y baja a "
-            f"{n(mejor_t['I6'], 2)} h con dos sublotes por orden (I6) y a {n(mejor_t['I8'], 2)} h con tres "
-            f"(I8). Con cinco órdenes, baja de {n(mejor_t['I2'], 2)} h (I2) a {n(mejor_t['I9'], 2)} h (I9). "
-            'Este resultado anticipa lo que se observa en el caso de estudio.']),
+        ('p', '**¿Hasta qué tamaño sirve el método exacto?** Solo para instancias muy pequeñas. El modelo '
+              f"del documento demostró la optimalidad hasta {f1_opt_max} sublotes"
+              + (f" y no encontró ninguna programación factible con "
+                 f"{_lista([str(int(v.loc[i, 'Sublotes'])) for i in sin_f1])} sublotes en 10 minutos "
+                 f"(las soluciones de {_lista(sin_f1)} en la Tabla {{T:validacion}} son de la segunda versión, "
+                 'que tampoco pudo demostrar su optimalidad)' if sin_f1 else '')
+              + f'. El algoritmo, en cambio, resolvió cada instancia en menos de {int(t_ag) + 1} segundos y, '
+              'en las instancias más grandes, superó a la mejor solución del solver: en '
+              f"{i_big} obtuvo {r3(inf[i_big]['ag'][0])} h de tardanza frente a {r3(inf[i_big]['ref'][0])} h. "
+              f'La instancia real, con {n_sub} sublotes y {n_maq} máquinas, implicaría {n(bin_real, 0)} '
+              'variables binarias, muy por encima de lo que el método exacto puede resolver; por eso el caso '
+              'de estudio se resuelve con el algoritmo genético.'),
+        ('p', 'Por último, las instancias muestran el efecto de dividir las órdenes: con las mismas cuatro '
+              f"órdenes, la mejor tardanza encontrada pasa de {n(mejor_t['I1'], 2)} h sin dividirlas (I1) a "
+              f"{n(mejor_t['I6'], 2)} h con dos sublotes por orden (I6) y a {n(mejor_t['I8'], 2)} h con tres "
+              f"(I8); con cinco órdenes, de {n(mejor_t['I2'], 2)} h (I2) a {n(mejor_t['I9'], 2)} h (I9)."),
     ]
 
 
