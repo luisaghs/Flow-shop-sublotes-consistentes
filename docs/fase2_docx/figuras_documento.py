@@ -192,4 +192,104 @@ def comparacion_ordenes(M, indic, B_actual):
 
 def generar(M, indic, ruta_bd, B_actual):
     return {'ocupacion': ocupacion_etapas(ruta_bd), 'cromosoma': cromosoma_ejemplo(),
+            'instancias': instancias_validacion(),
             'interaccion': interaccion_pob_mut(), 'comparacion': comparacion_ordenes(M, indic, B_actual)}
+
+
+def instancias_validacion():
+    """Fase 2: órdenes, máquinas e instancias de la validación en una sola figura."""
+    sys.path.insert(0, os.path.join(RAIZ, 'fase2'))
+    import validacion_milp as V
+    from matplotlib.patches import Rectangle
+    AMAR = '#eda100'
+    refs = []
+    for o in V.ORDENES_BASE:
+        if o[1] not in refs:
+            refs.append(o[1])
+    col_ref = dict(zip(refs, (AZUL, NARANJA, AGUA, AMAR)))
+    d_b = {o[0]: o[4] for o in V.ORDENES_B}
+    F = 'serif'
+    fig, ax = plt.subplots(figsize=(7.4, 8.4))
+    ax.set_xlim(0, 30)
+    ax.set_ylim(0, 34)
+    ax.axis('off')
+
+    def titulo(y, t):
+        ax.text(0, y, t, fontsize=10, fontweight='bold', family=F, color=TINTA, va='center')
+
+    # --- 1. Órdenes
+    titulo(33.2, '1. Órdenes de prueba')
+    w, x0 = 5.6, 0.0
+    for k, (j, p, q, r, d) in enumerate(V.ORDENES_BASE):
+        x = x0 + k * (w + 0.5)
+        c = col_ref[p]
+        ax.add_patch(FancyBboxPatch((x, 26.6), w, 5.6, boxstyle='round,pad=0,rounding_size=0.3',
+                                    fc='#F7F7F5', ec=c, lw=1.6))
+        ax.add_patch(Rectangle((x, 30.9), w, 1.3, fc=c, ec='none'))
+        ax.text(x + w / 2, 31.55, f'{j}', ha='center', va='center', fontsize=11, fontweight='bold',
+                family=F, color='white' if c in (AZUL, NARANJA) else TINTA)
+        lineas = [f'Ref. {p}', f'{q} docenas', f'r = {_coma(r, 0)} h',
+                  f'd = {_coma(d, 0)} h (A)', f'd = {_coma(d_b[j], 0)} h (B)']
+        for i, t in enumerate(lineas):
+            ax.text(x + w / 2, 30.2 - i * 0.78, t, ha='center', va='center', fontsize=8.3, family=F,
+                    color=TINTA, fontweight='bold' if i == 0 else 'normal')
+    ax.text(0, 25.8, 'Mismo color = misma referencia. J1 y J4 (C01) permiten comprobar que el alistamiento\n'
+                     'solo se aplica cuando cambia la referencia. d: fecha de entrega con el conjunto de máquinas A o B.',
+            fontsize=7.8, family=F, color=TINTA2, va='center')
+
+    # --- 2. Máquinas
+    titulo(24.45, '2. Máquinas por etapa')
+    etapas = ['Troquelado', 'Ensamble', 'Costura', 'Volteado']
+    vel = {'M5': 'lenta', 'M12': 'intermedia', 'M16': 'rápida'}
+    wc = 7.0
+    for k, e in enumerate(etapas):
+        x = k * (wc + 0.65)
+        ax.add_patch(FancyBboxPatch((x, 23.0), wc, 0.95, boxstyle='round,pad=0,rounding_size=0.2',
+                                    fc='#B4C7E7', ec='none'))
+        ax.text(x + wc / 2, 23.48, e, ha='center', va='center', fontsize=8.8, fontweight='bold', family=F)
+        maqs = V.MAQ_B[e]
+        for i, m in enumerate(maqs):
+            y = 21.9 - i * 1.25
+            solo_b = m not in V.MAQ_A[e]
+            ax.add_patch(FancyBboxPatch((x + 0.6, y - 0.45), wc - 1.2, 0.9,
+                                        boxstyle='round,pad=0,rounding_size=0.2',
+                                        fc='white' if solo_b else '#DCE6F2', ec=TINTA2, lw=1,
+                                        ls='--' if solo_b else '-'))
+            t = m + (f' ({vel[m]})' if m in vel else '')
+            ax.text(x + wc / 2, y, t, ha='center', va='center', fontsize=8, family=F, color=TINTA)
+    ax.text(0, 17.55, 'Recuadro relleno: máquina de los conjuntos A y B. Recuadro punteado: solo del conjunto B,\n'
+                      'que tiene más capacidad y por eso se usa con fechas de entrega más ajustadas.',
+            fontsize=7.8, family=F, color=TINTA2, va='center')
+
+    # --- 3. Instancias
+    titulo(16.3, '3. Instancias: qué órdenes y máquinas usa cada una')
+    cols_j = [o[0] for o in V.ORDENES_BASE]
+    xs = {'inst': 0.8, **{j: 5.0 + i * 2.3 for i, j in enumerate(cols_j)}, 'B': 17.6, 'sub': 21.3,
+          'maq': 25.6}
+    y0 = 15.0
+    for clave, t in (('inst', 'Instancia'), ('B', 'Sublotes\npor orden'), ('sub', 'Sublotes\ntotales'),
+                     ('maq', 'Máquinas')):
+        ax.text(xs[clave], y0, t, ha='center', va='center', fontsize=8, fontweight='bold', family=F)
+    for j in cols_j:
+        ax.text(xs[j], y0, j, ha='center', va='center', fontsize=8, fontweight='bold', family=F)
+    ax.plot([0, 30], [y0 - 0.65, y0 - 0.65], color=TINTA2, lw=0.8)
+    for i, (nom, ords, b, maq) in enumerate(V.INSTANCIAS):
+        y = y0 - 1.45 - i * 1.4
+        if i % 2 == 0:
+            ax.add_patch(Rectangle((0, y - 0.7), 30, 1.4, fc='#F4F4F2', ec='none', zorder=0))
+        ax.text(xs['inst'], y, nom, ha='center', va='center', fontsize=8.5, family=F, fontweight='bold')
+        incl = {o[0] for o in ords}
+        for o in V.ORDENES_BASE:
+            if o[0] in incl:
+                ax.scatter([xs[o[0]]], [y], s=70, color=col_ref[o[1]], edgecolor='white', lw=1, zorder=3)
+            else:
+                ax.scatter([xs[o[0]]], [y], s=22, facecolor='none', edgecolor='#BBBBBB', lw=0.8, zorder=3)
+        ax.text(xs['B'], y, f'{b}' + ('  (sin dividir)' if b == 1 else ''), ha='center', va='center',
+                fontsize=8.3, family=F)
+        ax.text(xs['sub'], y, f'{len(ords) * b}', ha='center', va='center', fontsize=8.3, family=F)
+        conj = 'A' if maq == V.MAQ_A else 'B'
+        ax.text(xs['maq'], y, f'Conjunto {conj}', ha='center', va='center', fontsize=8.3, family=F)
+    ax.text(0, y - 1.5, 'Punto de color: la orden forma parte de la instancia.\n'
+                        'I1 e I2 tienen las mismas órdenes que I6 e I9, pero sin dividirlas en sublotes.',
+            fontsize=7.8, family=F, color=TINTA2, va='center')
+    return _guardar(fig, 'instancias_validacion.png')

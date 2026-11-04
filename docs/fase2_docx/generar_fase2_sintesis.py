@@ -381,18 +381,18 @@ def validacion():
               'bien formulado?, ¿el algoritmo genético encuentra el óptimo? y ¿hasta qué tamaño puede usarse el '
               'método exacto?'),
         ('p', '**Instancias.** Se construyeron nueve instancias con los tiempos estándar reales de la empresa, '
-              'cantidades reducidas y un subconjunto de las máquinas de cada etapa (Tabla {T:inst}). En '
-              'ensamble se incluyeron siempre máquinas de velocidades distintas (M5, lenta; M12, intermedia; '
-              'M16, rápida), y dos órdenes de la misma referencia (C01), para comprobar que el alistamiento '
-              'solo se aplica cuando cambia la referencia. Las instancias I1 e I2 tienen las mismas órdenes '
-              'que I6 e I9, pero sin dividirlas en sublotes.'),
-        ('tabla', 'Instancias de validación', ['Instancia', 'Órdenes', 'B̄', 'Sublotes',
-                                               'Máquinas (T-E-C-V)', 'd_j (h)'], filas_inst,
-         {'etiqueta': 'inst', 'anchos': [1100, 1100, 700, 1100, 2100, 2738],
-          'alineacion': ['c', 'c', 'c', 'c', 'c', 'c']}),
-        ('p', f'Las órdenes son {o_txt}. El conjunto de máquinas A está formado por {maqA}; el conjunto '
-              f'B agrega {extraB}. Con el conjunto B, que tiene más capacidad, se usaron fechas de entrega '
-              'más ajustadas, para que la tardanza óptima fuera mayor que cero.'),
+              'cinco órdenes de pocas docenas y un subconjunto de las máquinas de cada etapa. La Figura '
+              '{F:inst_fig} resume su composición: las órdenes de prueba, las máquinas disponibles y qué '
+              'órdenes, cuántos sublotes y qué conjunto de máquinas usa cada instancia. Su diseño busca poner a '
+              'prueba los elementos del modelo: en ensamble se incluyeron máquinas de tres velocidades (M5, '
+              'lenta; M12, intermedia; M16, rápida); dos órdenes comparten la referencia C01, para comprobar '
+              'que el alistamiento solo se aplica cuando cambia la referencia; y las instancias I1 e I2 repiten '
+              'las órdenes de I6 e I9 sin dividirlas, para medir el efecto de los sublotes. Con el conjunto B, '
+              'que tiene más máquinas, se usaron fechas de entrega más ajustadas, para que la tardanza óptima '
+              'fuera mayor que cero.'),
+        ('figura', 'Composición de las instancias de validación: órdenes, máquinas e instancias',
+         os.path.join(os.path.dirname(os.path.abspath(__file__)), 'figuras', 'instancias_validacion.png'),
+         15.0, 'inst_fig'),
         ('p', '**Procedimiento.** Cada instancia se resolvió de forma exacta con el solver HiGHS. Como el '
               'objetivo es lexicográfico, se resolvió en dos fases: primero se minimizó la tardanza total y '
               'luego el makespan, sin empeorar la tardanza, con un límite de 10 minutos por fase. Sobre las '
