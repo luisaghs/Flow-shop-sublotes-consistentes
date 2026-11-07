@@ -302,20 +302,22 @@ def validacion():
 
     # --- Tabla de instancias (definiciones de validacion_milp.py)
     etapas = ['Troquelado', 'Ensamble', 'Costura', 'Volteado']
-    o_txt = _lista([f"{j} = {p} ({q} docenas, r = {n(r, 0)} h)" for j, p, q, r, _ in V.ORDENES_BASE])
-    d_b = {o[0]: o[4] for o in V.ORDENES_B}
-    filas_ord = [[j, p, str(q), n(r, 0), n(d, 0), n(d_b[j], 0)] for j, p, q, r, d in V.ORDENES_BASE]
-    js_val = [o[0] for o in V.ORDENES_BASE]
+    filas_ord = [[j, p, str(q), n(r, 0), n(d, 0)] for j, p, q, r, d in V.ORDENES]
+    js_val = [o[0] for o in V.ORDENES]
     filas_dis = []
     for nombre, ordenes, b_max, maq in V.INSTANCIAS:
         incl = {o[0] for o in ordenes}
         filas_dis.append([nombre] + ['●' if j in incl else '' for j in js_val]
-                         + [str(b_max) + (' (sin dividir)' if b_max == 1 else ''), str(len(ordenes) * b_max),
-                            'A' if maq == V.MAQ_A else 'B'])
-    n_a = sum(len(V.MAQ_A[e]) for e in etapas)
-    n_b = sum(len(V.MAQ_B[e]) for e in etapas)
-    maqA = _lista([f"{_lista(V.MAQ_A[e])} ({e.lower()})" for e in etapas])
-    extraB = _lista([f"{m} en {e.lower()}" for e in etapas for m in V.MAQ_B[e] if m not in V.MAQ_A[e]])
+                         + [str(b_max) + (' (sin dividir)' if b_max == 1 else ''), str(len(ordenes) * b_max)])
+    n_maq_v = sum(len(V.MAQUINAS[e]) for e in etapas)
+    maq_txt = _lista([f"{_lista(V.MAQUINAS[e])} ({e.lower()})" for e in etapas])
+    # instancias con las mismas órdenes y distinto número de sublotes (efecto de dividir)
+    grupos = {}
+    for nombre, ordenes, b_max, _m in V.INSTANCIAS:
+        grupos.setdefault(len(ordenes), []).append((b_max, nombre))
+    sin_div = [g for g in grupos.values() if min(g)[0] == 1 and len(g) > 1]
+    ig_sin = _lista([sorted(g)[0][1] for g in sin_div])
+    ig_con = _lista([sorted(g)[-1][1] for g in sin_div])
 
     # --- Tabla de resultados (una columna para la mejor solución exacta)
     filas_res = []
@@ -351,9 +353,18 @@ def validacion():
     n_sub, n_maq = 100, 36
     bin_real = n_sub * n_maq + n_sub ** 2 * n_maq
     mejor_t = {i: min(inf[i]['ref'][0], inf[i]['ag'][0]) for i in inf}
-    g5 = os.path.join(G.SAL_VAL, 'gantt_milp_vs_ag_I5.png')
-    igual_i5 = (abs(inf['I5']['ag'][0] - inf['I5']['ref'][0]) < 1e-3
-                and abs(inf['I5']['ag'][1] - inf['I5']['ref'][1]) < 1e-3)
+    ig = V.GRAFICAR[0]
+    g5 = os.path.join(G.SAL_VAL, f'gantt_milp_vs_ag_{ig}.png')
+    igual_i5 = (abs(inf[ig]['ag'][0] - inf[ig]['ref'][0]) < 1e-3
+                and abs(inf[ig]['ag'][1] - inf[ig]['ref'][1]) < 1e-3)
+    efecto = []
+    for k_ord, g in sorted(grupos.items()):
+        g = sorted(g)
+        if len(g) > 1 and g[0][0] == 1:
+            pasos = [f"{n(mejor_t[nom], 2)} h " + ('sin dividirlas' if b == 1 else
+                     f"con {NUM_TXT(b)} sublotes por orden") + f" ({nom})" for b, nom in g]
+            efecto.append(f"con {NUM_TXT(k_ord)} órdenes, la mejor tardanza encontrada pasa de " + pasos[0]
+                          + ' a ' + _lista(pasos[1:]))
 
     return [
         ('h3', 'Verificación y validación'),
@@ -384,30 +395,26 @@ def validacion():
               'con los del algoritmo. La validación busca responder tres preguntas: ¿el modelo matemático está '
               'bien formulado?, ¿el algoritmo genético encuentra el óptimo? y ¿hasta qué tamaño puede usarse el '
               'método exacto?'),
-        ('p', '**Órdenes.** Se construyeron nueve instancias con los tiempos estándar reales de la empresa, '
-              'a partir de las cinco órdenes de prueba de la Tabla {T:ord_val}. Dos de ellas, J1 y J4, tienen '
-              'la misma referencia (C01), para comprobar que el alistamiento solo se aplica cuando cambia la '
-              'referencia. Cada orden tiene dos fechas de entrega, según la configuración de máquinas con que '
-              'se resuelva.'),
+        ('p', f'**Órdenes.** Se construyeron {NUM_TXT(len(V.INSTANCIAS))} instancias con los tiempos estándar '
+              'reales de la empresa, a partir de las cinco órdenes de prueba de la Tabla {T:ord_val}. Dos de '
+              'ellas, J1 y J4, tienen la misma referencia (C01), para comprobar que el alistamiento solo se '
+              'aplica cuando cambia la referencia. Las fechas de entrega se fijaron ajustadas, para que la '
+              'tardanza óptima fuera mayor que cero y las instancias permitieran diferenciar entre métodos.'),
         ('tabla', 'Órdenes de prueba de la validación',
-         ['Orden', 'Referencia', 'Cantidad (docenas)', 'r_j (h)', 'd_j con el conjunto A (h)',
-          'd_j con el conjunto B (h)'], filas_ord,
-         {'etiqueta': 'ord_val', 'anchos': [1000, 1300, 1500, 1100, 1969, 1969], 'alineacion': ['c'] * 6}),
-        ('p', f'**Máquinas.** Se definieron dos configuraciones de máquinas. El conjunto A tiene '
-              f'{NUM_TXT(n_a)} máquinas: {maqA}. El conjunto B agrega {extraB}, para un total de {NUM_TXT(n_b)}. En ensamble se '
-              'incluyeron siempre máquinas de velocidades distintas (M5, lenta; M12, intermedia; M16, rápida). '
-              'El conjunto A, más reducido, permite demostrar el óptimo en instancias con más sublotes, y el '
-              'conjunto B pone a prueba la asignación entre máquinas no relacionadas, como ocurre en la planta. '
-              'Como el conjunto B tiene más capacidad, se le asignaron fechas de entrega más ajustadas, para que '
-              'la tardanza óptima fuera mayor que cero.'),
-        ('p', '**Instancias.** La Tabla {T:inst} indica qué órdenes, cuántos sublotes por orden y qué '
-              'configuración de máquinas usa cada instancia. El tamaño crece de 4 a 15 sublotes, y las '
-              'instancias I1 e I2 repiten las órdenes de I6 e I9 sin dividirlas, para medir el efecto de los '
-              'sublotes.'),
+         ['Orden', 'Referencia', 'Cantidad (docenas)', 'r_j (h)', 'd_j (h)'], filas_ord,
+         {'etiqueta': 'ord_val', 'anchos': [1300, 1700, 2100, 1800, 1938], 'alineacion': ['c'] * 5}),
+        ('p', f'**Máquinas.** Todas las instancias usan un mismo subconjunto de {NUM_TXT(n_maq_v)} máquinas de '
+              f'la planta: {maq_txt}. En ensamble se incluyeron máquinas de tres velocidades distintas (M5, '
+              'lenta; M12, intermedia; M16, rápida), para poner a prueba la asignación entre máquinas no '
+              'relacionadas, como ocurre en la planta.'),
+        ('p', '**Instancias.** La Tabla {T:inst} indica qué órdenes y cuántos sublotes por orden usa cada '
+              f"instancia. El tamaño crece de {min(len(o) * b for _, o, b, _m in V.INSTANCIAS)} a "
+              f"{max(len(o) * b for _, o, b, _m in V.INSTANCIAS)} sublotes, y las instancias {ig_sin} repiten "
+              f'las órdenes de {ig_con} sin dividirlas, para medir el efecto de los sublotes.'),
         ('tabla', 'Diseño de las instancias de validación (● orden incluida)',
-         ['Instancia'] + js_val + ['Sublotes por orden', 'Sublotes totales', 'Máquinas'], filas_dis,
-         {'etiqueta': 'inst', 'anchos': [1100] + [700] * len(js_val) + [1500, 1400, 1338],
-          'alineacion': ['c'] * (4 + len(js_val))}),
+         ['Instancia'] + js_val + ['Sublotes por orden', 'Sublotes totales'], filas_dis,
+         {'etiqueta': 'inst', 'anchos': [1300] + [800] * len(js_val) + [2038, 1500],
+          'alineacion': ['c'] * (3 + len(js_val))}),
         ('p', '**Procedimiento.** Cada instancia se resolvió de forma exacta con el solver HiGHS. Como el '
               'objetivo es lexicográfico, se resolvió en dos fases: primero se minimizó la tardanza total y '
               'luego el makespan, sin empeorar la tardanza, con un límite de 10 minutos por fase. Sobre las '
@@ -444,13 +451,13 @@ def validacion():
               + (f" La única diferencia con el óptimo fue el makespan de {dif_c[0]}, "
                  f"{n(100 * (inf[dif_c[0]]['ag'][1] / inf[dif_c[0]]['ref'][1] - 1), 1)} % mayor con la misma "
                  'tardanza.' if len(dif_c) == 1 else '')
-              + ' La Figura {F:gantt_val} compara las dos programaciones de la instancia I5. '
+              + ' La Figura {F:gantt_val} compara las dos programaciones de la instancia ' + ig + '. '
               + ('Son distintas, porque ordenan y asignan los sublotes de otra manera, pero alcanzan '
-                 f"exactamente el mismo valor óptimo ({r3(inf['I5']['ref'][0])} h de tardanza y "
-                 f"{r3(inf['I5']['ref'][1])} h de makespan): el problema puede tener varias soluciones óptimas "
+                 f"exactamente el mismo valor óptimo ({r3(inf[ig]['ref'][0])} h de tardanza y "
+                 f"{r3(inf[ig]['ref'][1])} h de makespan): el problema puede tener varias soluciones óptimas "
                  'y el algoritmo encontró una de ellas.' if igual_i5 else '')),
         ('figura', 'Programación óptima del modelo exacto (arriba) y mejor programación del algoritmo '
-                   'genético (abajo) en la instancia I5', g5, 15.5, 'gantt_val'),
+                   f'genético (abajo) en la instancia {ig}', g5, 15.5, 'gantt_val'),
         ('p', '**¿Hasta qué tamaño sirve el método exacto?** Solo para instancias muy pequeñas. El modelo '
               f"del documento demostró la optimalidad hasta {f1_opt_max} sublotes"
               + (f" y no encontró ninguna programación factible con "
@@ -463,10 +470,8 @@ def validacion():
               f'La instancia real, con {n_sub} sublotes y {n_maq} máquinas, implicaría {n(bin_real, 0)} '
               'variables binarias, muy por encima de lo que el método exacto puede resolver; por eso el caso '
               'de estudio se resuelve con el algoritmo genético.'),
-        ('p', 'Por último, las instancias muestran el efecto de dividir las órdenes: con las mismas cuatro '
-              f"órdenes, la mejor tardanza encontrada pasa de {n(mejor_t['I1'], 2)} h sin dividirlas (I1) a "
-              f"{n(mejor_t['I6'], 2)} h con dos sublotes por orden (I6) y a {n(mejor_t['I8'], 2)} h con tres "
-              f"(I8); con cinco órdenes, de {n(mejor_t['I2'], 2)} h (I2) a {n(mejor_t['I9'], 2)} h (I9)."),
+        ('p', 'Por último, las instancias muestran el efecto de dividir las órdenes: '
+              + '; '.join(efecto) + '.'),
     ]
 
 

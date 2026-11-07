@@ -57,7 +57,7 @@ Las etapas se toman en el orden en que aparecen en la hoja de tiempos.
 | Archivo | Contenido |
 |---|---|
 | `docs/fase2_guia_metodologica.md` | Estructura propuesta para la Fase 2, correcciones al MILP, diseño del AG, calibración |
-| `docs/fase2_validacion_milp.md` | Validación del MILP con 9 instancias pequeñas frente al AG (procedimiento, formulación y resultados) |
+| `docs/fase2_validacion_milp.md` | Validación del MILP con instancias pequeñas frente al AG (notas de trabajo; el documento usa 6 instancias) (procedimiento, formulación y resultados) |
 | `fase2/verificar_factibilidad.py` | Comprueba que las programaciones del decodificador cumplen las restricciones del MILP |
 | `fase2/validacion_milp.py` | Resuelve el MILP con HiGHS (dos formulaciones), lo verifica y lo compara con el AG |
 | `fase2/salida_validacion/` | Instancias (`I*.xlsx`), registros, programaciones óptimas, tablas y Gantt |

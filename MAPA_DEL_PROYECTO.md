@@ -65,7 +65,7 @@ de modo que **con la misma semilla se obtiene exactamente el mismo resultado**.
 
 | Experimento | Sección | Semillas | Notas |
 |---|---|---|---|
-| Validación con instancias reducidas | 4.2.3 | **1 a 10** (en cada una de las 9 instancias) | 10 réplicas por instancia |
+| Validación con instancias reducidas | 4.2.3 | **1 a 10** (en cada una de las 6 instancias) | 10 réplicas por instancia |
 | Verificación del decodificador | 4.2.3 | 1 | Para generar los 200 cromosomas aleatorios |
 | Calibración: diseño factorial (27 combinaciones) | 4.2.4 | **1001 a 1005** | La réplica r usa 1000 + r en todas las combinaciones |
 | Calibración: criterio de parada | 4.2.4 | **1101 a 1110** | 10 réplicas por criterio (50 y 100 generaciones sin mejora) |

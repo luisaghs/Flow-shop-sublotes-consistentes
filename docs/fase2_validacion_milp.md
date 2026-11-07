@@ -1,5 +1,12 @@
 # Fase 2 — Validación del modelo matemático con instancias pequeñas
 
+> **Nota sobre la versión final.** El documento del trabajo de grado usa solo las seis
+> instancias con un mismo conjunto de máquinas (el conjunto B de esta nota: M1–M2, M5,
+> M12, M16, M20–M21 y M29), renumeradas así: I1 → I1, I2 → I2, I4 → I3, I6 → I4,
+> I8 → I5 e I9 → I6. Las instancias del conjunto A (I3, I5 e I7 de esta nota) se
+> retiraron. Los resultados vigentes están en `fase2/salida_validacion/`.
+
+
 Script: `fase2/validacion_milp.py` · Resultados: `fase2/salida_validacion/`
 
 ## 1. Propósito

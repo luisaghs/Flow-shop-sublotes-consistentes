@@ -16,6 +16,7 @@ from correcciones_fase1 import cargas
 F = F3.F
 n = F3.n
 _lista = F3._lista
+_NUM = {2: 'dos', 3: 'tres', 4: 'cuatro', 5: 'cinco', 6: 'seis', 7: 'siete', 8: 'ocho', 9: 'nueve'}
 
 
 def _contexto(M, ruta_bd, indic, rep, D, val_info):
@@ -122,7 +123,7 @@ def capitulos(M, ruta_bd, indic, rep, D, val_info):
               'entrega, el alistamiento en troquelado y la división en sublotes consistentes.'),
         ('p', f"**Modelo y algoritmo.** El modelo matemático representó correctamente el sistema: sus "
               'soluciones cumplieron todas las restricciones y dos formulaciones independientes coincidieron '
-              f"en el óptimo. El algoritmo genético alcanzó la tardanza óptima en las {len(con_opt)} "
+              f"en el óptimo. El algoritmo genético alcanzó la tardanza óptima en las {_NUM.get(len(con_opt), len(con_opt))} "
               f"instancias reducidas con óptimo conocido ({hits} de {reps_v} réplicas), mientras que el "
               f"método exacto no encontró soluciones a partir de {min(i['sub'] for i in sin_f1)} sublotes. "
               'La calibración mostró que '

@@ -41,41 +41,34 @@ EPS = 1e-5
 SETUP_MIN = 4.98                 # alistamiento en troquelado [min]
 LIMITE_TIEMPO_S = 600            # límite por fase del MILP [s]
 SEMILLAS_AG = list(range(1, 11)) # 10 réplicas del AG por instancia
-GRAFICAR = ['I3', 'I5']          # instancias con Gantt MILP vs AG
+GRAFICAR = ['I3']                # instancia con Gantt MILP vs AG
 DIR_SALIDA = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'salida_validacion')
 
 # ---------------------------------------------------------------------------
 # Instancias de prueba (tiempos reales; cantidades y fechas reducidas)
 # ---------------------------------------------------------------------------
-# Órdenes: (orden, referencia, cantidad [docenas], r_j [h], d_j [h])
-ORDENES_BASE = [
-    ('J1', 'C01', 8, 0.0, 15.0),
-    ('J2', 'V03', 6, 0.0, 12.0),
-    ('J3', 'C04', 5, 2.0, 14.0),
-    ('J4', 'C01', 7, 3.0, 20.0),
-    ('J5', 'V02', 6, 5.0, 22.0),
+# Órdenes: (orden, referencia, cantidad [docenas], r_j [h], d_j [h]). Las fechas de
+# entrega son ajustadas para que la tardanza óptima sea positiva y las instancias
+# permitan diferenciar entre métodos.
+ORDENES = [
+    ('J1', 'C01', 8, 0.0, 9.0),
+    ('J2', 'V03', 6, 0.0, 7.0),
+    ('J3', 'C04', 5, 2.0, 8.0),
+    ('J4', 'C01', 7, 3.0, 12.0),
+    ('J5', 'V02', 6, 5.0, 14.0),
 ]
-# Con más máquinas (MAQ_B) se usan fechas de entrega más ajustadas para que el
-# óptimo tenga tardanza positiva y la instancia discrimine entre métodos
-ORDENES_B = [(j, p, q, r, d) for (j, p, q, r, _), d in zip(ORDENES_BASE, (9.0, 7.0, 8.0, 12.0, 14.0))]
-MAQ_A = {'Troquelado': ['M1', 'M2'], 'Ensamble': ['M5', 'M16'],
-         'Costura': ['M20'], 'Volteado': ['M29']}
-MAQ_B = {'Troquelado': ['M1', 'M2'], 'Ensamble': ['M5', 'M12', 'M16'],
-         'Costura': ['M20', 'M21'], 'Volteado': ['M29']}
+# Máquinas: en ensamble, tres velocidades distintas (M5 lenta, M12 intermedia, M16 rápida)
+MAQUINAS = {'Troquelado': ['M1', 'M2'], 'Ensamble': ['M5', 'M12', 'M16'],
+            'Costura': ['M20', 'M21'], 'Volteado': ['M29']}
 
 INSTANCIAS = [
     # nombre, órdenes, B̄ (sublotes por orden), máquinas por etapa
-    # Pequeñas: el MILP demuestra el óptimo
-    ('I1', ORDENES_B[:4], 1, MAQ_B),       # sin sublotes (lote completo)
-    ('I2', ORDENES_B[:5], 1, MAQ_B),       # sin sublotes (lote completo)
-    ('I3', ORDENES_BASE[:3], 2, MAQ_A),
-    ('I4', ORDENES_B[:3], 2, MAQ_B),
-    ('I5', ORDENES_BASE[:4], 2, MAQ_A),
-    # Medianas: el MILP llega al límite de tiempo
-    ('I6', ORDENES_B[:4], 2, MAQ_B),
-    ('I7', ORDENES_BASE[:3], 3, MAQ_A),
-    ('I8', ORDENES_B[:4], 3, MAQ_B),
-    ('I9', ORDENES_B[:5], 3, MAQ_B),
+    ('I1', ORDENES[:4], 1, MAQUINAS),      # sin dividir (lote completo)
+    ('I2', ORDENES[:5], 1, MAQUINAS),      # sin dividir (lote completo)
+    ('I3', ORDENES[:3], 2, MAQUINAS),
+    ('I4', ORDENES[:4], 2, MAQUINAS),
+    ('I5', ORDENES[:4], 3, MAQUINAS),
+    ('I6', ORDENES[:5], 3, MAQUINAS),
 ]
 
 # ---------------------------------------------------------------------------
