@@ -152,3 +152,56 @@ def insertar_figura_ocupacion(documento, ruta_png):
                             'planeación', ruta_png, 3, 14.0)
     _reemplazar_en_parrafo(ancla, texto + '.', texto + ' (Figura 3).')
     return 'Figura 3: ocupación por etapa'
+
+
+INTRO_METODOLOGIA = [
+    ('p', 'Este capítulo presenta el desarrollo del trabajo, organizado en tres fases que corresponden a los '
+          'tres objetivos específicos. Su propósito es dar respuesta a la pregunta de investigación, es decir, '
+          'establecer cómo un algoritmo genético para la programación de la producción en un Flow Shop híbrido '
+          'puede minimizar la tardanza total en la empresa. Para ello sigue una secuencia lógica: primero se '
+          'comprende el sistema productivo, luego se construye y se pone a prueba un modelo para programarlo y, '
+          'por último, se evalúa si ese modelo mejora la programación actual.'),
+    ('p', 'El desarrollo se basa en la información de la empresa: los tiempos estándar de cada referencia en '
+          'cada máquina, obtenidos mediante un estudio de tiempos; el calendario laboral, y un conjunto de diez '
+          'órdenes de trabajo con sus cantidades, fechas de liberación y fechas de entrega. Los modelos se '
+          'implementaron en Python: el modelo matemático se resolvió con el solver HiGHS y el algoritmo '
+          'genético se programó a partir de esa misma formulación, de modo que los resultados pueden '
+          'reproducirse con los datos y el código que acompañan el documento. El capítulo se organiza así:'),
+    ('viñetas', [
+        '**Caracterización del sistema Flow Shop híbrido (primer objetivo).** Describe las etapas del proceso, '
+        'las máquinas y su clasificación, los tiempos de procesamiento, las órdenes de trabajo y la carga de '
+        'cada etapa frente a su capacidad. Con esta información se establecen las restricciones y los '
+        'supuestos del problema y se clasifica en la notación de tres campos.',
+        '**Construcción del modelo matemático y del algoritmo genético (segundo objetivo).** Formula el modelo '
+        'de programación lineal entera mixta, diseña el algoritmo genético (representación de la solución, '
+        'decodificador y operadores), verifica y valida ambos con instancias reducidas, calibra los '
+        'parámetros del algoritmo mediante diseño de experimentos y presenta la programación obtenida para el '
+        'caso de estudio.',
+        '**Evaluación del modelo propuesto frente al sistema actual (tercer objetivo).** Representa el sistema '
+        'de programación actual y lo calibra con su desempeño histórico, define los indicadores de desempeño '
+        'y compara ambos sistemas en el caso de estudio y en escenarios de mayor exigencia.']),
+    ('p', 'Cada fase se apoya en los resultados de la anterior: la caracterización define los elementos que el '
+          'modelo debe representar, y el modelo verificado, validado y calibrado es el que se compara con el '
+          'sistema actual. La interpretación de conjunto de los resultados se presenta en el capítulo de '
+          'análisis de resultados.'),
+]
+
+
+def insertar_intro_metodologia(documento):
+    """Introducción del capítulo de desarrollo metodológico, debajo de su título."""
+    import lib_docx as L
+    ancla = next((p for p in documento.paragraphs
+                  if p.text.strip().upper() == 'DESARROLLO METODOLÓGICO'
+                  and p.style.name.startswith('Heading')), None)
+    if ancla is None:
+        raise ValueError('No se encontró el título DESARROLLO METODOLÓGICO.')
+    cuerpo = documento.element.body
+    antes = len(cuerpo)
+    esc = L.Escritor(documento, {})
+    L.escribir(esc, INTRO_METODOLOGIA)
+    nuevos = [el for el in list(cuerpo)[antes - 1:] if not el.tag.endswith('sectPr')]
+    pos = ancla._p
+    for el in nuevos:
+        pos.addnext(el)
+        pos = el
+    return 'Introducción del desarrollo metodológico'
