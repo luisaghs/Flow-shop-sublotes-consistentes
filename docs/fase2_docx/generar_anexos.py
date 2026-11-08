@@ -104,15 +104,15 @@ class EscritorAnexo(L.Escritor):
         r.font.highlight_color = 7                      # amarillo
 
 
-# Hojas del libro Anexos_datos.xlsx (generar_anexos_excel.py) que respaldan cada anexo
+# Libro de Excel de cada anexo (generar_anexos_excel.py) y sus hojas
 RESPALDO_XLSX = {
-    'D': ['D1_Ordenes', 'D2_Tiempos', 'D3_Calendario'],
-    'E': ['E_Carga'],
-    'F': ['F_Validacion'],
-    'G': ['G1_Corridas', 'G2_Combinaciones', 'G3_ANOVA', 'G4_Supuestos', 'G5_Parada'],
-    'H': ['H1_Replicas', 'H2_Programacion', 'H3_Por_orden'],
-    'I': ['I_Sistema_actual'],
-    'J': ['J1_Corridas_F3', 'J2_Deterministas', 'J3_Resumen'],
+    'D': ('Anexo_D_Base_de_datos.xlsx', ['Ordenes', 'Matriz_tiempos', 'Tiempos', 'Calendario']),
+    'E': ('Anexo_E_Carga_y_capacidad.xlsx', ['Carga', 'Ordenes', 'Tiempos']),
+    'F': ('Anexo_F_Validacion.xlsx', ['Resultados', 'Ordenes_prueba', 'Tiempos_prueba', 'Instancias']),
+    'G': ('Anexo_G_Calibracion.xlsx', ['Corridas', 'Combinaciones', 'ANOVA', 'Supuestos', 'Parada']),
+    'H': ('Anexo_H_Solucion_propuesta.xlsx', ['Replicas', 'Programacion', 'Por_orden', 'Por_maquina', 'Ordenes']),
+    'I': ('Anexo_I_Sistema_actual.xlsx', ['Sistema_actual', 'Ordenes']),
+    'J': ('Anexo_J_Fase3.xlsx', ['Resumen', 'Corridas', 'Deterministas']),
 }
 
 
@@ -548,7 +548,7 @@ def anexo_k(M):
         ['Calibración: criterio de parada', 'python fase2/calibracion_ag.py parada final_sc_hfsagls_S2_4.py BD_HFS.xlsx --instancia real'],
         ['Réplicas finales', 'python fase2/solucion_final.py final_sc_hfsagls_S2_4.py BD_HFS.xlsx 10'],
         ['Experimentos de la Fase 3', 'python fase3/experimentos_fase3.py correr final_sc_hfsagls_S2_4.py BD_HFS.xlsx'],
-        ['Libro de Excel de los anexos', 'python docs/fase2_docx/generar_anexos_excel.py Anexos_datos.xlsx']]
+        ['Archivos de Excel de los anexos D a J', 'python docs/fase2_docx/generar_anexos_excel.py anexos_excel']]
     funciones = [('simular_hfs', 'Decodificador: convierte el cromosoma en una programación'),
                  ('cruce', 'Operador de cruce (aritmético en el nivel 1, LOX en el nivel 2)'),
                  ('mutar', 'Operador de mutación (perturbación en el nivel 1, intercambio en el nivel 2)'),
@@ -621,17 +621,17 @@ def main():
     p = d.add_paragraph('ANEXOS', style='Titulo')
     esc.p('Los anexos respaldan la información presentada en el documento. Los anexos A, B y C contienen los '
           'soportes aportados por la empresa; los anexos D a K se generaron a partir de la base de datos, el '
-          'modelo y los resultados de los experimentos, que se entregan además en formato digital. Los anexos D a J '
-          'se acompañan del libro de Excel Anexos_datos.xlsx, cuya hoja Indice indica qué hoja respalda cada '
-          'anexo y cada tabla del documento.')
+          'modelo y los resultados de los experimentos, que se entregan además en formato digital. Cada anexo de D a J '
+          'se acompaña de su propio archivo de Excel con los datos y los cálculos que lo respaldan.')
     esc.viñetas([f'**Anexo {l}.** {t}' for l, t, _ in bloques_todos])
     for letra, titulo, bloques in bloques_todos:
         esc.nuevo_anexo(letra, titulo)
         if letra in RESPALDO_XLSX:
-            hojas = RESPALDO_XLSX[letra]
-            lista = ', '.join(f'**{h}**' for h in hojas[:-1]) + (' y ' if len(hojas) > 1 else '') + f'**{hojas[-1]}**'
-            esc.p(f'*Respaldo digital:* hoja{"s" if len(hojas) > 1 else ""} {lista} del libro **Anexos_datos.xlsx**, '
-                  'donde los datos se presentan completos y los cálculos se reproducen con fórmulas.')
+            archivo, hojas = RESPALDO_XLSX[letra]
+            lista = ', '.join(hojas[:-1]) + ' y ' + hojas[-1]
+            esc.p(f'*Respaldo digital:* archivo **{archivo}** (hojas {lista}). El archivo contiene los datos '
+                  'completos de este anexo y reproduce sus cálculos con fórmulas; la hoja Leeme explica qué '
+                  'respalda cada hoja.')
         for b in bloques:
             if b[0] == 'listado':
                 esc.listado(b[1])

@@ -8,7 +8,7 @@
 | `BD_HFS.xlsx` | **Los datos** del caso de estudio: tiempos, órdenes y calendario. |
 | `docs/Trabajo_de_Grado_con_Fases_2_y_3.docx` | **El documento** del trabajo de grado: Fase 1 actualizada, Fases 2 y 3, análisis de resultados, conclusiones y recomendaciones. |
 | `docs/Anexos_Trabajo_de_Grado.docx` | **Los anexos** (A a K). Los anexos A, B y C los completan los autores; D a K se generan con `docs/fase2_docx/generar_anexos.py documento_base.docx salida.docx`. |
-| `docs/Anexos_datos.xlsx` | **Respaldo en Excel de los anexos D a J** (18 hojas: órdenes, tiempos, calendario, carga, validación, calibración con el ANOVA en fórmulas, réplicas, programación, sistema actual y Fase 3). La hoja `Indice` dice qué tabla del documento respalda cada hoja. Se genera con `python docs/fase2_docx/generar_anexos_excel.py docs/Anexos_datos.xlsx` y luego se recalcula (LibreOffice). |
+| `docs/anexos_excel/` | **Un archivo de Excel por anexo (D a J)**, cada uno independiente, con una hoja `Leeme`, los datos que usa y sus cálculos con fórmulas: D base de datos (r_j y d_j recalculados desde el calendario, matriz de tiempos), E carga y capacidad, F validación (tiempos de las órdenes de prueba, diseño y resultados), G calibración (ANOVA con fórmulas, parada con comparación pareada), H solución propuesta (C_j, T_j, comprobación de sublotes y uso de máquinas), I sistema actual (tamaño de las partes, comparación con el 45 % histórico) y J Fase 3 (resúmenes y comparación con el sistema actual y la mejor regla). Se generan con `python docs/fase2_docx/generar_anexos_excel.py docs/anexos_excel` y luego se recalculan (LibreOffice). |
 
 Todo lo demás son pruebas, experimentos y resultados que respaldan lo que dicen las Fases 2 y 3.
 
