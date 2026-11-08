@@ -71,6 +71,7 @@ Las etapas se toman en el orden en que aparecen en la hoja de tiempos.
 | `fase3/experimentos_fase3.py`, `fase3/salida_fase3/` | Fase 3: comparación del AG con el sistema actual (B = 6), sensibilidad y escenarios de exigencia |
 | `docs/fase2_referencias.md` | Referencias nuevas citadas en la Fase 2 (verificar antes de usar) |
 | `docs/fase2_docx/` | Generador del documento (`generar_fase2_sintesis.py`) y utilidades |
+| `Anexos_digitales/` | Anexo digital para entregar (datos, programas y resultados ordenados por etapa, con `LEEME.md` y `requisitos.txt`); lo arma `docs/armar_anexos_digitales.py` |
 | `fase2/solucion_final.py`, `fase2/salida_solucion/` | 10 réplicas del AG calibrado y la mejor programación (tablas, Gantt, convergencia) |
 
 ```bash

@@ -1,0 +1,10 @@
+Validación: algoritmo genético con los parámetros calibrados (final_sc_hfsagls_S2_4.py,
+población 150, cruce 0,9, mutación 0,5, parada tras 100 generaciones sin mejora),
+10 semillas (1 a 10) por instancia. Referencia: óptimo exacto o mejor solución exacta conocida.
+
+I1: mejor 28.190 / 19.836 | prom ΣT 28.306 | ≤ref 7/10 | 2.1 s
+I2: mejor 34.374 / 21.794 | prom ΣT 34.428 | ≤ref 9/10 | 2.5 s
+I3: mejor 3.861 / 12.082 | prom ΣT 3.861 | ≤ref 10/10 | 2.8 s
+I4: mejor 5.928 / 13.942 | prom ΣT 6.020 | ≤ref 8/10 | 4.1 s
+I5: mejor 1.214 / 12.114 | prom ΣT 1.336 | ≤ref 10/10 | 6.4 s
+I6: mejor 1.214 / 13.857 | prom ΣT 1.457 | ≤ref 10/10 | 7.4 s

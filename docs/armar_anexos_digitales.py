@@ -1,0 +1,179 @@
+# -*- coding: utf-8 -*-
+"""
+Arma la carpeta Anexos_digitales/ (anexo digital del trabajo de grado) copiando
+los datos, los programas y los resultados del repositorio. Cada programa va con
+su carpeta de resultados, de modo que la carpeta se puede ejecutar por sí sola.
+
+No se copian los registros de ejecución (log_*.txt), los archivos internos de la
+calibración (salida_calibracion/control/) ni los programas que generan el
+documento Word.
+
+Uso (desde la raíz del repositorio): python docs/armar_anexos_digitales.py
+"""
+import os
+import shutil
+
+RAIZ = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+DESTINO = os.path.join(RAIZ, 'Anexos_digitales')
+
+# carpeta de destino -> lista de (origen relativo a la raíz, excluir)
+CONTENIDO = {
+    '1_Datos': [('BD_HFS.xlsx', None)],
+    '2_Modelo': [('final_sc_hfsagls_S2_4.py', None)],
+    '3_Verificacion': [('fase2/verificar_factibilidad.py', None)],
+    '4_Calibracion': [('fase2/calibracion_ag.py', None), ('fase2/anova_excel.py', None),
+                      ('fase2/verificar_reproduccion.py', None),
+                      ('fase2/salida_calibracion', ('control',))],
+    '5_Validacion': [('fase2/validacion_milp.py', None), ('fase2/salida_validacion', ('log_*',))],
+    '6_Solucion_propuesta': [('fase2/solucion_final.py', None), ('fase2/salida_solucion', None)],
+    '7_Fase3_Comparacion': [('fase3/experimentos_fase3.py', None), ('fase3/salida_fase3', ('log_*',))],
+}
+
+REQUISITOS = """\
+# Librerías de Python usadas para obtener los resultados (Python 3.13).
+# Instalación: pip install -r requisitos.txt
+pandas==3.0.5
+numpy==2.5.3
+openpyxl==3.1.5
+matplotlib==3.11.2
+scipy==1.18.1
+PuLP==4.2.0
+highspy==1.15.1
+"""
+
+LEEME = """\
+# Anexo digital del trabajo de grado
+
+Programación de un Flow Shop híbrido de cuatro etapas con sublotes consistentes
+mediante un algoritmo genético que minimiza la tardanza total.
+
+Esta carpeta contiene los datos, el modelo y los programas con los que se obtuvieron
+todos los resultados del documento, junto con esos resultados. **Ningún resultado se
+editó a mano: cada archivo lo genera el programa de su carpeta.**
+
+## Contenido
+
+| Carpeta | Qué contiene | Qué respalda en el documento |
+|---|---|---|
+| `1_Datos` | `BD_HFS.xlsx`: órdenes de trabajo, tiempos estándar por máquina y referencia, y calendario laboral | Caso de estudio y datos del modelo |
+| `2_Modelo` | `final_sc_hfsagls_S2_4.py`: lectura de datos, decodificador y algoritmo genético con los parámetros calibrados | Modelo y algoritmo propuesto |
+| `3_Verificacion` | `verificar_factibilidad.py`: comprueba que las programaciones del algoritmo cumplen todas las restricciones del modelo matemático | Verificación del modelo |
+| `4_Calibracion` | `calibracion_ag.py`, `anova_excel.py`, `verificar_reproduccion.py` y `salida_calibracion/` (135 corridas del diseño factorial, 20 del criterio de parada, ANOVA, pruebas, figuras e informe; ver su `LEEME.md`) | Calibración de los parámetros |
+| `5_Validacion` | `validacion_milp.py` y `salida_validacion/`: seis instancias reducidas resueltas de forma exacta (HiGHS) y con el algoritmo | Validación del modelo |
+| `6_Solucion_propuesta` | `solucion_final.py` y `salida_solucion/`: 10 réplicas finales, la mejor solución (semilla 1203), su convergencia y su diagrama de Gantt | Programación propuesta |
+| `7_Fase3_Comparacion` | `experimentos_fase3.py` y `salida_fase3/`: 120 corridas del algoritmo, sistema actual y reglas de despacho en cinco escenarios, informe y figura | Comparación con el sistema actual (Fase 3) |
+
+## Archivos principales de resultados
+
+| Carpeta | Archivo | Contenido |
+|---|---|---|
+| `4_Calibracion/salida_calibracion` | `corridas_diseno.csv` | Las 135 corridas del diseño factorial 3³ × 5 réplicas |
+| | `anova.csv`, `anova_calibracion_excel.xlsx` | ANOVA de la tardanza total (el Excel lo calcula con fórmulas) |
+| | `corridas_parada.csv`, `resumen_parada.csv` | Criterio de parada: 50 frente a 100 generaciones sin mejora |
+| | `informe_calibracion.md` | Informe completo con las pruebas de supuestos y las decisiones |
+| `5_Validacion/salida_validacion` | `resultados_validacion_todas.csv` / `.md` | Resultados de las seis instancias (solución exacta, reglas y algoritmo) |
+| | `I1.xlsx` … `I6.xlsx` | Datos de cada instancia reducida |
+| | `programacion_milp_I1.csv` … | Programación de la solución exacta de cada instancia |
+| | `gantt_milp_vs_ag_I3.png` | Gantt de la solución exacta frente a la del algoritmo en I3 |
+| `6_Solucion_propuesta/salida_solucion` | `replicas.csv` | Las 10 réplicas finales (semillas 1201 a 1210) |
+| | `mejor_solucion.json` | Cromosoma de la mejor solución (tamaños de sublote y secuencias) |
+| | `gantt_solucion.png`, `convergencia.png` | Gantt de la programación propuesta y convergencia del algoritmo |
+| `7_Fase3_Comparacion/salida_fase3` | `corridas_ag.csv` | Las 120 corridas del algoritmo en la Fase 3 |
+| | `deterministas.csv` | Sistema actual y reglas de despacho en cada escenario |
+| | `informe_fase3.md`, `comparacion_base.png` | Resumen estadístico y comparación del escenario base |
+
+## Cómo reproducir los resultados
+
+1. Instalar Python 3.13 y las librerías: `pip install -r requisitos.txt`
+2. Ejecutar los comandos **desde esta carpeta** (`Anexos_digitales`), en este orden:
+
+| Paso | Comando | Tiempo aproximado* |
+|---|---|---|
+| Ejecutar el modelo (programación propuesta) | `python 2_Modelo/final_sc_hfsagls_S2_4.py 1_Datos/BD_HFS.xlsx` | 10 min |
+| Verificación | `python 3_Verificacion/verificar_factibilidad.py 2_Modelo/final_sc_hfsagls_S2_4.py 1_Datos/BD_HFS.xlsx` | segundos |
+| Calibración: diseño factorial | `python 4_Calibracion/calibracion_ag.py diseno 2_Modelo/final_sc_hfsagls_S2_4.py 1_Datos/BD_HFS.xlsx --instancia real` | 1 h |
+| Calibración: criterio de parada | `python 4_Calibracion/calibracion_ag.py parada 2_Modelo/final_sc_hfsagls_S2_4.py 1_Datos/BD_HFS.xlsx --instancia real --config 150,0.9,0.5` | 35 min |
+| Calibración: ANOVA en Excel | `python 4_Calibracion/anova_excel.py` | segundos |
+| Validación | `python 5_Validacion/validacion_milp.py 2_Modelo/final_sc_hfsagls_S2_4.py 1_Datos/BD_HFS.xlsx` | 1 h 45 min |
+| Réplicas finales | `python 6_Solucion_propuesta/solucion_final.py 2_Modelo/final_sc_hfsagls_S2_4.py 1_Datos/BD_HFS.xlsx 10` | 20 min |
+| Fase 3 | `python 7_Fase3_Comparacion/experimentos_fase3.py correr 2_Modelo/final_sc_hfsagls_S2_4.py 1_Datos/BD_HFS.xlsx` | 2 h 45 min |
+
+\\* Con 4 procesos en paralelo; los programas usan todos los núcleos disponibles.
+La validación incluye los límites de tiempo del solver (600 s por fase).
+
+Cada programa guarda sus resultados en la carpeta `salida_…` que está a su lado y
+reemplaza los archivos que encuentre. Si una corrida larga se interrumpe, al repetir el
+mismo comando continúa desde donde quedó.
+
+## Semillas (reproducibilidad)
+
+El algoritmo genético es aleatorio; cada corrida usa una semilla fija. Con la misma
+semilla, el mismo código y los mismos datos se obtiene exactamente el mismo resultado;
+solo cambia el tiempo de cómputo según el computador.
+
+| Experimento | Semillas |
+|---|---|
+| Calibración: diseño factorial | 1001 a 1005 (la misma réplica usa la misma semilla en las 27 combinaciones) |
+| Calibración: criterio de parada | 1101 a 1110 |
+| Validación (algoritmo en cada instancia) | 1 a 10 |
+| Réplicas finales | 1201 a 1210; la programación propuesta es la de la semilla 1203 |
+| Fase 3: escenario base | 3001 a 3030 |
+| Fase 3: sensibilidad y escenarios de exigencia | 3001 a 3010 |
+
+`4_Calibracion/verificar_reproduccion.py` repite corridas de la calibración y comprueba
+que dan el mismo resultado que el guardado.
+
+## Parámetros del algoritmo
+
+Los parámetros calibrados están escritos en `2_Modelo/final_sc_hfsagls_S2_4.py`
+(diccionario `GA_PARAMS`): población 150, probabilidad de cruce 0,9, probabilidad de
+mutación 0,5, parada tras 100 generaciones sin mejora (máximo 1000) y semilla 1203.
+Repetir la calibración no cambia ese archivo: si se obtuviera otra configuración,
+habría que escribirla allí.
+"""
+
+
+def _copiar(origen, destino, excluir):
+    if os.path.isdir(origen):
+        ign = shutil.ignore_patterns('__pycache__', '*.pyc', *(excluir or ()))
+        shutil.copytree(origen, destino, ignore=ign)
+    else:
+        shutil.copy2(origen, destino)
+
+
+def _adaptar_leeme_calibracion():
+    """La guía de salida_calibracion usa las rutas del repositorio: se ajusta a las del anexo
+    y se quita la sección de control/, que no se copia."""
+    ruta = os.path.join(DESTINO, '4_Calibracion', 'salida_calibracion', 'LEEME.md')
+    s = open(ruta, encoding='utf-8').read()
+    s = s.split('## `control/`')[0].rstrip() + '\n'
+    for a, b in [('desde la raíz del proyecto', 'desde la carpeta Anexos_digitales'),
+                 ('fase2/calibracion_ag.py', '4_Calibracion/calibracion_ag.py'),
+                 ('fase2/anova_excel.py', '4_Calibracion/anova_excel.py'),
+                 ('final_sc_hfsagls_S2_4.py BD_HFS.xlsx', '2_Modelo/final_sc_hfsagls_S2_4.py 1_Datos/BD_HFS.xlsx'),
+                 ('parada 2_Modelo/final_sc_hfsagls_S2_4.py 1_Datos/BD_HFS.xlsx --instancia real`',
+                  'parada 2_Modelo/final_sc_hfsagls_S2_4.py 1_Datos/BD_HFS.xlsx --instancia real --config 150,0.9,0.5`')]:
+        s = s.replace(a, b)
+    with open(ruta, 'w', encoding='utf-8') as fh:
+        fh.write(s)
+
+
+def main():
+    if os.path.isdir(DESTINO):
+        shutil.rmtree(DESTINO)
+    os.makedirs(DESTINO)
+    for carpeta, items in CONTENIDO.items():
+        d = os.path.join(DESTINO, carpeta)
+        os.makedirs(d)
+        for rel, excluir in items:
+            _copiar(os.path.join(RAIZ, rel), os.path.join(d, os.path.basename(rel)), excluir)
+    _adaptar_leeme_calibracion()
+    with open(os.path.join(DESTINO, 'LEEME.md'), 'w', encoding='utf-8') as fh:
+        fh.write(LEEME)
+    with open(os.path.join(DESTINO, 'requisitos.txt'), 'w', encoding='utf-8') as fh:
+        fh.write(REQUISITOS)
+    print('Carpeta armada en', DESTINO)
+
+
+if __name__ == '__main__':
+    main()

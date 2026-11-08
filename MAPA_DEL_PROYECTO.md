@@ -7,8 +7,9 @@
 | `final_sc_hfsagls_S2_4.py` | **El modelo**: el algoritmo genético final, con los parámetros calibrados. Es el código del trabajo de grado. |
 | `BD_HFS.xlsx` | **Los datos** del caso de estudio: tiempos, órdenes y calendario. |
 | `docs/Trabajo_de_Grado_con_Fases_2_y_3.docx` | **El documento** del trabajo de grado: Fase 1 actualizada, Fases 2 y 3, análisis de resultados, conclusiones y recomendaciones. |
+| `Anexos_digitales/` | **El anexo digital para entregar**: datos, modelo, programas y resultados de verificación, calibración, validación, solución propuesta y Fase 3, con `LEEME.md` (contenido, orden de ejecución, semillas) y `requisitos.txt`. Se arma con `python docs/armar_anexos_digitales.py`; no se edita a mano. |
 
-Todo lo demás son pruebas, experimentos y resultados que respaldan lo que dicen las Fases 2 y 3.
+Todo lo demás son pruebas, experimentos y resultados que respaldan lo que dicen las Fases 2 y 3. Para entregar, usar la carpeta `Anexos_digitales/`, que reúne lo que respalda el documento.
 
 ---
 

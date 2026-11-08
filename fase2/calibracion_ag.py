@@ -606,6 +606,8 @@ def analizar(dir_salida):
         informe += ["## Criterio de parada", ""]
         if os.path.isfile(_ctrl(dir_salida, 'config_parada.txt')):
             informe += [f"Configuración: {open(_ctrl(dir_salida, 'config_parada.txt'), encoding='utf-8').read().strip()}", ""]
+        else:                                   # sin archivo de control: la configuración seleccionada
+            informe += [f"Configuración: {seleccion}", ""]
         mejora_sig = {}
         decisiones['parada'] = {'tablas': {}, 'p': {}}
         for inst, par in pars.items():
