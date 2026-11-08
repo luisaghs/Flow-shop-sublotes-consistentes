@@ -7,6 +7,7 @@
 | `final_sc_hfsagls_S2_4.py` | **El modelo**: el algoritmo genético final, con los parámetros calibrados. Es el código del trabajo de grado. |
 | `BD_HFS.xlsx` | **Los datos** del caso de estudio: tiempos, órdenes y calendario. |
 | `docs/Trabajo_de_Grado_con_Fases_2_y_3.docx` | **El documento** del trabajo de grado: Fase 1 actualizada, Fases 2 y 3, análisis de resultados, conclusiones y recomendaciones. |
+| `docs/Anexos_Trabajo_de_Grado.docx` | **Los anexos** (A a K). Los anexos A, B y C los completan los autores; D a K se generan con `docs/fase2_docx/generar_anexos.py documento_base.docx salida.docx`. |
 
 Todo lo demás son pruebas, experimentos y resultados que respaldan lo que dicen las Fases 2 y 3.
 
