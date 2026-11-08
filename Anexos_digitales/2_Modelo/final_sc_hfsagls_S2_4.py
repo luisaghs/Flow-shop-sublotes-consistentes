@@ -30,6 +30,8 @@ Datos de entrada: libro de Excel BD_HFS.xlsx con las hojas
   "Disponibilidad"         : calendario laboral (horas acumuladas por día)
 
 Uso:  python final_sc_hfsagls_S2_4.py [ruta/BD_HFS.xlsx]
+      Al terminar muestra un diagrama de Gantt por etapa y la ruta de la orden
+      de entrega más temprana (sección 13).
 """
 
 import random
@@ -858,87 +860,169 @@ def imprimir_solucion(individuo: dict):
     print()
 
 # ---------------------------------------------------------------------------
-# 13. DIAGRAMA DE GANTT
+# 13. DIAGRAMAS DE GANTT
 # ---------------------------------------------------------------------------
+# Un diagrama por etapa (tiempo en horas laborables abajo y semanas arriba) y la
+# ruta de una orden por las cuatro etapas. Los alistamientos de troquelado duran
+# 4,98 min, demasiado poco para verse como barra: se marcan con un triángulo.
 
-def graficar_gantt(individuo: dict, guardar_como: Optional[str] = None):
-    """Diagrama de Gantt de la programación, con los alistamientos rayados."""
-    C, gantt = simular_hfs(individuo)
-    ind  = calcular_indicadores(C)
-    cmax = ind['Cmax']
+COLORES_ORDEN = ['#4E79A7', '#F28E2B', '#59A14F', '#E15759', '#B07AA1',
+                 '#76B7B2', '#EDC948', '#FF9DA7', '#9C755F', '#BAB0AC']
+COLORES_ETAPA = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100']
+_TINTA, _TINTA2, _REJILLA = '#222222', '#555555', '#d9d9d9'
+_ESTILO_GANTT = {'font.family': 'DejaVu Sans', 'font.size': 9, 'axes.edgecolor': _TINTA2,
+                 'axes.labelcolor': _TINTA, 'xtick.color': _TINTA2, 'ytick.color': _TINTA2}
 
-    colores = ['#4E79A7', '#F28E2B', '#59A14F', '#E15759', '#B07AA1',
-               '#76B7B2', '#EDC948', '#FF9DA7', '#9C755F', '#BAB0AC']
-    color_trabajo = {j: colores[i % len(colores)] for i, j in enumerate(TRABAJOS)}
 
-    maquinas_usadas = {s: sorted({m for (_, _, m, _, _) in gantt[s]}, key=_clave_maquina)
-                       for s in ETAPAS}
-    alturas = [max(1, len(maquinas_usadas[s])) for s in ETAPAS]
+def _texto_sobre(color_hex: str) -> str:
+    """Blanco sobre colores oscuros y negro sobre colores claros."""
+    r, g, b = (int(color_hex[k:k + 2], 16) / 255 for k in (1, 3, 5))
+    return 'white' if 0.299 * r + 0.587 * g + 0.114 * b < 0.6 else _TINTA
 
-    fig, axes = plt.subplots(len(ETAPAS), 1,
-                             figsize=(20, max(8, sum(alturas) * 0.40 + 3)),
-                             gridspec_kw={'height_ratios': alturas}, sharex=True)
-    if len(ETAPAS) == 1:
-        axes = [axes]
-    fig.suptitle("Diagrama de Gantt — Flow Shop híbrido con sublotes consistentes (AG)",
-                 fontsize=14, fontweight='bold', y=1.0)
-    umbral_texto = (cmax if cmax > 0 else 1) * 0.025
 
-    for idx, s in enumerate(ETAPAS):
-        ax = axes[idx]
-        pos_maq = {m: i for i, m in enumerate(maquinas_usadas[s])}
+def _coma(x: float, dec: int = 1) -> str:
+    return f'{x:.{dec}f}'.replace('.', ',')
 
-        for (j, b, m, ini, fin) in gantt[s]:
-            dur = fin - ini
-            ax.barh(pos_maq[m], dur, left=ini, height=0.72, color=color_trabajo[j],
-                    edgecolor='white', linewidth=0.6, alpha=0.92)
-            if dur >= umbral_texto:
-                ax.text(ini + dur / 2, pos_maq[m], f"{j}-S{b}", ha='center', va='center',
-                        fontsize=6.5, fontweight='bold', color='white', clip_on=True)
 
-        for (s_al, m_al, a_ini, a_fin) in gantt['alistamientos']:
-            if s_al == s and m_al in pos_maq:
-                ax.barh(pos_maq[m_al], a_fin - a_ini, left=a_ini, height=0.72,
-                        color='white', edgecolor='#555555', hatch='////', linewidth=0.4)
+def fin_de_semanas() -> List[float]:
+    """Horas laborables acumuladas al final de cada semana del calendario."""
+    if not CALENDARIO:
+        return []
+    inicio = pd.Timestamp(CALENDARIO[0][0])
+    fin = {}
+    for f, h in CALENDARIO:
+        fin[(pd.Timestamp(f) - inicio).days // 7] = h
+    return [fin[k] for k in sorted(fin)]
 
-        ax.axvline(cmax, color='#333333', linewidth=1.2, linestyle='--', alpha=0.7)
-        ax.set_yticks(range(len(pos_maq)))
-        ax.set_yticklabels(maquinas_usadas[s], fontsize=8)
-        ax.set_ylim(-0.6, max(len(pos_maq), 1) - 0.4)
-        ax.set_ylabel(f"Etapa {s} — {NOMBRE_ETAPA[s]}", fontsize=9,
-                      fontweight='bold', labelpad=8)
-        ax.xaxis.set_minor_locator(ticker.AutoMinorLocator(4))
-        ax.grid(axis='x', which='major', linestyle='--', linewidth=0.5, alpha=0.5, color='#bbbbbb')
-        ax.grid(axis='x', which='minor', linestyle=':', linewidth=0.3, alpha=0.35, color='#cccccc')
-        ax.set_facecolor('#F8F9FA')
-        ax.spines['top'].set_visible(False)
-        ax.spines['right'].set_visible(False)
-        if idx == len(ETAPAS) - 1:
-            ax.annotate(f"Cmax = {cmax:.2f} h", xy=(cmax, -0.55),
-                        xytext=(cmax * 0.99, -0.55), fontsize=8, color='#333333', ha='right')
 
-    axes[-1].set_xlabel("Tiempo (horas laborables)", fontsize=10)
-    axes[-1].xaxis.set_major_locator(ticker.MaxNLocator(integer=False, nbins=15))
+def _eje_tiempo(ax, xmax: float, semanas: List[float]):
+    ax.set_xlim(0, xmax)
+    ax.xaxis.set_major_locator(ticker.MultipleLocator(50))
+    ax.xaxis.set_minor_locator(ticker.MultipleLocator(10))
+    ax.grid(axis='x', which='major', color=_REJILLA, linewidth=0.7)
+    ax.grid(axis='x', which='minor', color=_REJILLA, linewidth=0.3, alpha=0.6)
+    ax.set_axisbelow(True)
+    ax.set_xlabel('Tiempo (horas laborables desde el inicio del horizonte)')
+    for lado in ('top', 'right'):
+        ax.spines[lado].set_visible(False)
+    if semanas:                       # semanas del calendario en el eje superior
+        ax2 = ax.secondary_xaxis('top')
+        lim = [0] + [h for h in semanas if h <= xmax]
+        ax2.set_xticks([(a + b) / 2 for a, b in zip(lim[:-1], lim[1:])])
+        ax2.set_xticklabels([f'S{k + 1}' for k in range(len(lim) - 1)], fontsize=7.5, color=_TINTA2)
+        ax2.tick_params(length=0)
+        ax2.spines['top'].set_visible(False)
+        ax2.set_xlabel('Semana', fontsize=8, color=_TINTA2)
+        for h in lim[1:]:
+            ax.axvline(h, color='#aaaaaa', linewidth=0.6, linestyle=(0, (2, 3)), zorder=0)
 
-    leyenda = [mpatches.Patch(color=color_trabajo[j], label=f"{j} ({PRODUCTO[j]})")
-               for j in TRABAJOS]
-    leyenda.append(mpatches.Patch(facecolor='white', edgecolor='#555555',
-                                  hatch='////', label='Alistamiento'))
-    fig.legend(handles=leyenda, loc='lower center', ncol=min(len(leyenda), 11),
-               fontsize=9, frameon=True, framealpha=0.9, edgecolor='#cccccc',
-               bbox_to_anchor=(0.5, 0.0))
-    fig.text(0.5, 1.002,
-             f"Sublotes por orden = {NUM_SUBLOTES}  |  ΣTj = {ind['suma_Ti']:.2f} h  |  "
-             f"Cmax = {cmax:.2f} h  |  Órdenes tardías = {ind['num_tardy']}",
-             ha='center', va='bottom', fontsize=8.5, color='#444444',
-             transform=fig.transFigure)
-    plt.tight_layout(rect=[0, 0.025, 1, 0.99])
 
-    if guardar_como:                  # se guarda antes de mostrarla
-        fig.savefig(guardar_como, dpi=150, bbox_inches='tight')
-        print(f"  Gantt guardado en: {guardar_como}")
-    plt.show()
+def figura_gantt_etapa(gantt: Dict, etapa: int, xmax: float = 620, titulo: bool = True):
+    """Diagrama de Gantt de una etapa: una fila por máquina y una barra por sublote."""
+    color = {j: COLORES_ORDEN[i % len(COLORES_ORDEN)] for i, j in enumerate(TRABAJOS)}
+    maqs = sorted({m for (_, _, m, _, _) in gantt[etapa]}, key=_clave_maquina)
+    pos = {m: k for k, m in enumerate(reversed(maqs))}
+    with plt.rc_context(_ESTILO_GANTT):
+        fig, ax = plt.subplots(figsize=(10, max(2.2, 0.36 * len(maqs) + 1.5)))
+        for (j, b, m, ini, fin) in gantt[etapa]:
+            ax.barh(pos[m], fin - ini, left=ini, height=0.74, color=color[j], edgecolor='white', linewidth=0.6)
+            if fin - ini >= 3.1 * len(f'{j}-{b}'):          # la etiqueta solo si cabe
+                ax.text((ini + fin) / 2, pos[m], f'{j}-{b}', ha='center', va='center', fontsize=6,
+                        color=_texto_sobre(color[j]), fontweight='bold', clip_on=True)
+        hay_alist = False
+        for (s_al, m_al, a, _) in gantt.get('alistamientos', []):
+            if s_al == etapa and m_al in pos:
+                hay_alist = True
+                ax.plot(a, pos[m_al] + 0.47, marker='v', markersize=4, color=_TINTA, linestyle='none',
+                        zorder=5, clip_on=False)
+        fin_etapa = max(f for (*_, f) in gantt[etapa])
+        ax.axvline(fin_etapa, color=_TINTA, linewidth=1, linestyle='--')
+        ax.text(fin_etapa + 3, len(maqs) - 0.5, f'fin de la etapa\n{_coma(fin_etapa)} h', fontsize=7.5,
+                color=_TINTA, va='top')
+        ax.set_yticks(range(len(maqs)))
+        ax.set_yticklabels(list(reversed(maqs)))
+        ax.set_ylim(-0.6, len(maqs) - 0.4)
+        ax.set_ylabel('Máquina')
+        if titulo:
+            ax.set_title(f'Etapa {etapa}: {NOMBRE_ETAPA[etapa]}', loc='left', fontsize=10,
+                         fontweight='bold', color=_TINTA, pad=28)
+        _eje_tiempo(ax, xmax, fin_de_semanas())
+        leyenda = [mpatches.Patch(color=color[j], label=f'{j} ({PRODUCTO[j]})') for j in TRABAJOS]
+        if hay_alist:
+            leyenda.append(plt.Line2D([], [], marker='v', markersize=5, color=_TINTA, linestyle='none',
+                                      label='Alistamiento (4,98 min)'))
+        ax.legend(handles=leyenda, loc='upper center', ncol=6, fontsize=7.5, frameon=False,
+                  bbox_to_anchor=(0.5, -0.30 if len(maqs) < 6 else -0.11), handlelength=1.2,
+                  columnspacing=1.0)
     return fig
+
+
+def figura_ruta_orden(C: Dict[str, float], gantt: Dict, tam: Dict[str, List[float]], orden: str):
+    """Recorrido de los sublotes de una orden por las cuatro etapas (máquina, inicio y fin)."""
+    ops = {(b, s): (m, i, f) for s in ETAPAS for (j, b, m, i, f) in gantt[s] if j == orden}
+    B = max(b for (b, _) in ops)
+    r, d, cj = RELEASE[orden], DUE_DATE[orden], C[orden]
+    with plt.rc_context(_ESTILO_GANTT):
+        fig, ax = plt.subplots(figsize=(10, 0.42 * B + 1.8))
+        for b in range(1, B + 1):
+            y = B - b
+            ax.plot([r, ops[(b, ETAPAS[-1])][2]], [y, y], color='#cccccc', linewidth=1, zorder=1)
+            for k, s in enumerate(ETAPAS):
+                m, i, f = ops[(b, s)]
+                ax.barh(y, f - i, left=i, height=0.62, color=COLORES_ETAPA[k], edgecolor='white',
+                        linewidth=0.6, zorder=2)
+                if f - i >= 8:
+                    ax.text((i + f) / 2, y, m, ha='center', va='center', fontsize=6.8,
+                            color=_texto_sobre(COLORES_ETAPA[k]), fontweight='bold', zorder=3)
+                else:                 # segmento corto: la máquina se escribe encima
+                    ax.text((i + f) / 2, y + 0.36, m, ha='center', va='bottom', fontsize=6, color=_TINTA,
+                            zorder=3)
+        for x, txt, estilo, ha in ((r, f'liberación r = {r:.0f} h', ':', 'left'),
+                                   (cj, f'terminación C = {_coma(cj)} h', '-', 'right'),
+                                   (d, f'entrega d = {d:.0f} h', '--', 'left')):
+            ax.axvline(x, color=_TINTA, linewidth=1, linestyle=estilo, zorder=4)
+            ax.text(x + (1.5 if ha == 'left' else -1.5), B - 0.2, txt, fontsize=7.5, color=_TINTA,
+                    va='bottom', ha=ha)
+        ax.set_yticks(range(B))
+        ax.set_yticklabels([f'S{b}  ({int(tam[orden][b - 1])} doc.)' for b in range(B, 0, -1)])
+        ax.set_ylim(-0.6, B + 0.6)
+        ax.set_ylabel(f'Sublote de {orden}')
+        _eje_tiempo(ax, 10 * int(max(d, cj) // 10) + 30, [])
+        ax.set_xlim(10 * int(r // 10) - 10, 10 * int(max(d, cj) // 10) + 30)
+        leyenda = [mpatches.Patch(color=COLORES_ETAPA[k], label=f'Etapa {k + 1}: {NOMBRE_ETAPA[s]}')
+                   for k, s in enumerate(ETAPAS)]
+        leyenda.append(plt.Line2D([], [], color='#cccccc', linewidth=1, label='espera del sublote'))
+        ax.legend(handles=leyenda, loc='upper center', bbox_to_anchor=(0.5, -0.16), ncol=5, fontsize=7.5,
+                  frameon=False, handlelength=1.4)
+    return fig
+
+
+def figuras_gantt(individuo: dict, orden_ruta: Optional[str] = None,
+                  titulo: bool = True) -> Dict[str, object]:
+    """Figuras de la programación: 'etapa1' … 'etapa4' y 'ruta_<orden>'. Si no se indica la
+    orden, se muestra la de entrega más temprana."""
+    C, gantt = simular_hfs(individuo)
+    tam = {j: props_a_docenas(j, individuo['proporciones'][j]) for j in TRABAJOS}
+    figs = {f'etapa{k}': figura_gantt_etapa(gantt, s, titulo=titulo) for k, s in enumerate(ETAPAS, start=1)}
+    orden = orden_ruta or min(TRABAJOS, key=lambda j: DUE_DATE[j])
+    figs[f'ruta_{orden}'] = figura_ruta_orden(C, gantt, tam, orden)
+    return figs
+
+
+def graficar_gantt(individuo: dict, guardar_como: Optional[str] = None,
+                   orden_ruta: Optional[str] = None, mostrar: bool = True):
+    """Muestra un diagrama de Gantt por etapa y la ruta de una orden. Con guardar_como
+    ('carpeta/gantt.png') guarda gantt_etapa1.png … gantt_etapa4.png y gantt_ruta_<orden>.png."""
+    figs = figuras_gantt(individuo, orden_ruta)
+    if guardar_como:                  # se guardan antes de mostrarlas
+        base, ext = os.path.splitext(guardar_como)
+        for nombre, fig in figs.items():
+            ruta = f'{base}_{nombre}{ext or ".png"}'
+            fig.savefig(ruta, dpi=200, bbox_inches='tight')
+            print(f"  Gantt guardado en: {ruta}")
+    if mostrar:
+        plt.show()
+    return figs
 
 # ---------------------------------------------------------------------------
 # 14. PROGRAMA PRINCIPAL

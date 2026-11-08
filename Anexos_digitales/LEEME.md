@@ -12,7 +12,7 @@ editó a mano: cada archivo lo genera el programa de su carpeta.**
 | Carpeta | Qué contiene | Qué respalda en el documento |
 |---|---|---|
 | `1_Datos` | `BD_HFS.xlsx`: órdenes de trabajo, tiempos estándar por máquina y referencia, y calendario laboral | Caso de estudio y datos del modelo |
-| `2_Modelo` | `final_sc_hfsagls_S2_4.py`: lectura de datos, decodificador y algoritmo genético con los parámetros calibrados | Modelo y algoritmo propuesto |
+| `2_Modelo` | `final_sc_hfsagls_S2_4.py`: lectura de datos, decodificador y algoritmo genético con los parámetros calibrados; al terminar muestra un diagrama de Gantt por etapa y la ruta de la orden de entrega más temprana | Modelo, algoritmo propuesto y diagramas de Gantt |
 | `3_Verificacion` | `verificar_factibilidad.py`: comprueba que las programaciones del algoritmo cumplen todas las restricciones del modelo matemático | Verificación del modelo |
 | `4_Calibracion` | `calibracion_ag.py`, `anova_excel.py`, `verificar_reproduccion.py` y `salida_calibracion/` (135 corridas del diseño factorial, 20 del criterio de parada, ANOVA, pruebas, figuras e informe; ver su `LEEME.md`) | Calibración de los parámetros |
 | `5_Validacion` | `validacion_milp.py` y `salida_validacion/`: seis instancias reducidas resueltas de forma exacta (HiGHS) y con el algoritmo | Validación del modelo |
