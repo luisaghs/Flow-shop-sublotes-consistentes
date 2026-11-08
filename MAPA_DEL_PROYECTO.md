@@ -8,6 +8,7 @@
 | `BD_HFS.xlsx` | **Los datos** del caso de estudio: tiempos, órdenes y calendario. |
 | `docs/Trabajo_de_Grado_con_Fases_2_y_3.docx` | **El documento** del trabajo de grado: Fase 1 actualizada, Fases 2 y 3, análisis de resultados, conclusiones y recomendaciones. |
 | `docs/Anexos_Trabajo_de_Grado.docx` | **Los anexos** (A a K). Los anexos A, B y C los completan los autores; D a K se generan con `docs/fase2_docx/generar_anexos.py documento_base.docx salida.docx`. |
+| `docs/Anexos_datos.xlsx` | **Respaldo en Excel de los anexos D a J** (18 hojas: órdenes, tiempos, calendario, carga, validación, calibración con el ANOVA en fórmulas, réplicas, programación, sistema actual y Fase 3). La hoja `Indice` dice qué tabla del documento respalda cada hoja. Se genera con `python docs/fase2_docx/generar_anexos_excel.py docs/Anexos_datos.xlsx` y luego se recalcula (LibreOffice). |
 
 Todo lo demás son pruebas, experimentos y resultados que respaldan lo que dicen las Fases 2 y 3.
 
