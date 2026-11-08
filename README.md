@@ -63,7 +63,7 @@ Las etapas se toman en el orden en que aparecen en la hoja de tiempos.
 | `fase2/salida_validacion/` | Instancias (`I*.xlsx`), registros, programaciones óptimas, tablas y Gantt |
 | `docs/fase2_calibracion.md` | Calibración de los parámetros del AG (diseño factorial y criterio de parada) |
 | `fase2/calibracion_ag.py` | Corre los experimentos de calibración en paralelo y genera ANOVA, figuras e informe |
-| `fase2/salida_calibracion/` | Corridas, resúmenes, ANOVA, figuras e `informe_calibracion.md` |
+| `fase2/salida_calibracion/` | Corridas, resúmenes, ANOVA, figuras e `informe_calibracion.md` (guía en `LEEME.md`; archivos internos del proceso en `control/`) |
 | `fase2/salida_calibracion/anova_calibracion_excel.xlsx` | ANOVA de la calibración calculado con fórmulas de Excel (lo arma `fase2/anova_excel.py`) |
 | `fase2/verificar_reproduccion.py` | Repite corridas de la calibración y comprueba que dan los mismos resultados |
 | `docs/guia_apropiacion_calibracion.md` | Cómo entender, reproducir y declarar la calibración |

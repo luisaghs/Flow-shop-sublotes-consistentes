@@ -31,7 +31,7 @@ Todo lo demás son pruebas, experimentos y resultados que respaldan lo que dicen
 |---|---|---|
 | 4.2.3 Verificación (el decodificador cumple el modelo) | `verificar_factibilidad.py` | Se imprime en pantalla (0 violaciones) |
 | 4.2.3 Validación con instancias reducidas (Tabla 11) | `validacion_milp.py` | `salida_validacion/` (`resultados_validacion_todas.csv`; AG con parámetros calibrados en `ag_parametros_calibrados.txt`) |
-| 4.2.4 Calibración: diseño factorial, ANOVA y criterio de parada | `calibracion_ag.py` | `salida_calibracion/` (`informe_calibracion.md`, `corridas_*.csv`, `resumen_*.csv`, `anova.csv`, `efectos_principales.png`) |
+| 4.2.4 Calibración: diseño factorial, ANOVA y criterio de parada | `calibracion_ag.py` | `salida_calibracion/` (`informe_calibracion.md`, `corridas_*.csv`, `resumen_*.csv`, `anova.csv`, `efectos_principales.png`, `interacciones.png`; `LEEME.md` describe cada archivo y `control/` guarda los archivos internos del proceso) |
 | 4.2.4 Rehacer el ANOVA en Excel | `anova_excel.py` | `salida_calibracion/anova_calibracion_excel.xlsx` |
 | 4.2.5 Programación obtenida | `solucion_final.py` | `salida_solucion/` (`replicas.csv`, `mejor_solucion.json`, `gantt_solucion.png`) |
 | Comprobar que la calibración se repite igual | `verificar_reproduccion.py` | Se imprime en pantalla |

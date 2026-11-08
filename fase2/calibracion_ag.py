@@ -22,20 +22,25 @@ combinaciones) sobre la instancia real de BD_HFS.xlsx:
     medias con intervalos LSD al 95 %, supuestos (Shapiro-Wilk, Levene),
     Kruskal-Wallis y comparación pareada (Wilcoxon) con la configuración actual.
 
-Experimento 1b — ampliación: si la mejor combinación queda en el borde del
-rango, se prueban niveles más allá (población 200 y 250, mutación 0,7) con las
-mismas semillas. Solo se cambia la configuración si la mejora es significativa.
-
 Experimento 2 — criterio de parada: con la configuración seleccionada se compara la
-parada por generaciones sin mejora (50, 100, 200) en calidad y tiempo.
+parada tras 50 y 100 generaciones sin mejora (10 réplicas, semillas 1101 a 1110)
+en calidad y tiempo, con una prueba de Wilcoxon pareada de una cola.
+
+Opción no usada en el trabajo — ampliación: si la mejor combinación queda en el
+borde del rango, la acción 'ampliacion' permite probar niveles más allá con las
+mismas semillas. En la calibración del trabajo no se ejecutó: se adoptó la mejor
+combinación dentro del rango del diseño.
+
+Salidas en salida_calibracion/ (ver LEEME.md de esa carpeta): resultados en la
+carpeta principal y archivos de control del proceso en salida_calibracion/control/.
 
 Uso:
   python calibracion_ag.py diseno   ruta/modelo.py ruta/BD_HFS.xlsx [--replicas 5]
                                     [--presupuesto 30000] [--procesos 4]
-  python calibracion_ag.py ampliacion ruta/modelo.py ruta/BD_HFS.xlsx
   python calibracion_ag.py parada   ruta/modelo.py ruta/BD_HFS.xlsx
                                     [--config 150,0.9,0.5] [--replicas 10]
   python calibracion_ag.py analizar
+  python calibracion_ag.py ampliacion ruta/modelo.py ruta/BD_HFS.xlsx   (opcional, no usada)
 
   Agregar --prueba para una corrida corta de verificación (otra carpeta).
   Si una corrida se interrumpe, al volver a ejecutar el mismo comando se
@@ -202,9 +207,15 @@ def experimento_diseno(ruta_modelo, ruta_bd, dir_salida, replicas, presupuesto, 
               ruta_modelo, ruta_bd, procesos)
 
 
+def _ctrl(dir_salida, nombre):
+    """Archivos de control del proceso (no son resultados): van en la subcarpeta control/."""
+    os.makedirs(os.path.join(dir_salida, 'control'), exist_ok=True)
+    return os.path.join(dir_salida, 'control', nombre)
+
+
 def _leer_json(dir_salida, nombre):
     import json
-    with open(os.path.join(dir_salida, nombre), encoding='utf-8') as fh:
+    with open(_ctrl(dir_salida, nombre), encoding='utf-8') as fh:
         return json.load(fh)
 
 
@@ -233,7 +244,7 @@ def experimento_parada(ruta_modelo, ruta_bd, dir_salida, config, replicas, proce
             })
     print(f"\nEXPERIMENTO 2 — {NOMBRE_INSTANCIA[INSTANCIA]}: criterio de parada {PARADA_NIVELES} "
           f"generaciones sin mejora, configuración {config}, {replicas} réplicas")
-    with open(os.path.join(dir_salida, 'config_parada.txt'), 'w', encoding='utf-8') as fh:
+    with open(_ctrl(dir_salida, 'config_parada.txt'), 'w', encoding='utf-8') as fh:
         fh.write(str(config))
     _ejecutar(tareas, os.path.join(dir_salida, _arch('corridas_parada')),
               ruta_modelo, ruta_bd, procesos)
@@ -513,7 +524,7 @@ def analizar(dir_salida):
     comb['pos_prom'] = comb[cols_pos].mean(axis=1)
     orden = ['pos_prom'] + (['pos_exigente'] if 'pos_exigente' in comb else [])
     comb = comb.sort_values(orden).reset_index(drop=True)
-    comb.to_csv(os.path.join(dir_salida, 'seleccion_combinada.csv'), index=False, encoding='utf-8-sig')
+    comb.to_csv(_ctrl(dir_salida, 'seleccion_combinada.csv'), index=False, encoding='utf-8-sig')
     mejor = {f: (int(comb.loc[0, f]) if f == 'poblacion' else float(comb.loc[0, f])) for f in factores}
     informe += ["## Selección combinada", "",
                 "Posición de cada combinación en cada instancia (1 = mejor) y posición promedio "
@@ -536,7 +547,7 @@ def analizar(dir_salida):
     informe.append("")
     decisiones.update(mejor_diseno=mejor, significativos=sorted(signif), en_borde=en_borde,
                       grilla={k: v for k, v in grilla.items()})
-    with open(os.path.join(dir_salida, 'ampliacion_grilla.json'), 'w', encoding='utf-8') as fh:
+    with open(_ctrl(dir_salida, 'ampliacion_grilla.json'), 'w', encoding='utf-8') as fh:
         json.dump({**grilla, '_mejor': mejor}, fh)
 
     # ── Ampliación
@@ -583,7 +594,7 @@ def analizar(dir_salida):
     elif en_borde:
         informe += ["No se evaluaron niveles fuera del rango del diseño; se adopta la mejor "
                     "combinación dentro de ese rango.", ""]
-    with open(os.path.join(dir_salida, 'config_seleccionada.txt'), 'w', encoding='utf-8') as fh:
+    with open(_ctrl(dir_salida, 'config_seleccionada.txt'), 'w', encoding='utf-8') as fh:
         fh.write(f"{int(seleccion['poblacion'])},{float(seleccion['prob_cruce']):g},"
                  f"{float(seleccion['prob_mutacion']):g}\n")
     informe += [f"**Configuración seleccionada: {_texto_config(seleccion)}.**", ""]
@@ -593,8 +604,8 @@ def analizar(dir_salida):
     pars = {inst: _leer(dir_salida, 'corridas_parada', inst) for inst in disenos}
     if any(p is not None for p in pars.values()):
         informe += ["## Criterio de parada", ""]
-        if os.path.isfile(os.path.join(dir_salida, 'config_parada.txt')):
-            informe += [f"Configuración: {open(os.path.join(dir_salida, 'config_parada.txt'), encoding='utf-8').read().strip()}", ""]
+        if os.path.isfile(_ctrl(dir_salida, 'config_parada.txt')):
+            informe += [f"Configuración: {open(_ctrl(dir_salida, 'config_parada.txt'), encoding='utf-8').read().strip()}", ""]
         mejora_sig = {}
         decisiones['parada'] = {'tablas': {}, 'p': {}}
         for inst, par in pars.items():
@@ -632,7 +643,7 @@ def analizar(dir_salida):
                        "(mejora de forma significativa frente a los niveles menores; no se "
                        "evaluaron niveles mayores)."), ""]
         decisiones['parada']['elegido'] = int(elegido)
-        with open(os.path.join(dir_salida, 'parada_seleccionada.txt'), 'w', encoding='utf-8') as fh:
+        with open(_ctrl(dir_salida, 'parada_seleccionada.txt'), 'w', encoding='utf-8') as fh:
             fh.write(f"{elegido}\n")
 
     with open(os.path.join(dir_salida, 'decisiones.json'), 'w', encoding='utf-8') as fh:
@@ -684,7 +695,7 @@ def main():
             experimento_ampliacion(modelo, bd, dir_salida, a.replicas or (2 if a.prueba else REPLICAS),
                                    presupuesto, a.procesos)
         elif a.accion == 'parada':
-            texto = a.config or open(os.path.join(dir_salida, 'config_seleccionada.txt'),
+            texto = a.config or open(_ctrl(dir_salida, 'config_seleccionada.txt'),
                                      encoding='utf-8').read().strip()
             p, c, m = texto.split(',')
             config = {'poblacion': int(p), 'prob_cruce': float(c), 'prob_mutacion': float(m)}
