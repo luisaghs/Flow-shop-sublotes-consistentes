@@ -19,7 +19,7 @@ import multiprocessing as mp
 os.environ.setdefault('MPLBACKEND', 'Agg')
 import pandas as pd
 
-DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'salida_revision')
+DIR = os.environ.get('SALIDA_REVISION') or os.path.join(os.path.dirname(os.path.abspath(__file__)), 'salida_revision')
 SEMILLAS = list(range(1201, 1211))
 CONFIGS = {'A': {'B': 10, 'edd': True}, 'B': {'B': 15, 'edd': True}, 'C': {'B': 10, 'edd': False}}
 _M = None
