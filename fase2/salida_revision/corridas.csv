@@ -1,0 +1,2 @@
+﻿config,B,siembra_EDD,semilla,regla,regla_suma_T,regla_Cmax,regla_tardias,ini_suma_T,ini_Cmax,suma_T,Cmax,tardias,Tmax,gen_tardanza_cero,generaciones,segundos
+A,10,True,1201,EDD,99.00866666666673,681.2831666666667,2,99.00866666666673,681.2831666666667,0.0,594.5065000000001,0,0.0,177,532,263.1
