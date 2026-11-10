@@ -997,15 +997,74 @@ def figura_ruta_orden(C: Dict[str, float], gantt: Dict, tam: Dict[str, List[floa
     return fig
 
 
+def figura_ruta_por_etapa(C: Dict[str, float], gantt: Dict, tam: Dict[str, List[float]], orden: str):
+    """Ruta de una orden con el eje de tiempo dividido por etapa: un panel por etapa, cada uno
+    desde el primer inicio hasta el último fin de los sublotes de la orden en esa etapa. Todos
+    los paneles usan la misma escala (horas por centímetro), de modo que sus anchos se comparan."""
+    ops = {(b, s): (m, i, f) for s in ETAPAS for (j, b, m, i, f) in gantt[s] if j == orden}
+    B = max(b for (b, _) in ops)
+    r, d, cj = RELEASE[orden], DUE_DATE[orden], C[orden]
+    ventanas = []
+    for s in ETAPAS:
+        ini = min(ops[(b, s)][1] for b in range(1, B + 1))
+        fin = max(ops[(b, s)][2] for b in range(1, B + 1))
+        ventanas.append((ini, fin, 5 * math.floor((ini - 9) / 5), 5 * math.ceil((fin + 9) / 5)))
+    with plt.rc_context(_ESTILO_GANTT):
+        fig, axes = plt.subplots(1, len(ETAPAS), figsize=(11, 0.42 * B + 2.4), sharey=True,
+                                 gridspec_kw={'width_ratios': [hi - lo for (_, _, lo, hi) in ventanas],
+                                              'wspace': 0.06})
+        for k, (ax, s) in enumerate(zip(axes, ETAPAS)):
+            ini, fin, lo, hi = ventanas[k]
+            ancho = hi - lo
+            ax.axvspan(ini, fin, color=COLORES_ETAPA[k], alpha=0.07, zorder=0)
+            for x in (ini, fin):
+                ax.axvline(x, color=COLORES_ETAPA[k], linewidth=1, linestyle=':', zorder=1)
+            for b in range(1, B + 1):
+                y = B - b
+                m, i, f = ops[(b, s)]
+                ax.barh(y, f - i, left=i, height=0.62, color=COLORES_ETAPA[k], edgecolor='white',
+                        linewidth=0.6, zorder=2)
+                if f - i >= 0.13 * ancho:
+                    ax.text((i + f) / 2, y, m, ha='center', va='center', fontsize=6.8,
+                            color=_texto_sobre(COLORES_ETAPA[k]), fontweight='bold', zorder=3)
+                else:                 # segmento corto: la máquina se escribe encima
+                    ax.text((i + f) / 2, y + 0.36, m, ha='center', va='bottom', fontsize=6, color=_TINTA,
+                            zorder=3)
+            ax.set_xlim(lo, hi)
+            ax.set_xticks([x for x in range(50 * math.ceil(lo / 50), hi + 1, 50) if lo + 8 <= x <= hi - 8])
+            ax.xaxis.set_minor_locator(ticker.MultipleLocator(10))
+            ax.grid(axis='x', which='major', color=_REJILLA, linewidth=0.7)
+            ax.grid(axis='x', which='minor', color=_REJILLA, linewidth=0.3, alpha=0.6)
+            ax.set_axisbelow(True)
+            for lado in ('top', 'right'):
+                ax.spines[lado].set_visible(False)
+            if k:
+                ax.tick_params(axis='y', length=0)
+            ax.set_title(f'Etapa {k + 1}: {NOMBRE_ETAPA[s]}\n{_coma(ini)} h – {_coma(fin)} h', fontsize=8.5,
+                         color=_TINTA, fontweight='bold', pad=6)
+        axes[0].set_yticks(range(B))
+        axes[0].set_yticklabels([f'S{b}  ({int(tam[orden][b - 1])} doc.)' for b in range(B, 0, -1)])
+        axes[0].set_ylim(-0.6, B - 0.2)
+        axes[0].set_ylabel(f'Sublote de {orden}')
+        fig.supxlabel('Tiempo (horas laborables desde el inicio del horizonte); cada panel muestra el '
+                      'intervalo de su etapa', fontsize=8.5, color=_TINTA, y=0.04)
+        fig.text(0.5, 0.0, f'Orden {orden} ({PRODUCTO[orden]}, {DEMANDA[orden]:.0f} docenas): liberación '
+                             f'r = {r:.0f} h   ·   terminación C = {_coma(cj)} h   ·   entrega d = {d:.0f} h '
+                             f'(holgura de {_coma(d - cj)} h)', ha='center', fontsize=8, color=_TINTA2)
+    return fig
+
+
 def figuras_gantt(individuo: dict, orden_ruta: Optional[str] = None,
                   titulo: bool = True) -> Dict[str, object]:
-    """Figuras de la programación: 'etapa1' … 'etapa4' y 'ruta_<orden>'. Si no se indica la
-    orden, se muestra la de entrega más temprana."""
+    """Figuras de la programación: 'etapa1' … 'etapa4', 'ruta_<orden>' (un solo eje de tiempo) y
+    'ruta_etapas_<orden>' (un panel por etapa). Si no se indica la orden, se usa la de entrega más
+    temprana."""
     C, gantt = simular_hfs(individuo)
     tam = {j: props_a_docenas(j, individuo['proporciones'][j]) for j in TRABAJOS}
     figs = {f'etapa{k}': figura_gantt_etapa(gantt, s, titulo=titulo) for k, s in enumerate(ETAPAS, start=1)}
     orden = orden_ruta or min(TRABAJOS, key=lambda j: DUE_DATE[j])
     figs[f'ruta_{orden}'] = figura_ruta_orden(C, gantt, tam, orden)
+    figs[f'ruta_etapas_{orden}'] = figura_ruta_por_etapa(C, gantt, tam, orden)
     return figs
 
 
