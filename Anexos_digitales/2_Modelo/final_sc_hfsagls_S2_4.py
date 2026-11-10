@@ -1054,10 +1054,82 @@ def figura_ruta_por_etapa(C: Dict[str, float], gantt: Dict, tam: Dict[str, List[
     return fig
 
 
+def figura_ruta_maquinas(C: Dict[str, float], gantt: Dict, tam: Dict[str, List[float]], orden: str):
+    """Gantt de la ruta de una orden: una fila por máquina que la procesa, agrupadas por etapa, y
+    cada barra etiquetada con su sublote (un color por sublote, para seguir su flujo entre etapas)."""
+    ops = {(b, s): (m, i, f) for s in ETAPAS for (j, b, m, i, f) in gantt[s] if j == orden}
+    B = max(b for (b, _) in ops)
+    r, d, cj = RELEASE[orden], DUE_DATE[orden], C[orden]
+    color = {b: COLORES_ORDEN[(b - 1) % len(COLORES_ORDEN)] for b in range(1, B + 1)}
+    filas, grupos = [], []                       # filas de arriba hacia abajo, agrupadas por etapa
+    for s in ETAPAS:
+        maqs = sorted({ops[(b, s)][0] for b in range(1, B + 1)}, key=_clave_maquina)
+        grupos.append((s, len(filas), len(filas) + len(maqs) - 1))
+        filas += [(s, mq) for mq in maqs]
+    n = len(filas)
+    y_de = {fm: n - 1 - k for k, fm in enumerate(filas)}
+    lo, hi = 10 * int(r // 10) - 10, 10 * int(max(d, cj) // 10) + 20
+    with plt.rc_context(_ESTILO_GANTT):
+        fig, ax = plt.subplots(figsize=(11, 0.34 * n + 2.2))
+        for k, (s, a, z) in enumerate(grupos):   # franjas y separadores por etapa
+            y0, y1 = n - 1 - z - 0.5, n - 1 - a + 0.5
+            ax.axhspan(y0, y1, color=COLORES_ETAPA[k], alpha=0.07, zorder=0)
+            if k:
+                ax.axhline(y1, color=_TINTA2, linewidth=0.8, zorder=1)
+            ax.text(hi + (hi - lo) * 0.012, (y0 + y1) / 2, f'Etapa {k + 1}\n{NOMBRE_ETAPA[s]}', va='center',
+                    ha='left', fontsize=8, fontweight='bold', color=COLORES_ETAPA[k])
+        for b in range(1, B + 1):                # conexión entre etapas de cada sublote
+            for s1, s2 in zip(ETAPAS[:-1], ETAPAS[1:]):
+                m1, _, f1 = ops[(b, s1)]
+                m2, i2, _ = ops[(b, s2)]
+                ax.plot([f1, i2], [y_de[(s1, m1)], y_de[(s2, m2)]], color=color[b], linewidth=0.8,
+                        alpha=0.45, linestyle=(0, (3, 2)), zorder=1)
+        for b in range(1, B + 1):
+            for s in ETAPAS:
+                m, i, f = ops[(b, s)]
+                y = y_de[(s, m)]
+                ax.barh(y, f - i, left=i, height=0.66, color=color[b], edgecolor='white', linewidth=0.6,
+                        zorder=2)
+                if f - i >= 6:
+                    ax.text((i + f) / 2, y, f'S{b}', ha='center', va='center', fontsize=6.8,
+                            fontweight='bold', color=_texto_sobre(color[b]), zorder=3)
+                else:                            # barra corta: la etiqueta va a la derecha
+                    ax.text(f + 0.8, y, f'S{b}', ha='left', va='center', fontsize=6.3,
+                            fontweight='bold', color=_TINTA, zorder=3)
+        for x, txt, estilo in ((r, f'liberación\n{r:.0f} h', ':'), (cj, f'terminación\n{_coma(cj)} h', '-'),
+                               (d, f'entrega\n{d:.0f} h', '--')):
+            ax.axvline(x, color=_TINTA, linewidth=1, linestyle=estilo, zorder=4)
+            ax.text(x, n - 0.35, txt, fontsize=7.3, color=_TINTA, ha='center', va='bottom', zorder=5,
+                    bbox=dict(facecolor='white', edgecolor='none', pad=1.2))
+        ax.set_yticks(range(n))
+        ax.set_yticklabels([mq for (_, mq) in reversed(filas)])
+        ax.set_ylim(-0.6, n + 0.9)
+        ax.set_ylabel('Máquina')
+        ax.set_xlim(lo, hi)
+        ax.xaxis.set_major_locator(ticker.MultipleLocator(50))
+        ax.xaxis.set_minor_locator(ticker.MultipleLocator(10))
+        ax.grid(axis='x', which='major', color=_REJILLA, linewidth=0.7)
+        ax.grid(axis='x', which='minor', color=_REJILLA, linewidth=0.3, alpha=0.6)
+        ax.set_axisbelow(True)
+        ax.set_xlabel('Tiempo (horas laborables desde el inicio del horizonte)')
+        for lado in ('top', 'right'):
+            ax.spines[lado].set_visible(False)
+        leyenda = [mpatches.Patch(color=color[b], label=f'S{b} ({int(tam[orden][b - 1])} doc.)')
+                   for b in range(1, B + 1)]
+        leyenda.append(plt.Line2D([], [], color=_TINTA2, linewidth=0.8, linestyle=(0, (3, 2)),
+                                  label='paso a la etapa siguiente'))
+        ax.legend(handles=leyenda, loc='upper center', bbox_to_anchor=(0.5, -0.09), ncol=6, fontsize=7.5,
+                  frameon=False, handlelength=1.3, columnspacing=1.0,
+                  title=f'Sublotes de {orden} ({PRODUCTO[orden]}, {DEMANDA[orden]:.0f} docenas)',
+                  title_fontsize=8)
+    return fig
+
+
 def figuras_gantt(individuo: dict, orden_ruta: Optional[str] = None,
                   titulo: bool = True) -> Dict[str, object]:
     """Figuras de la programación: 'etapa1' … 'etapa4', 'ruta_<orden>' (un solo eje de tiempo) y
-    'ruta_etapas_<orden>' (un panel por etapa). Si no se indica la orden, se usa la de entrega más
+    'ruta_etapas_<orden>' (un panel por etapa) y 'ruta_maquinas_<orden>' (máquinas por etapa, barras por
+    sublote). Si no se indica la orden, se usa la de entrega más
     temprana."""
     C, gantt = simular_hfs(individuo)
     tam = {j: props_a_docenas(j, individuo['proporciones'][j]) for j in TRABAJOS}
@@ -1065,6 +1137,7 @@ def figuras_gantt(individuo: dict, orden_ruta: Optional[str] = None,
     orden = orden_ruta or min(TRABAJOS, key=lambda j: DUE_DATE[j])
     figs[f'ruta_{orden}'] = figura_ruta_orden(C, gantt, tam, orden)
     figs[f'ruta_etapas_{orden}'] = figura_ruta_por_etapa(C, gantt, tam, orden)
+    figs[f'ruta_maquinas_{orden}'] = figura_ruta_maquinas(C, gantt, tam, orden)
     return figs
 
 
