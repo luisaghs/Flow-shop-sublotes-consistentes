@@ -16,7 +16,7 @@ editó a mano: cada archivo lo genera el programa de su carpeta.**
 | `3_Verificacion` | `verificar_factibilidad.py`: comprueba que las programaciones del algoritmo cumplen todas las restricciones del modelo matemático | Verificación del modelo |
 | `4_Calibracion` | `calibracion_ag.py`, `anova_excel.py`, `verificar_reproduccion.py` y `salida_calibracion/` (135 corridas del diseño factorial, 20 del criterio de parada, ANOVA, pruebas, figuras e informe; ver su `LEEME.md`) | Calibración de los parámetros |
 | `5_Validacion` | `validacion_milp.py` y `salida_validacion/`: seis instancias reducidas resueltas de forma exacta (HiGHS) y con el algoritmo | Validación del modelo |
-| `6_Solucion_propuesta` | `solucion_final.py` y `salida_solucion/`: 10 réplicas finales, la mejor solución (semilla 1203), su convergencia y su diagrama de Gantt. `experimentos_revision.py` y `salida_revision/`: el algoritmo con B̄ = 15 y con población inicial sin EDD (10 réplicas cada uno) | Programación propuesta, B̄ = 15 y mejora frente a EDD |
+| `6_Solucion_propuesta` | `solucion_final.py` y `salida_solucion/`: 10 réplicas finales, la mejor solución (semilla 1203), su convergencia y su diagrama de Gantt. `experimentos_revision.py` y `salida_revision/`: el algoritmo con B̄ = 15 y con población inicial sin EDD (10 réplicas cada uno). `Gantt_en_Colab.ipynb`: cuaderno de Google Colab que genera los diagramas de Gantt a partir de la solución guardada | Programación propuesta, B̄ = 15 y mejora frente a EDD |
 | `7_Fase3_Comparacion` | `experimentos_fase3.py` y `salida_fase3/`: 120 corridas del algoritmo, sistema actual y reglas de despacho en cinco escenarios, informe y figura | Comparación con el sistema actual (Fase 3) |
 
 ## Archivos principales de resultados
