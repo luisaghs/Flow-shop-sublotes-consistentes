@@ -30,8 +30,9 @@ Datos de entrada: libro de Excel BD_HFS.xlsx con las hojas
   "Disponibilidad"         : calendario laboral (horas acumuladas por día)
 
 Uso:  python final_sc_hfsagls_S2_4.py [ruta/BD_HFS.xlsx]
-      Al terminar muestra un diagrama de Gantt por etapa y la ruta de la orden
-      de entrega más temprana (sección 13).
+      Al terminar muestra y guarda en la carpeta graficos/ los diagramas de Gantt de
+      cada etapa, la ruta de la orden de entrega más temprana, el uso de cada máquina
+      y la simultaneidad de los sublotes (sección 13).
 """
 
 import random
@@ -1125,33 +1126,139 @@ def figura_ruta_maquinas(C: Dict[str, float], gantt: Dict, tam: Dict[str, List[f
     return fig
 
 
-def figuras_gantt(individuo: dict, orden_ruta: Optional[str] = None,
-                  titulo: bool = True) -> Dict[str, object]:
-    """Figuras de la programación: 'etapa1' … 'etapa4', 'ruta_<orden>' (un solo eje de tiempo) y
-    'ruta_etapas_<orden>' (un panel por etapa) y 'ruta_maquinas_<orden>' (máquinas por etapa, barras por
-    sublote). Si no se indica la orden, se usa la de entrega más
-    temprana."""
+def figura_uso_maquinas(gantt: Dict, cmax: float):
+    """Uso de cada máquina hasta el makespan: horas de proceso, de alistamiento y libres,
+    con las máquinas agrupadas por etapa y su ocupación al final de cada barra."""
+    filas, grupos = [], []
+    for s in ETAPAS:
+        maqs = sorted(MAQUINAS_POR_ETAPA[s], key=_clave_maquina)
+        grupos.append((s, len(filas), len(filas) + len(maqs) - 1))
+        filas += [(s, m) for m in maqs]
+    proc = {m: 0.0 for (_, m) in filas}
+    alis = {m: 0.0 for (_, m) in filas}
+    for s in ETAPAS:
+        for (_, _, m, i, f) in gantt[s]:
+            proc[m] += f - i
+    for (_, m, a, z) in gantt.get('alistamientos', []):
+        alis[m] += z - a
+    n = len(filas)
+    y_de = {m: n - 1 - k for k, (_, m) in enumerate(filas)}
+    with plt.rc_context(_ESTILO_GANTT):
+        fig, ax = plt.subplots(figsize=(10, 0.24 * n + 1.8))
+        for k, (s, a, z) in enumerate(grupos):
+            y0, y1 = n - 1 - z - 0.5, n - 1 - a + 0.5
+            if k:
+                ax.axhline(y1, color=_TINTA2, linewidth=0.8)
+            horas = sum(proc[m] for (ss, m) in filas if ss == s)
+            ocup = 100 * horas / (len(MAQUINAS_POR_ETAPA[s]) * cmax)
+            ax.text(cmax * 1.13, (y0 + y1) / 2, f'Etapa {k + 1}\n{NOMBRE_ETAPA[s]}\nocupación {_coma(ocup)} %',
+                    va='center', ha='left', fontsize=7.8, fontweight='bold', color=COLORES_ETAPA[k])
+            for (ss, m) in filas:
+                if ss != s:
+                    continue
+                y = y_de[m]
+                ax.barh(y, proc[m], color=COLORES_ETAPA[k], height=0.7)
+                ax.barh(y, alis[m], left=proc[m], color=_TINTA, height=0.7)
+                ax.barh(y, max(0.0, cmax - proc[m] - alis[m]), left=proc[m] + alis[m], color='#e9e9e9',
+                        height=0.7)
+                ax.text(cmax + 4, y, f'{_coma(100 * proc[m] / cmax, 0)} %', va='center', fontsize=6.5,
+                        color=_TINTA2)
+        ax.set_yticks(range(n))
+        ax.set_yticklabels([m for (_, m) in reversed(filas)], fontsize=7)
+        ax.set_ylim(-0.6, n - 0.4)
+        ax.set_xlim(0, cmax * 1.12)
+        ax.xaxis.set_major_locator(ticker.MultipleLocator(100))
+        ax.set_xlabel(f'Horas hasta el makespan ({_coma(cmax)} h); el porcentaje es la ocupación de cada máquina')
+        ax.set_ylabel('Máquina')
+        for lado in ('top', 'right'):
+            ax.spines[lado].set_visible(False)
+        leyenda = [mpatches.Patch(color='#888888', label='Proceso (color de la etapa)'),
+                   mpatches.Patch(color=_TINTA, label='Alistamiento'),
+                   mpatches.Patch(color='#e9e9e9', label='Libre')]
+        ax.legend(handles=leyenda, loc='upper center', bbox_to_anchor=(0.5, -0.07), ncol=3, fontsize=7.5,
+                  frameon=False)
+    return fig
+
+
+def figura_simultaneidad(gantt: Dict, C: Dict[str, float], paso: float = 0.25):
+    """Sublotes en proceso en cada etapa a lo largo del tiempo (área apilada) y número de
+    órdenes en curso (desde que inicia su primer sublote hasta que termina)."""
+    cmax = max(C.values())
+    t = [k * paso for k in range(int(cmax / paso) + 1)]
+    capas = []
+    for s in ETAPAS:
+        cuenta = [0] * len(t)
+        for (_, _, _, i, f) in gantt[s]:
+            for k in range(int(math.ceil(i / paso)), min(len(t), int(math.ceil(f / paso)))):
+                cuenta[k] += 1
+        capas.append(cuenta)
+    inicio = {j: min(i for s in ETAPAS for (jj, _, _, i, _) in gantt[s] if jj == j) for j in TRABAJOS}
+    en_curso = [sum(1 for j in TRABAJOS if inicio[j] <= x < C[j]) for x in t]
+    total = [sum(c[k] for c in capas) for k in range(len(t))]
+    with plt.rc_context(_ESTILO_GANTT):
+        fig, (a1, a2) = plt.subplots(2, 1, figsize=(10, 5.2), sharex=True,
+                                     gridspec_kw={'height_ratios': [3, 1.2], 'hspace': 0.12})
+        a1.stackplot(t, capas, colors=COLORES_ETAPA, alpha=0.85,
+                     labels=[f'Etapa {k + 1}: {NOMBRE_ETAPA[s]} ({len(MAQUINAS_POR_ETAPA[s])} máq.)'
+                             for k, s in enumerate(ETAPAS)])
+        a1.set_ylabel('Sublotes en proceso')
+        a1.axhline(max(total), color=_TINTA2, linewidth=0.8, linestyle='--')
+        a1.text(t[-1], max(total) + 0.6, f'máximo: {max(total)} sublotes a la vez (promedio: '
+                f'{_coma(sum(total) / len(total))})', ha='right', fontsize=7.5, color=_TINTA)
+        a1.set_ylim(0, max(total) + 3)
+        a1.legend(loc='lower left', bbox_to_anchor=(0, 1.01), fontsize=7.5, frameon=False, ncol=4,
+                  handlelength=1.2, columnspacing=1.0)
+        a2.step(t, en_curso, where='post', color=_TINTA, linewidth=1)
+        a2.set_ylabel('Órdenes\nen curso')
+        a2.set_ylim(0, len(TRABAJOS) + 1)
+        a2.yaxis.set_major_locator(ticker.MultipleLocator(5))
+        for ax in (a1, a2):
+            ax.grid(axis='both', color=_REJILLA, linewidth=0.6)
+            ax.set_axisbelow(True)
+            for lado in ('top', 'right'):
+                ax.spines[lado].set_visible(False)
+        a2.set_xlim(0, cmax)
+        a2.xaxis.set_major_locator(ticker.MultipleLocator(50))
+        a2.set_xlabel('Tiempo (horas laborables desde el inicio del horizonte)')
+    return fig
+
+
+def figuras_gantt(individuo: dict, orden_ruta: Optional[str] = None, titulo: bool = True,
+                  todas_las_rutas: bool = False) -> Dict[str, object]:
+    """Figuras de la programación:
+      'etapa1' … 'etapa4'        diagrama de Gantt de cada etapa
+      'ruta_maquinas_<orden>'    ruta de una orden: máquinas por etapa y barras por sublote
+      'uso_maquinas'             horas de proceso, alistamiento y libres de cada máquina
+      'simultaneidad'            sublotes en proceso por etapa y órdenes en curso en el tiempo
+    Con todas_las_rutas=True agrega las otras dos vistas de la ruta ('ruta_<orden>', un solo
+    eje de tiempo, y 'ruta_etapas_<orden>', un panel por etapa). Si no se indica la orden, se
+    usa la de entrega más temprana."""
     C, gantt = simular_hfs(individuo)
     tam = {j: props_a_docenas(j, individuo['proporciones'][j]) for j in TRABAJOS}
     figs = {f'etapa{k}': figura_gantt_etapa(gantt, s, titulo=titulo) for k, s in enumerate(ETAPAS, start=1)}
     orden = orden_ruta or min(TRABAJOS, key=lambda j: DUE_DATE[j])
-    figs[f'ruta_{orden}'] = figura_ruta_orden(C, gantt, tam, orden)
-    figs[f'ruta_etapas_{orden}'] = figura_ruta_por_etapa(C, gantt, tam, orden)
+    if todas_las_rutas:
+        figs[f'ruta_{orden}'] = figura_ruta_orden(C, gantt, tam, orden)
+        figs[f'ruta_etapas_{orden}'] = figura_ruta_por_etapa(C, gantt, tam, orden)
     figs[f'ruta_maquinas_{orden}'] = figura_ruta_maquinas(C, gantt, tam, orden)
+    figs['uso_maquinas'] = figura_uso_maquinas(gantt, max(C.values()))
+    figs['simultaneidad'] = figura_simultaneidad(gantt, C)
     return figs
 
 
 def graficar_gantt(individuo: dict, guardar_como: Optional[str] = None,
                    orden_ruta: Optional[str] = None, mostrar: bool = True):
-    """Muestra un diagrama de Gantt por etapa y la ruta de una orden. Con guardar_como
-    ('carpeta/gantt.png') guarda gantt_etapa1.png … gantt_etapa4.png y gantt_ruta_<orden>.png."""
+    """Muestra las figuras de la programación (ver figuras_gantt). Con guardar_como
+    ('carpeta/gantt.png') las guarda como gantt_etapa1.png … gantt_etapa4.png,
+    gantt_ruta_maquinas_<orden>.png, gantt_uso_maquinas.png y gantt_simultaneidad.png."""
     figs = figuras_gantt(individuo, orden_ruta)
     if guardar_como:                  # se guardan antes de mostrarlas
         base, ext = os.path.splitext(guardar_como)
+        os.makedirs(os.path.dirname(base) or '.', exist_ok=True)
         for nombre, fig in figs.items():
             ruta = f'{base}_{nombre}{ext or ".png"}'
             fig.savefig(ruta, dpi=200, bbox_inches='tight')
-            print(f"  Gantt guardado en: {ruta}")
+            print(f"  Gráfico guardado en: {ruta}")
     if mostrar:
         plt.show()
     return figs
@@ -1160,7 +1267,7 @@ def graficar_gantt(individuo: dict, guardar_como: Optional[str] = None,
 # 14. PROGRAMA PRINCIPAL
 # ---------------------------------------------------------------------------
 
-def main(ruta_excel: str = RUTA_EXCEL, guardar_gantt: Optional[str] = None):
+def main(ruta_excel: str = RUTA_EXCEL, guardar_gantt: Optional[str] = os.path.join('graficos', 'gantt.png')):
     print()
     print(SEP)
     print("  FLOW SHOP HÍBRIDO CON SUBLOTES CONSISTENTES — ALGORITMO GENÉTICO")

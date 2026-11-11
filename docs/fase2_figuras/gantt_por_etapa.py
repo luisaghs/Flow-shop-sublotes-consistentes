@@ -40,7 +40,7 @@ def cargar():
 def main():
     orden = sys.argv[1] if len(sys.argv) > 1 else 'J07'
     M, ind = cargar()
-    for nombre, fig in M.figuras_gantt(ind, orden_ruta=orden, titulo=False).items():
+    for nombre, fig in M.figuras_gantt(ind, orden_ruta=orden, titulo=False, todas_las_rutas=True).items():
         archivo = f'gantt_{nombre}.png' if nombre.startswith('etapa') else f'{nombre}.png'
         fig.savefig(os.path.join(DIR, archivo), dpi=200, bbox_inches='tight')
     print('Figuras guardadas en', DIR)
