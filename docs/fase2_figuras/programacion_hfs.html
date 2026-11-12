@@ -159,6 +159,10 @@ function ejeTiempo(svg,x,x0,x1,top,alto,izq,ancho){
     if(c>=x0 && c<=x1) el('text',{x:x(c),y:top-8,'text-anchor':'middle','font-size':10.5,fill:tinta},g).textContent='S'+(k+1)}
   el('text',{x:izq,y:top-24,'font-size':10.5,fill:tinta,'letter-spacing':'.06em'},g).textContent='SEMANA';
 }
+function ejeMaquina(svg,top,alto){
+  const y=top+alto/2;
+  el('text',{x:14,y:y,'text-anchor':'middle','font-size':12,fill:css('--ink-2'),transform:`rotate(-90 14 ${y})`},svg).textContent='Máquina';
+}
 function barra(svg,o,x,y,alto,clase){
   const g=el('g',{class:'bar '+clase,'data-j':o.j,'data-b':o.b},svg);
   const w=Math.max(1.2,x(o.f)-x(o.i));
@@ -176,13 +180,14 @@ let etapaSel=1, resaltada=null;
 function dibujarEtapa(){
   const cont=document.getElementById('chart-etapa'); cont.innerHTML='';
   const maqs=etapas.find(e=>e.n===etapaSel).maquinas;
-  const fila=28, izq=54, der=86, top=44, alto=maqs.length*fila;
+  const fila=28, izq=72, der=86, top=44, alto=maqs.length*fila;
   const W=Math.max(760,cont.clientWidth), ancho=W-izq-der, x0=0, x1=620;
   const x=h=>izq+(h-x0)/(x1-x0)*ancho;
   const svg=el('svg',{width:W,height:top+alto+44,viewBox:`0 0 ${W} ${top+alto+44}`,role:'img','aria-label':`Gantt de ${nombreEtapa[etapaSel]}`},cont);
   ejeTiempo(svg,x,x0,x1,top,alto,izq,ancho);
   const yDe=Object.fromEntries(maqs.map((m,k)=>[m,top+k*fila+fila/2]));
   maqs.forEach(m=>{el('text',{x:izq-8,y:yDe[m]+4,'text-anchor':'end','font-size':11.5,fill:css('--ink'),'font-family':'IBM Plex Mono, monospace'},svg).textContent=m});
+  ejeMaquina(svg,top,alto);
   const ops=DATA.ops.filter(o=>o[2]===etapaSel).map(([j,b,s,m,i,f,q,w])=>({j,b,s,m,i,f,q,w}));
   for(const o of ops){const g=barra(svg,o,x,yDe[o.m],fila-8,'');if(resaltada&&o.j!==resaltada)g.style.opacity=.18}
   if(etapaSel===1){for(const [m,a] of DATA.alist){const xx=x(a),yy=yDe[m]-fila/2+1;
@@ -209,7 +214,7 @@ function dibujarRuta(){
   for(const e of etapas){const ms=[...new Set(ops.filter(p=>p.s===e.n).map(p=>p.m))].sort((a,b)=>+a.slice(1)-+b.slice(1));
     grupos.push({e,desde:filas.length,hasta:filas.length+ms.length-1}); ms.forEach(m=>filas.push(e.n+'|'+m))}
   const cont=document.getElementById('chart-ruta'); cont.innerHTML='';
-  const fila=26, izq=54, der=96, top=44, alto=filas.length*fila;
+  const fila=26, izq=72, der=96, top=44, alto=filas.length*fila;
   const W=Math.max(760,cont.clientWidth), ancho=W-izq-der;
   const x0=Math.floor(o.r/10)*10-10, x1=Math.ceil(Math.max(o.d,o.c)/10)*10+20;
   const x=h=>izq+(h-x0)/(x1-x0)*ancho;
@@ -217,10 +222,11 @@ function dibujarRuta(){
   ejeTiempo(svg,x,x0,x1,top,alto,izq,ancho);
   const yDe=Object.fromEntries(filas.map((k,n)=>[k,top+n*fila+fila/2]));
   grupos.forEach((g,k)=>{const y0=top+g.desde*fila,y1=top+(g.hasta+1)*fila;
-    if(k) el('line',{x1:izq-50,x2:izq+ancho,y1:y0,y2:y0,stroke:css('--ink-2'),'stroke-width':1},svg);
+    if(k) el('line',{x1:izq-46,x2:izq+ancho,y1:y0,y2:y0,stroke:css('--ink-2'),'stroke-width':1},svg);
     const t=el('text',{x:izq+ancho+10,y:(y0+y1)/2-3,'font-size':11.5,fill:css('--ink-2')},svg);
     t.innerHTML=`<tspan x="${izq+ancho+10}">Etapa ${g.e.n}</tspan><tspan x="${izq+ancho+10}" dy="14">${g.e.nombre}</tspan>`});
   filas.forEach(k=>{el('text',{x:izq-8,y:yDe[k]+4,'text-anchor':'end','font-size':11.5,fill:css('--ink'),'font-family':'IBM Plex Mono, monospace'},svg).textContent=k.split('|')[1]});
+  ejeMaquina(svg,top,alto);
   const conectores=el('g',{},svg);
   const porB={}; ops.forEach(p=>{(porB[p.b] ??= {})[p.s]=p});
   for(let b=1;b<=B;b++)for(let s=1;s<4;s++){const a=porB[b][s],c=porB[b][s+1];
