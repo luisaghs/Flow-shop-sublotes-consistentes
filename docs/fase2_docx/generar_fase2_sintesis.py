@@ -382,8 +382,9 @@ def validacion():
               'terminar la etapa anterior, que ninguna máquina procese dos sublotes a la vez y que se incluya '
               'el alistamiento en troquelado cuando cambia la referencia. Como no reutiliza la lógica del '
               'decodificador, detectaría un error de este. Se aplicó a las programaciones de 200 cromosomas '
-              'aleatorios de la instancia real y de las seis reglas de despacho, y también a las soluciones '
-              'del modelo exacto de la validación: en ningún caso se encontraron violaciones.'),
+              'aleatorios de la instancia real, a las de las reglas FIFO y EDD con las órdenes completas y '
+              'divididas en 10 sublotes, y a las soluciones del modelo exacto de la validación: en ningún caso '
+              'se encontraron violaciones.'),
 
         ('h4', 'Validación con instancias reducidas'),
         ('p', 'Evaluar la calidad de las soluciones del algoritmo genético requiere compararlas con la '
@@ -415,7 +416,8 @@ def validacion():
          ['Instancia'] + js_val + ['Sublotes por orden', 'Sublotes totales'], filas_dis,
          {'etiqueta': 'inst', 'anchos': [1300] + [800] * len(js_val) + [2038, 1500],
           'alineacion': ['c'] * (3 + len(js_val))}),
-        ('p', '**Procedimiento.** Cada instancia se resolvió de forma exacta con el solver HiGHS. Como el '
+        ('p', '**Procedimiento.** Cada instancia se resolvió de forma exacta con el solver HiGHS (Huangfu y Hall, '
+              '2018), un programa libre de optimización. Como el '
               'objetivo es lexicográfico, se resolvió en dos fases: primero se minimizó la tardanza total y '
               'luego el makespan, sin empeorar la tardanza, con un límite de 10 minutos por fase. Sobre las '
               'mismas instancias se corrió el algoritmo genético con los parámetros calibrados en la sección '
