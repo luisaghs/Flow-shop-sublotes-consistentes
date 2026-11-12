@@ -1,0 +1,279 @@
+<title>Programación propuesta HFS</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: encabezado con indicadores, pestañas de vista y un lienzo de Gantt a todo el ancho con su tabla debajo. */
+:root{
+  --bg:#f6f7f9; --panel:#ffffff; --ink:#1d232b; --ink-2:#55606e; --line:#d9dee5; --line-2:#eceff3;
+  --accent:#1f5f99; --accent-soft:#e3edf7; --ok:#1d7a4c;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-data:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12161b; --panel:#1a1f26; --ink:#e7eaee; --ink-2:#9aa4b1; --line:#2e3640; --line-2:#232a33;
+  --accent:#7fb2e5; --accent-soft:#1f2d3c; --ok:#5cc38f; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12161b; --panel:#1a1f26; --ink:#e7eaee; --ink-2:#9aa4b1; --line:#2e3640; --line-2:#232a33;
+  --accent:#7fb2e5; --accent-soft:#1f2d3c; --ok:#5cc38f; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+header{display:flex;flex-direction:column;gap:6px}
+.eyebrow{font-family:var(--f-data);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
+h1{font-size:clamp(22px,3vw,30px);font-weight:600;margin:0;text-wrap:balance;letter-spacing:-.01em}
+.sub{color:var(--ink-2);margin:0;max-width:70ch}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:6px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.stat b{font-family:var(--f-data);font-size:20px;font-weight:500;font-variant-numeric:tabular-nums}
+.stat span{font-size:12px;color:var(--ink-2)}
+.stat.ok b{color:var(--ok)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.tab{appearance:none;border:0;background:none;color:var(--ink-2);font:inherit;font-weight:500;padding:10px 14px;cursor:pointer;
+  border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tab:focus-visible,.seg button:focus-visible,.chip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.controls{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center}
+.label{font-size:12px;color:var(--ink-2);text-transform:uppercase;letter-spacing:.06em;font-family:var(--f-data)}
+.seg{display:flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{appearance:none;border:0;background:var(--panel);color:var(--ink);font:inherit;font-size:14px;padding:6px 12px;cursor:pointer;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{appearance:none;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:inherit;font-size:13px;
+  padding:4px 9px 4px 7px;border-radius:999px;display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+.chip i{width:11px;height:11px;border-radius:3px;display:inline-block}
+.chip[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.chip.static{cursor:default}
+.hint{font-size:13px;color:var(--ink-2);margin:0}
+.chart{overflow-x:auto;min-width:0}
+.chart svg{display:block}
+.facts{display:flex;flex-wrap:wrap;gap:8px}
+.fact{font-size:13px;border:1px solid var(--line);border-radius:6px;padding:5px 10px;display:inline-flex;gap:6px;align-items:center}
+.fact b{font-family:var(--f-data);font-weight:500;font-variant-numeric:tabular-nums}
+.fact svg{flex:none}
+.tablewrap{overflow-x:auto;min-width:0}
+table{border-collapse:collapse;width:100%;font-size:13px;min-width:720px}
+th,td{padding:6px 8px;border-bottom:1px solid var(--line-2);text-align:left;white-space:nowrap}
+th{font-weight:600;color:var(--ink-2);font-size:12px;border-bottom:1px solid var(--line)}
+td.num{font-family:var(--f-data);font-variant-numeric:tabular-nums}
+tr.hl td{background:var(--accent-soft)}
+.tip{position:fixed;z-index:20;pointer-events:none;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:6px;
+  box-shadow:0 6px 18px rgba(0,0,0,.18);padding:8px 10px;font-size:13px;line-height:1.45;max-width:260px}
+.tip strong{display:block}
+.tip .m{font-family:var(--f-data);font-variant-numeric:tabular-nums}
+footer{font-size:12px;color:var(--ink-2)}
+svg text{font-family:var(--f-body)}
+@media (prefers-reduced-motion:no-preference){.bar{transition:opacity .15s}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Flow Shop híbrido · 4 etapas · 36 máquinas</div>
+    <h1>Programación propuesta de las 10 órdenes</h1>
+    <p class="sub">Mejor solución del algoritmo genético (semilla 1203, 10 sublotes por orden). Tiempos en horas laborables desde el inicio del horizonte, el 4 de mayo de 2026.</p>
+    <div class="stats" id="stats"></div>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" id="tab-etapa" aria-selected="true" aria-controls="vista-etapa">Gantt por etapa</button>
+    <button class="tab" role="tab" id="tab-ruta" aria-selected="false" aria-controls="vista-ruta">Ruta de una orden</button>
+  </div>
+
+  <section class="panel" id="vista-etapa" role="tabpanel" aria-labelledby="tab-etapa">
+    <div class="controls">
+      <span class="label">Etapa</span>
+      <div class="seg" id="seg-etapa"></div>
+    </div>
+    <div class="controls">
+      <span class="label">Resaltar orden</span>
+      <div class="chips" id="chips-etapa"></div>
+    </div>
+    <p class="hint">Cada barra es un sublote (J04-3 es el sublote 3 de J04). Pasa el cursor o toca una barra para ver el detalle; los triángulos marcan los alistamientos de troquelado (4,98 min).</p>
+    <div class="chart" id="chart-etapa"></div>
+  </section>
+
+  <section class="panel" id="vista-ruta" role="tabpanel" aria-labelledby="tab-ruta" hidden>
+    <div class="controls">
+      <span class="label">Orden</span>
+      <div class="chips" id="chips-ruta"></div>
+    </div>
+    <div class="facts" id="facts-ruta"></div>
+    <p class="hint">Las máquinas que procesan la orden están agrupadas por etapa. Pasa el cursor sobre un sublote para seguir su recorrido; las líneas punteadas unen el fin de una etapa con el inicio de la siguiente.</p>
+    <div class="chart" id="chart-ruta"></div>
+    <div class="tablewrap"><table id="tabla-ruta"></table></div>
+  </section>
+
+  <footer>Datos: programación obtenida con final_sc_hfsagls_S2_4.py a partir de BD_HFS.xlsx y de la mejor solución guardada (fase2/salida_solucion/mejor_solucion.json).</footer>
+</div>
+<div class="tip" id="tip" hidden></div>
+
+<script>
+const DATA = {"ordenes":[{"id":"J01","ref":"C01","q":580,"r":0.0,"d":504.0,"c":487.952},{"id":"J02","ref":"C01","q":624,"r":0.0,"d":462.0,"c":420.287},{"id":"J03","ref":"C03","q":630,"r":15.0,"d":388.0,"c":282.363},{"id":"J04","ref":"V01","q":660,"r":42.0,"d":458.0,"c":345.287},{"id":"J05","ref":"C02","q":426,"r":57.0,"d":500.0,"c":457.824},{"id":"J06","ref":"C01","q":768,"r":57.0,"d":611.0,"c":571.962},{"id":"J07","ref":"V03","q":336,"r":72.0,"d":338.0,"c":284.822},{"id":"J08","ref":"C02","q":486,"r":84.0,"d":492.0,"c":472.403},{"id":"J09","ref":"C04","q":210,"r":99.0,"d":365.0,"c":327.463},{"id":"J10","ref":"V02","q":522,"r":119.0,"d":580.0,"c":531.832}],"etapas":[{"n":1,"nombre":"Troquelado","maquinas":["M1","M2","M3","M4"]},{"n":2,"nombre":"Ensamble","maquinas":["M5","M6","M7","M8","M9","M10","M11","M12","M13","M14","M15","M16","M17","M18","M19"]},{"n":3,"nombre":"Costura","maquinas":["M20","M21","M22","M23","M24","M25","M26","M27","M28"]},{"n":4,"nombre":"Volteado","maquinas":["M29","M30","M31","M32","M33","M34","M35","M36"]}],"ops":[["J03",4,1,"M1",15.0,43.297,76,0.0],["J03",8,1,"M2",15.0,39.946,67,0.0],["J04",10,1,"M2",42.0,77.988,107,0.0],["J02",4,1,"M3",0.083,34.115,96,0.083],["J02",2,1,"M4",0.083,38.369,108,0.083],["J03",9,1,"M3",34.198,63.24,78,19.198],["J03",7,1,"M4",38.452,67.494,78,23.452],["J03",3,1,"M1",43.297,71.595,76,28.297],["J03",2,1,"M3",63.24,83.346,54,48.24],["J07",3,1,"M1",72.0,98.755,79,0.0],["J04",1,1,"M4",67.577,99.529,95,25.577],["J04",4,1,"M2",77.988,109.603,94,35.988],["J01",3,1,"M3",83.429,125.26,118,83.429],["J07",4,1,"M1",98.755,108.576,29,26.755],["J09",6,1,"M4",99.612,106.247,17,0.612],["J09",1,1,"M4",106.247,112.493,16,7.247],["J07",6,1,"M1",108.576,117.043,25,36.576],["J03",1,1,"M2",109.686,135.749,70,94.686],["J03",5,1,"M4",112.576,139.011,71,97.576],["J09",8,1,"M1",117.126,122.2,13,18.126],["J04",8,1,"M1",122.283,140.109,53,80.283],["J07",7,1,"M3",125.343,132.794,22,53.343],["J09",2,1,"M3",132.877,142.245,24,33.877],["J01",10,1,"M2",135.832,162.065,74,135.832],["J02",5,1,"M4",139.094,161.782,64,139.094],["J09",5,1,"M1",140.192,149.95,25,41.192],["J04",3,1,"M3",142.328,171.925,88,100.328],["J07",2,1,"M1",150.033,155.452,16,78.033],["J09",3,1,"M1",155.535,163.732,21,56.535],["J07",8,1,"M4",161.865,175.751,41,89.865],["J07",5,1,"M2",162.148,181.452,57,90.148],["J09",4,1,"M1",163.732,172.319,22,64.732],["J04",7,1,"M3",171.925,184.706,38,129.925],["J06",10,1,"M1",172.402,213.878,117,115.402],["J02",3,1,"M4",175.834,197.813,62,175.834],["J07",10,1,"M2",181.452,193.306,35,109.452],["J09",7,1,"M3",184.789,194.937,26,85.789],["J03",10,1,"M2",193.389,207.537,38,178.389],["J09",9,1,"M3",194.937,203.915,23,95.937],["J09",10,1,"M4",197.896,206.873,23,98.896],["J02",1,1,"M3",203.998,226.331,63,203.998],["J04",9,1,"M4",206.956,225.118,54,164.956],["J04",5,1,"M2",207.62,223.428,47,165.62],["J07",1,1,"M1",213.961,219.041,15,141.961],["J04",6,1,"M1",219.124,235.605,49,177.124],["J02",10,1,"M2",223.511,235.209,33,223.511],["J03",6,1,"M4",225.201,233.393,22,210.201],["J02",6,1,"M3",226.331,250.437,68,226.331],["J07",9,1,"M4",233.476,239.233,17,161.476],["J08",6,1,"M2",235.292,253.372,51,151.292],["J01",7,1,"M1",235.688,256.249,58,235.688],["J02",7,1,"M4",239.316,262.358,65,239.316],["J04",2,1,"M3",250.52,262.292,35,208.52],["J05",7,1,"M2",253.372,278.541,71,196.372],["J05",3,1,"M1",256.332,278.665,63,199.332],["J01",6,1,"M4",262.358,290.01,78,262.358],["J10",6,1,"M3",262.375,296.345,101,143.375],["J08",5,1,"M2",278.541,303.002,69,194.541],["J08",10,1,"M1",278.665,294.618,45,194.665],["J08",4,1,"M4",290.093,301.791,33,206.093],["J05",4,1,"M1",294.618,312.697,51,237.618],["J08",7,1,"M3",296.428,316.634,57,212.428],["J08",9,1,"M4",301.791,321.289,55,217.791],["J08",8,1,"M2",303.002,319.663,47,219.002],["J08",3,1,"M1",312.697,331.131,52,228.697],["J02",8,1,"M3",316.717,325.58,25,316.717],["J05",6,1,"M2",319.663,332.425,36,262.663],["J08",2,1,"M4",321.289,334.76,38,237.289],["J05",8,1,"M3",325.663,338.07,35,268.663],["J05",10,1,"M1",331.131,345.666,41,274.131],["J10",4,1,"M2",332.509,353.025,61,213.509],["J06",8,1,"M4",334.843,373.838,110,277.843],["J02",9,1,"M3",338.153,352.333,40,338.153],["J08",1,1,"M1",345.666,359.491,39,261.666],["J01",1,1,"M3",352.333,364.386,34,352.333],["J06",4,1,"M2",353.108,390.685,106,296.108],["J05",2,1,"M1",359.491,375.798,46,302.491],["J01",2,1,"M3",364.386,385.302,59,364.386],["J05",1,1,"M4",373.921,387.392,38,316.921],["J05",5,1,"M1",375.798,383.952,23,318.798],["J01",8,1,"M1",384.035,395.733,33,384.035],["J01",4,1,"M3",385.302,402.318,48,385.302],["J05",9,1,"M4",387.392,395.191,22,330.392],["J01",5,1,"M2",390.685,405.219,41,390.685],["J01",9,1,"M4",395.274,408.39,37,395.274],["J10",1,1,"M1",395.816,411.624,47,276.816],["J10",2,1,"M3",402.401,411.482,27,283.401],["J06",1,1,"M2",405.219,430.743,72,348.219],["J10",3,1,"M4",408.473,428.317,59,289.473],["J10",5,1,"M3",411.482,429.644,54,292.482],["J10",7,1,"M1",411.624,423.059,34,292.624],["J10",8,1,"M1",423.059,437.858,44,304.059],["J10",9,1,"M4",428.317,444.124,47,309.317],["J10",10,1,"M3",429.644,445.788,48,310.644],["J06",2,1,"M2",430.743,454.14,66,373.743],["J06",3,1,"M1",437.941,460.984,65,380.941],["J06",5,1,"M4",444.207,465.832,61,387.207],["J06",6,1,"M3",445.871,467.141,60,388.871],["J06",7,1,"M2",454.14,474.347,57,397.14],["J06",9,1,"M1",460.984,480.127,54,403.984],["J06",3,2,"M16",460.984,513.839,65,0.0],["J06",4,2,"M17",390.685,476.881,106,0.0],["J05",4,2,"M16",312.697,354.33,51,0.0],["J02",9,2,"M17",352.333,384.86,40,0.0],["J05",7,2,"M17",278.541,336.501,71,0.0],["J01",5,2,"M16",405.219,438.559,41,0.0],["J05",3,2,"M18",278.665,330.094,63,0.0],["J09",6,2,"M16",106.247,120.87,17,0.0],["J08",1,2,"M16",359.491,391.328,39,0.0],["J02",6,2,"M16",250.437,305.733,68,0.0],["J08",10,2,"M19",294.618,331.353,45,0.0],["J04",10,2,"M17",77.988,161.715,107,0.0],["J01",9,2,"M18",408.39,438.477,37,0.0],["J02",4,2,"M18",34.115,112.179,96,0.0],["J06",6,2,"M18",467.141,515.931,60,0.0],["J09",4,2,"M16",172.319,191.243,22,0.0],["J01",10,2,"M17",162.065,222.24,74,0.0],["J09",1,2,"M18",112.493,126.255,16,0.0],["J09",3,2,"M18",163.732,181.795,21,0.0],["J07",8,2,"M19",175.751,209.473,41,0.0],["J09",8,2,"M16",122.2,133.382,13,0.0],["J08",5,2,"M12",303.002,362.17,69,0.0],["J08",7,2,"M13",316.634,365.512,57,0.0],["J07",4,2,"M19",108.576,132.428,29,0.0],["J10",1,2,"M19",411.624,449.389,47,0.0],["J09",2,2,"M16",142.245,162.889,24,0.0],["J04",2,2,"M19",262.292,289.68,35,0.0],["J10",7,2,"M12",423.059,451.761,34,0.0],["J08",4,2,"M14",301.791,330.089,33,0.0],["J05",9,2,"M12",395.191,414.056,22,0.0],["J03",4,2,"M16",43.297,106.048,76,0.0],["J02",8,2,"M15",325.58,346.934,25,0.0],["J10",8,2,"M13",437.858,475.001,44,0.0],["J01",7,2,"M13",256.249,305.791,58,0.0],["J03",7,2,"M12",67.494,135.146,78,0.0],["J09",7,2,"M16",194.937,217.302,26,0.0],["J08",9,2,"M5",321.289,370.202,55,0.0],["J09",9,2,"M18",203.915,223.699,23,0.0],["J07",2,2,"M19",155.452,168.612,16,0.0],["J07",10,2,"M12",193.306,223.546,35,0.0],["J06",7,2,"M19",474.347,520.697,57,0.0],["J03",1,2,"M13",135.749,196.463,70,0.0],["J03",6,2,"M17",233.393,251.557,22,0.0],["J03",3,2,"M14",71.595,137.512,76,0.0],["J05",6,2,"M18",332.425,361.813,36,0.0],["J08",8,2,"M6",319.663,361.462,47,0.0],["J02",10,2,"M18",235.209,262.044,33,0.0],["J06",1,2,"M14",430.743,492.243,72,0.0],["J04",4,2,"M15",109.603,186.871,94,0.0],["J01",3,2,"M5",125.26,229.729,118,0.0],["J06",9,2,"M17",480.127,524.038,54,0.0],["J03",2,2,"M13",83.346,130.182,54,0.0],["J08",2,2,"M19",334.76,365.78,38,0.0],["J10",5,2,"M15",429.644,475.229,54,0.0],["J01",2,2,"M13",385.302,435.698,59,0.0],["J06",5,2,"M12",465.832,517.936,61,0.0],["J04",8,2,"M12",140.109,183.675,53,0.0],["J10",6,2,"M7",296.345,385.511,101,0.0],["J09",10,2,"M13",206.873,227.658,23,0.0],["J01",1,2,"M18",364.386,392.034,34,0.0],["J07",9,2,"M19",239.233,253.215,17,0.0],["J02",1,2,"M12",226.331,280.144,63,0.0],["J10",4,2,"M14",353.025,404.519,61,0.0],["J07",3,2,"M6",98.755,170.144,79,0.0],["J04",5,2,"M14",223.428,262.062,47,0.0],["J05",1,2,"M15",387.392,419.977,38,0.0],["J07",7,2,"M18",132.794,150.889,22,0.0],["J06",10,2,"M15",213.878,313.816,117,0.0],["J02",2,2,"M7",38.369,133.985,108,0.0],["J01",8,2,"M5",395.733,424.949,33,0.0],["J05",2,2,"M6",375.798,416.708,46,0.0],["J07",6,2,"M8",117.043,139.634,25,0.0],["J03",9,2,"M9",63.24,133.999,78,0.0],["J01",6,2,"M8",290.01,359.065,78,0.0],["J03",5,2,"M14",139.011,200.592,71,0.0],["J04",9,2,"M6",225.118,271.54,54,0.0],["J02",7,2,"M5",262.358,319.905,65,0.0],["J05",5,2,"M19",383.952,402.728,23,0.0],["J05",10,2,"M15",346.934,382.092,41,1.268],["J07",1,2,"M16",219.041,231.379,15,0.0],["J02",5,2,"M7",161.782,218.444,64,0.0],["J04",7,2,"M6",184.706,217.373,38,0.0],["J10",3,2,"M5",428.317,480.404,59,0.0],["J10",10,2,"M6",445.788,488.164,48,0.0],["J10",9,2,"M7",444.124,485.618,47,0.0],["J08",3,2,"M9",331.131,377.377,52,0.0],["J04",3,2,"M8",171.925,247.576,88,0.0],["J08",6,2,"M9",253.372,298.728,51,0.0],["J05",8,2,"M10",338.07,369.197,35,0.0],["J10",2,2,"M7",411.482,435.318,27,0.0],["J04",6,2,"M7",235.605,277.728,49,0.0],["J06",8,2,"M8",373.838,471.224,110,0.0],["J03",8,2,"M19",39.946,95.266,67,0.0],["J06",2,2,"M9",454.14,512.572,66,0.0],["J09",5,2,"M9",149.95,173.579,25,0.0],["J07",5,2,"M9",181.452,232.961,57,0.0],["J02",3,2,"M10",197.813,252.703,62,0.0],["J03",10,2,"M11",207.537,242.01,38,0.0],["J01",4,2,"M9",402.318,444.814,48,0.0],["J04",1,2,"M10",99.529,181.197,95,0.0],["J08",8,3,"M20",361.462,391.668,47,0.0],["J01",5,3,"M20",438.559,464.574,41,0.0],["J01",2,3,"M21",435.698,473.133,59,0.0],["J03",1,3,"M20",196.463,241.904,70,0.0],["J02",3,3,"M20",252.703,292.042,62,0.0],["J02",10,3,"M21",262.044,282.982,33,0.0],["J02",6,3,"M20",305.733,348.879,68,0.0],["J02",2,3,"M21",133.985,202.511,108,0.0],["J05",4,3,"M21",354.33,387.106,51,0.0],["J10",6,3,"M22",385.511,448.181,101,0.0],["J03",9,3,"M20",133.999,184.634,78,0.0],["J07",5,3,"M22",232.961,270.41,57,0.0],["J07",7,3,"M22",150.889,165.343,22,0.0],["J03",3,3,"M23",137.512,186.849,76,0.0],["J07",3,3,"M22",170.144,222.047,79,0.0],["J04",3,3,"M23",247.576,301.652,88,0.0],["J08",9,3,"M23",370.202,405.549,55,0.0],["J07",8,3,"M21",209.473,236.41,41,0.0],["J03",7,3,"M24",135.146,185.781,78,0.0],["J02",7,3,"M22",319.905,361.148,65,0.0],["J04",4,3,"M23",186.871,244.634,94,0.0],["J09",1,3,"M22",126.255,137.386,16,0.0],["J03",5,3,"M24",200.592,246.683,71,0.0],["J06",1,3,"M20",492.243,537.927,72,0.0],["J01",9,3,"M23",438.477,461.954,37,0.0],["J06",3,3,"M21",513.839,555.082,65,0.0],["J07",9,3,"M24",253.215,264.384,17,0.0],["J07",4,3,"M25",132.428,151.481,29,0.0],["J04",10,3,"M25",161.715,227.467,107,0.0],["J09",7,3,"M26",217.302,235.389,26,0.0],["J03",4,3,"M26",106.048,155.385,76,0.0],["J04",1,3,"M27",181.197,239.574,95,0.0],["J07",10,3,"M28",223.546,246.541,35,0.0],["J05",3,3,"M24",330.094,370.582,63,0.0],["J01",4,3,"M24",444.814,475.27,48,0.0],["J03",8,3,"M27",95.266,138.76,67,0.0],["J05",7,3,"M25",336.501,382.13,71,0.0],["J01",3,3,"M25",229.729,304.6,118,0.0],["J10",1,3,"M22",449.389,478.552,47,0.0],["J03",10,3,"M26",242.01,266.678,38,0.0],["J05",8,3,"M26",369.197,391.69,35,0.0],["J01",10,3,"M27",239.574,286.527,74,17.335],["J04",2,3,"M21",289.68,311.187,35,0.0],["J05",6,3,"M22",361.813,384.95,36,0.0],["J02",8,3,"M23",346.934,362.797,25,0.0],["J05",2,3,"M25",416.708,446.27,46,0.0],["J09",10,3,"M21",236.41,252.41,23,8.752],["J06",7,3,"M22",520.697,556.864,57,0.0],["J08",4,3,"M21",330.089,351.297,33,0.0],["J09",4,3,"M26",191.243,206.547,22,0.0],["J02",9,3,"M24",384.86,410.24,40,0.0],["J06",2,3,"M23",512.572,554.449,66,0.0],["J06",10,3,"M27",313.816,388.052,117,0.0],["J05",10,3,"M28",382.092,408.441,41,0.0],["J06",4,3,"M24",476.881,544.138,106,0.0],["J09",9,3,"M28",246.541,262.541,23,22.842],["J04",6,3,"M22",277.728,307.839,49,0.0],["J04",8,3,"M28",183.675,216.243,53,0.0],["J06",5,3,"M25",517.936,556.641,61,0.0],["J10",3,3,"M22",480.404,517.013,59,0.0],["J08",10,3,"M26",331.353,360.273,45,0.0],["J04",9,3,"M24",271.54,304.723,54,0.0],["J06",6,3,"M26",515.931,554.001,60,0.0],["J10",8,3,"M21",475.001,502.303,44,0.0],["J10",5,3,"M23",475.229,508.736,54,0.0],["J01",7,3,"M23",305.791,342.591,58,0.0],["J06",9,3,"M27",524.038,558.301,54,0.0],["J03",6,3,"M28",262.541,276.823,22,10.984],["J02",5,3,"M26",266.678,307.286,64,48.234],["J10",10,3,"M27",488.164,517.948,48,0.0],["J01",6,3,"M27",388.052,437.543,78,28.987],["J02",4,3,"M28",112.179,173.091,96,0.0],["J05",1,3,"M24",419.977,444.398,38,0.0],["J09",6,3,"M20",120.87,132.696,17,0.0],["J05",5,3,"M20",402.728,417.509,23,0.0],["J02",1,3,"M28",280.144,320.117,63,0.0],["J09",8,3,"M22",137.386,146.43,13,4.004],["J04",5,3,"M25",304.6,333.482,47,42.538],["J08",7,3,"M21",387.106,423.738,57,21.594],["J08",5,3,"M26",391.69,436.034,69,29.521],["J03",2,3,"M27",138.76,173.815,54,8.578],["J08",3,3,"M25",382.13,415.549,52,4.754],["J09",5,3,"M26",173.579,190.971,25,0.0],["J04",7,3,"M27",286.527,309.878,38,69.154],["J08",2,3,"M23",405.549,429.97,38,39.768],["J10",9,3,"M25",485.618,514.781,47,0.0],["J09",2,3,"M24",304.723,321.419,24,141.835],["J07",1,3,"M20",241.904,251.759,15,10.525],["J05",9,3,"M28",414.056,428.194,22,0.0],["J07",6,3,"M26",155.385,171.81,25,15.75],["J01",8,3,"M28",428.194,449.133,33,3.245],["J08",6,3,"M28",320.117,352.893,51,21.389],["J10",2,3,"M26",436.034,452.788,27,0.716],["J08",1,3,"M27",437.543,462.607,39,46.215],["J10",4,3,"M25",446.27,484.121,61,41.751],["J01",1,3,"M28",449.133,470.706,34,57.099],["J09",3,3,"M24",185.781,200.39,21,3.986],["J07",2,3,"M28",173.091,183.603,16,4.479],["J10",7,3,"M26",452.788,473.885,34,1.027],["J06",8,3,"M28",471.224,541.019,110,0.0],["J08",4,4,"M29",351.297,359.585,33,0.0],["J10",5,4,"M29",508.736,522.299,54,0.0],["J08",10,4,"M29",360.273,371.575,45,0.0],["J06",4,4,"M29",544.138,570.761,106,0.0],["J05",5,4,"M29",417.509,423.286,23,0.0],["J03",4,4,"M29",155.385,174.524,76,0.0],["J08",5,4,"M29",436.034,453.365,69,0.0],["J09",7,4,"M29",235.389,241.937,26,0.0],["J05",6,4,"M29",384.95,393.991,36,0.0],["J07",5,4,"M29",270.41,284.822,57,0.0],["J02",6,4,"M30",348.879,365.958,68,0.0],["J04",5,4,"M29",333.482,345.287,47,0.0],["J08",7,4,"M30",423.738,438.055,57,0.0],["J06",1,4,"M30",537.927,556.011,72,0.0],["J05",8,4,"M30",391.69,400.481,35,0.0],["J10",3,4,"M30",517.013,531.832,59,0.0],["J07",7,4,"M30",165.343,170.905,22,0.0],["J02",4,4,"M30",173.091,197.203,96,0.0],["J07",6,4,"M31",171.81,178.131,25,0.0],["J01",1,4,"M29",470.706,479.245,34,0.0],["J03",9,4,"M29",184.634,204.277,78,0.0],["J04",3,4,"M29",301.652,323.754,88,0.0],["J08",2,4,"M31",429.97,439.514,38,0.0],["J05",4,4,"M31",387.106,399.916,51,0.0],["J01",8,4,"M30",449.133,457.421,33,0.0],["J04",6,4,"M30",307.839,320.146,49,0.0],["J01",7,4,"M31",342.591,357.159,58,0.0],["J01",6,4,"M32",437.543,457.134,78,0.0],["J09",1,4,"M29",137.386,141.415,16,0.0],["J04",8,4,"M29",216.243,229.555,53,0.0],["J09",10,4,"M29",252.41,258.203,23,0.0],["J03",6,4,"M30",276.823,282.363,22,0.0],["J02",2,4,"M30",202.511,229.637,108,0.0],["J02",7,4,"M31",361.148,377.474,65,0.0],["J09",9,4,"M29",262.541,268.333,23,0.0],["J10",10,4,"M31",517.948,530.004,48,0.0],["J07",1,4,"M30",251.759,255.552,15,0.0],["J07",10,4,"M31",246.541,255.39,35,0.0],["J02",1,4,"M31",320.117,335.941,63,0.0],["J07",9,4,"M30",264.384,268.683,17,0.0],["J04",7,4,"M31",309.878,319.423,38,0.0],["J02",10,4,"M30",282.982,291.271,33,0.0],["J02",5,4,"M32",307.286,323.361,64,0.0],["J10",9,4,"M32",514.781,526.586,47,0.0],["J06",6,4,"M31",554.001,569.071,60,0.0],["J06",9,4,"M30",558.301,571.864,54,0.0],["J03",8,4,"M30",138.76,155.633,67,0.0],["J06",2,4,"M32",554.449,571.026,66,0.0],["J06",10,4,"M32",388.052,417.439,117,0.0],["J09",5,4,"M31",190.971,197.267,25,0.0],["J08",1,4,"M30",462.607,472.403,39,0.0],["J01",3,4,"M33",304.6,334.238,118,0.0],["J04",2,4,"M34",311.187,319.978,35,0.0],["J02",3,4,"M30",292.042,307.615,62,0.0],["J10",4,4,"M29",484.121,499.442,61,0.0],["J07",2,4,"M31",183.603,187.648,16,0.0],["J04",1,4,"M32",239.574,263.435,95,0.0],["J02",9,4,"M30",410.24,420.287,40,0.0],["J09",8,4,"M29",146.43,149.703,13,0.0],["J04",9,4,"M35",304.723,318.286,54,0.0],["J06",3,4,"M33",555.082,571.408,65,0.0],["J09",4,4,"M29",206.547,212.088,22,0.0],["J10",7,4,"M30",473.885,482.425,34,0.0],["J09",6,4,"M29",132.696,136.978,17,0.0],["J03",7,4,"M32",185.781,205.424,78,0.0],["J03",5,4,"M33",246.683,264.563,71,0.0],["J03",1,4,"M34",241.904,259.533,70,0.0],["J08",6,4,"M32",352.893,365.703,51,0.0],["J05",9,4,"M29",428.194,433.72,22,0.0],["J01",9,4,"M31",461.954,471.247,37,0.0],["J10",1,4,"M31",478.552,490.357,47,0.0],["J06",5,4,"M34",556.641,571.962,61,0.0],["J05",3,4,"M30",370.582,386.406,63,0.0],["J04",4,4,"M35",244.634,268.244,94,0.0],["J10",6,4,"M33",448.181,473.549,101,0.0],["J04",10,4,"M36",227.467,254.341,107,0.0],["J10",8,4,"M30",502.303,513.355,44,0.0],["J09",2,4,"M30",321.419,327.463,24,0.0],["J06",8,4,"M35",541.019,568.648,110,0.0],["J05",7,4,"M33",382.13,399.963,71,0.0],["J03",3,4,"M33",186.849,205.988,76,0.0],["J01",4,4,"M32",475.27,487.326,48,0.0],["J03",10,4,"M31",266.678,276.248,38,0.0],["J05",10,4,"M31",408.441,418.739,41,0.0],["J07",3,4,"M31",222.047,242.021,79,0.0],["J07",8,4,"M30",236.41,246.776,41,0.0],["J07",4,4,"M31",151.481,158.814,29,0.0],["J05",2,4,"M31",446.27,457.824,46,0.0],["J08",3,4,"M33",415.549,428.61,52,0.0],["J08",9,4,"M34",405.549,419.363,55,0.0],["J05",1,4,"M34",444.398,453.942,38,0.0],["J01",2,4,"M34",473.133,487.952,59,0.0],["J09",3,4,"M31",200.39,205.679,21,0.0],["J01",10,4,"M31",286.527,305.114,74,0.0],["J01",5,4,"M32",464.574,474.872,41,0.0],["J10",2,4,"M35",452.788,459.569,27,0.0],["J03",2,4,"M34",173.815,187.414,54,0.0],["J08",8,4,"M34",391.668,403.472,47,0.0],["J02",8,4,"M33",362.797,369.076,25,0.0],["J06",7,4,"M36",556.864,571.18,57,0.0]],"alist":[["M1",0.0,0.083],["M2",0.0,0.083],["M2",39.946,40.029],["M3",0.0,0.083],["M4",0.0,0.083],["M3",34.115,34.198],["M4",38.369,38.452],["M1",71.595,71.678],["M4",67.494,67.577],["M3",83.346,83.429],["M4",99.529,99.612],["M2",109.603,109.686],["M4",112.493,112.576],["M1",117.043,117.126],["M1",122.2,122.283],["M3",125.26,125.343],["M3",132.794,132.877],["M2",135.749,135.832],["M4",139.011,139.094],["M1",140.109,140.192],["M3",142.245,142.328],["M1",149.95,150.033],["M1",155.452,155.535],["M4",161.782,161.865],["M2",162.065,162.148],["M1",172.319,172.402],["M4",175.751,175.834],["M3",184.706,184.789],["M2",193.306,193.389],["M4",197.813,197.896],["M3",203.915,203.998],["M4",206.873,206.956],["M2",207.537,207.62],["M1",213.878,213.961],["M1",219.041,219.124],["M2",223.428,223.511],["M4",225.118,225.201],["M4",233.393,233.476],["M2",235.209,235.292],["M1",235.605,235.688],["M4",239.233,239.316],["M3",250.437,250.52],["M1",256.249,256.332],["M3",262.292,262.375],["M4",290.01,290.093],["M3",296.345,296.428],["M3",316.634,316.717],["M3",325.58,325.663],["M2",332.425,332.509],["M4",334.76,334.843],["M3",338.07,338.153],["M2",353.025,353.108],["M4",373.838,373.921],["M1",383.952,384.035],["M4",395.191,395.274],["M1",395.733,395.816],["M3",402.318,402.401],["M4",408.39,408.473],["M1",437.858,437.941],["M4",444.124,444.207],["M3",445.788,445.871]],"semanas":[42.0,84.0,119.0,161.0,203.0,238.0,273.0,315.0,350.0,392.0,427.0,462.0,504.0,538.0,580.0,615.0,657.0,699.0,741.0,783.0,825.0,867.0,909.0,951.0],"cmax":571.962,"sumT":0.0,"tardias":0};
+const COLORES = ['#4E79A7','#F28E2B','#59A14F','#E15759','#B07AA1','#76B7B2','#EDC948','#FF9DA7','#9C755F','#BAB0AC'];
+const ord = Object.fromEntries(DATA.ordenes.map((o,k)=>[o.id,{...o,color:COLORES[k%COLORES.length]}]));
+const etapas = DATA.etapas;
+const nombreEtapa = Object.fromEntries(etapas.map(e=>[e.n,e.nombre]));
+const coma = (x,d=1)=>x.toFixed(d).replace('.',',');
+const miles = x=>Math.round(x).toLocaleString('es-CO');
+const css = n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const NS='http://www.w3.org/2000/svg';
+function el(tag,attrs={},parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e}
+function textoSobre(hex){const r=parseInt(hex.slice(1,3),16)/255,g=parseInt(hex.slice(3,5),16)/255,b=parseInt(hex.slice(5,7),16)/255;return (0.299*r+0.587*g+0.114*b)<0.6?'#ffffff':'#1d232b'}
+const opsPor = {};
+for(const [j,b,s,m,i,f,q,w] of DATA.ops){(opsPor[j] ??= []).push({j,b,s,m,i,f,q,w})}
+
+// ---------- indicadores
+const tAl = DATA.alist.reduce((a,x)=>a+(x[2]-x[1]),0);
+document.getElementById('stats').innerHTML = [
+  ['ok',coma(DATA.sumT)+' h','Tardanza total'],
+  ['ok',DATA.tardias+' de '+DATA.ordenes.length,'Órdenes tardías'],
+  ['',coma(DATA.cmax)+' h','Makespan'],
+  ['',DATA.ops.length/4+' sublotes','En 4 etapas'],
+  ['',DATA.alist.length+' ('+coma(tAl)+' h)','Alistamientos en troquelado'],
+].map(([c,v,t])=>`<div class="stat ${c}"><b>${v}</b><span>${t}</span></div>`).join('');
+
+// ---------- tooltip
+const tip=document.getElementById('tip');
+function mostrarTip(ev,html){tip.innerHTML=html;tip.hidden=false;const p=ev.touches?ev.touches[0]:ev;
+  const w=tip.offsetWidth,h=tip.offsetHeight;let x=p.clientX+14,y=p.clientY+14;
+  if(x+w>innerWidth-8)x=p.clientX-w-14; if(y+h>innerHeight-8)y=p.clientY-h-14; tip.style.left=Math.max(8,x)+'px';tip.style.top=Math.max(8,y)+'px'}
+function ocultarTip(){tip.hidden=true}
+function htmlOp(o){return `<strong>${o.j}-${o.b} · ${ord[o.j].ref}</strong>Sublote ${o.b} de ${o.j}, ${o.q} docenas<br>${nombreEtapa[o.s]} · máquina ${o.m}<br>
+  <span class="m">Inicio ${coma(o.i)} h · Fin ${coma(o.f)} h</span><br><span class="m">Duración ${coma(o.f-o.i)} h · Espera previa ${coma(Math.max(0,o.w))} h</span>`}
+
+// ---------- ejes comunes
+function ejeTiempo(svg,x,x0,x1,top,alto,izq,ancho){
+  const g=el('g',{},svg), lin=css('--line-2'), lin2=css('--line'), tinta=css('--ink-2');
+  for(let h=Math.ceil(x0/10)*10;h<=x1;h+=10){const mayor=h%50===0;
+    el('line',{x1:x(h),x2:x(h),y1:top,y2:top+alto,stroke:mayor?lin2:lin,'stroke-width':1},g);
+    if(mayor) el('text',{x:x(h),y:top+alto+16,'text-anchor':'middle','font-size':11,fill:tinta},g).textContent=h}
+  el('text',{x:izq+ancho/2,y:top+alto+31,'text-anchor':'middle','font-size':11,fill:tinta},g).textContent='Tiempo (horas laborables)';
+  const lim=[0,...DATA.semanas];
+  for(let k=0;k<lim.length-1;k++){const a=lim[k],b=lim[k+1],c=(a+b)/2;
+    if(b>x0 && b<x1) el('line',{x1:x(b),x2:x(b),y1:top,y2:top+alto,stroke:tinta,'stroke-width':.8,'stroke-dasharray':'2 3',opacity:.55},g);
+    if(c>=x0 && c<=x1) el('text',{x:x(c),y:top-8,'text-anchor':'middle','font-size':10.5,fill:tinta},g).textContent='S'+(k+1)}
+  el('text',{x:izq,y:top-24,'font-size':10.5,fill:tinta,'letter-spacing':'.06em'},g).textContent='SEMANA';
+}
+function barra(svg,o,x,y,alto,clase){
+  const g=el('g',{class:'bar '+clase,'data-j':o.j,'data-b':o.b},svg);
+  const w=Math.max(1.2,x(o.f)-x(o.i));
+  el('rect',{x:x(o.i),y:y-alto/2,width:w,height:alto,fill:ord[o.j].color,stroke:css('--panel'),'stroke-width':1,rx:1.5},g);
+  const t=`${o.j}-${o.b}`;
+  if(w>t.length*6.1+6){el('text',{x:x(o.i)+w/2,y:y+4,'text-anchor':'middle','font-size':10,'font-weight':600,fill:textoSobre(ord[o.j].color),'pointer-events':'none'},g).textContent=t}
+  const ver=ev=>mostrarTip(ev,htmlOp(o));
+  g.addEventListener('mousemove',ver); g.addEventListener('mouseleave',ocultarTip);
+  g.addEventListener('touchstart',ev=>{ver(ev)},{passive:true});
+  return g;
+}
+
+// ---------- vista por etapa
+let etapaSel=1, resaltada=null;
+function dibujarEtapa(){
+  const cont=document.getElementById('chart-etapa'); cont.innerHTML='';
+  const maqs=etapas.find(e=>e.n===etapaSel).maquinas;
+  const fila=28, izq=54, der=86, top=44, alto=maqs.length*fila;
+  const W=Math.max(760,cont.clientWidth), ancho=W-izq-der, x0=0, x1=620;
+  const x=h=>izq+(h-x0)/(x1-x0)*ancho;
+  const svg=el('svg',{width:W,height:top+alto+44,viewBox:`0 0 ${W} ${top+alto+44}`,role:'img','aria-label':`Gantt de ${nombreEtapa[etapaSel]}`},cont);
+  ejeTiempo(svg,x,x0,x1,top,alto,izq,ancho);
+  const yDe=Object.fromEntries(maqs.map((m,k)=>[m,top+k*fila+fila/2]));
+  maqs.forEach(m=>{el('text',{x:izq-8,y:yDe[m]+4,'text-anchor':'end','font-size':11.5,fill:css('--ink'),'font-family':'IBM Plex Mono, monospace'},svg).textContent=m});
+  const ops=DATA.ops.filter(o=>o[2]===etapaSel).map(([j,b,s,m,i,f,q,w])=>({j,b,s,m,i,f,q,w}));
+  for(const o of ops){const g=barra(svg,o,x,yDe[o.m],fila-8,'');if(resaltada&&o.j!==resaltada)g.style.opacity=.18}
+  if(etapaSel===1){for(const [m,a] of DATA.alist){const xx=x(a),yy=yDe[m]-fila/2+1;
+    el('path',{d:`M${xx-4} ${yy-1}L${xx+4} ${yy-1}L${xx} ${yy+5}Z`,fill:css('--ink'),opacity:resaltada?.35:1},svg)}}
+  const fin=Math.max(...ops.map(o=>o.f));
+  el('line',{x1:x(fin),x2:x(fin),y1:top,y2:top+alto,stroke:css('--ink'),'stroke-width':1.2,'stroke-dasharray':'5 3'},svg);
+  const tf=el('text',{x:x(fin)+6,y:top+13,'font-size':11,fill:css('--ink')},svg);
+  tf.innerHTML=`<tspan x="${x(fin)+6}">fin de la etapa</tspan><tspan x="${x(fin)+6}" dy="14">${coma(fin)} h</tspan>`;
+}
+document.getElementById('seg-etapa').innerHTML=etapas.map(e=>`<button type="button" data-e="${e.n}" aria-pressed="${e.n===1}">${e.n}. ${e.nombre} <span style="color:var(--ink-2)">(${e.maquinas.length})</span></button>`).join('');
+document.getElementById('seg-etapa').addEventListener('click',ev=>{const b=ev.target.closest('button');if(!b)return;etapaSel=+b.dataset.e;
+  location.hash='etapa-'+etapaSel; sincronizar()});
+document.getElementById('chips-etapa').innerHTML=DATA.ordenes.map(o=>`<button type="button" class="chip" data-j="${o.id}" aria-pressed="false"><i style="background:${ord[o.id].color}"></i>${o.id} <span style="color:var(--ink-2)">${o.ref}</span></button>`).join('');
+document.getElementById('chips-etapa').addEventListener('click',ev=>{const b=ev.target.closest('button');if(!b)return;
+  resaltada=resaltada===b.dataset.j?null:b.dataset.j;
+  document.querySelectorAll('#chips-etapa .chip').forEach(c=>c.setAttribute('aria-pressed',String(c.dataset.j===resaltada)));dibujarEtapa()});
+
+// ---------- vista de ruta
+let ordenSel='J07';
+function dibujarRuta(){
+  const o=ord[ordenSel], ops=opsPor[ordenSel], B=Math.max(...ops.map(p=>p.b));
+  const filas=[], grupos=[];
+  for(const e of etapas){const ms=[...new Set(ops.filter(p=>p.s===e.n).map(p=>p.m))].sort((a,b)=>+a.slice(1)-+b.slice(1));
+    grupos.push({e,desde:filas.length,hasta:filas.length+ms.length-1}); ms.forEach(m=>filas.push(e.n+'|'+m))}
+  const cont=document.getElementById('chart-ruta'); cont.innerHTML='';
+  const fila=26, izq=54, der=96, top=44, alto=filas.length*fila;
+  const W=Math.max(760,cont.clientWidth), ancho=W-izq-der;
+  const x0=Math.floor(o.r/10)*10-10, x1=Math.ceil(Math.max(o.d,o.c)/10)*10+20;
+  const x=h=>izq+(h-x0)/(x1-x0)*ancho;
+  const svg=el('svg',{width:W,height:top+alto+44,viewBox:`0 0 ${W} ${top+alto+44}`,role:'img','aria-label':`Ruta de la orden ${ordenSel}`},cont);
+  ejeTiempo(svg,x,x0,x1,top,alto,izq,ancho);
+  const yDe=Object.fromEntries(filas.map((k,n)=>[k,top+n*fila+fila/2]));
+  grupos.forEach((g,k)=>{const y0=top+g.desde*fila,y1=top+(g.hasta+1)*fila;
+    if(k) el('line',{x1:izq-50,x2:izq+ancho,y1:y0,y2:y0,stroke:css('--ink-2'),'stroke-width':1},svg);
+    const t=el('text',{x:izq+ancho+10,y:(y0+y1)/2-3,'font-size':11.5,fill:css('--ink-2')},svg);
+    t.innerHTML=`<tspan x="${izq+ancho+10}">Etapa ${g.e.n}</tspan><tspan x="${izq+ancho+10}" dy="14">${g.e.nombre}</tspan>`});
+  filas.forEach(k=>{el('text',{x:izq-8,y:yDe[k]+4,'text-anchor':'end','font-size':11.5,fill:css('--ink'),'font-family':'IBM Plex Mono, monospace'},svg).textContent=k.split('|')[1]});
+  const conectores=el('g',{},svg);
+  const porB={}; ops.forEach(p=>{(porB[p.b] ??= {})[p.s]=p});
+  for(let b=1;b<=B;b++)for(let s=1;s<4;s++){const a=porB[b][s],c=porB[b][s+1];
+    el('line',{x1:x(a.f),y1:yDe[s+'|'+a.m],x2:x(c.i),y2:yDe[(s+1)+'|'+c.m],stroke:css('--ink-2'),'stroke-width':1,'stroke-dasharray':'3 3',opacity:.45,'data-b':b,class:'con'},conectores)}
+  for(const p of ops){const g=barra(svg,p,x,yDe[p.s+'|'+p.m],fila-8,'ruta');
+    g.addEventListener('mouseenter',()=>resaltarSublote(p.b)); g.addEventListener('mouseleave',()=>resaltarSublote(null));
+    g.addEventListener('touchstart',()=>resaltarSublote(p.b),{passive:true})}
+  for(const [m,a] of DATA.alist){const p=ops.find(q=>q.s===1&&q.m===m&&a<=q.i+1e-6&&a>=q.i-0.2);
+    if(p){const xx=x(a),yy=yDe['1|'+m]-fila/2+1; el('path',{d:`M${xx-4} ${yy-1}L${xx+4} ${yy-1}L${xx} ${yy+5}Z`,fill:css('--ink')},svg)}}
+  const lineas=[[o.r,'2 3'],[o.c,'6 3'],[o.d,'']];
+  for(const [v,da] of lineas){el('line',{x1:x(v),x2:x(v),y1:top,y2:top+alto,stroke:css('--ink'),'stroke-width':1.3,'stroke-dasharray':da},svg)}
+  // datos de la orden
+  const sw=da=>`<svg width="22" height="10" aria-hidden="true"><line x1="0" x2="22" y1="5" y2="5" stroke="currentColor" stroke-width="1.5" stroke-dasharray="${da}"/></svg>`;
+  const holgura=o.d-o.c;
+  document.getElementById('facts-ruta').innerHTML=`
+    <span class="fact"><i style="width:11px;height:11px;border-radius:3px;background:${o.color};display:inline-block"></i>${o.id} · ${o.ref} · <b>${miles(o.q)}</b> docenas · <b>${B}</b> sublotes</span>
+    <span class="fact">${sw('2 3')} Liberación <b>${coma(o.r,0)} h</b></span>
+    <span class="fact">${sw('6 3')} Terminación <b>${coma(o.c)} h</b></span>
+    <span class="fact">${sw('')} Entrega <b>${coma(o.d,0)} h</b></span>
+    <span class="fact">${holgura>=0?'Termina <b>'+coma(holgura)+' h</b> antes de la entrega':'Tardanza <b>'+coma(-holgura)+' h</b>'}</span>`;
+  // tabla
+  let h=`<thead><tr><th>Sublote</th><th>Docenas</th>${etapas.map(e=>`<th colspan="2">${e.nombre}</th>`).join('')}</tr>
+    <tr><th></th><th></th>${etapas.map(()=>'<th>Máquina</th><th>Inicio – fin (h)</th>').join('')}</tr></thead><tbody>`;
+  for(let b=1;b<=B;b++){const r=porB[b];
+    h+=`<tr data-b="${b}"><td>${ordenSel}-${b}</td><td class="num">${r[1].q}</td>${[1,2,3,4].map(s=>`<td class="num">${r[s].m}</td><td class="num">${coma(r[s].i)} – ${coma(r[s].f)}</td>`).join('')}</tr>`}
+  document.getElementById('tabla-ruta').innerHTML=h+'</tbody>';
+}
+function resaltarSublote(b){
+  document.querySelectorAll('#chart-ruta .bar').forEach(g=>{g.style.opacity=(b===null||+g.dataset.b===b)?1:.2});
+  document.querySelectorAll('#chart-ruta .con').forEach(l=>{const on=b!==null&&+l.dataset.b===b;l.setAttribute('opacity',b===null?.45:(on?1:.08));l.setAttribute('stroke-width',on?1.6:1)});
+  document.querySelectorAll('#tabla-ruta tbody tr').forEach(r=>r.classList.toggle('hl',b!==null&&+r.dataset.b===b));
+}
+document.getElementById('chips-ruta').innerHTML=DATA.ordenes.map(o=>`<button type="button" class="chip" data-j="${o.id}" aria-pressed="${o.id===ordenSel}"><i style="background:${ord[o.id].color}"></i>${o.id}</button>`).join('');
+document.getElementById('chips-ruta').addEventListener('click',ev=>{const b=ev.target.closest('button');if(!b)return;ordenSel=b.dataset.j;
+  location.hash='ruta-'+ordenSel.toLowerCase(); sincronizar()});
+
+// ---------- navegación
+function sincronizar(){
+  const h=location.hash.slice(1); let vista='etapa';
+  let m=h.match(/^etapa-([1-4])$/); if(m){etapaSel=+m[1]}
+  m=h.match(/^ruta-(j\d\d)$/i); if(m && ord[m[1].toUpperCase()]){ordenSel=m[1].toUpperCase();vista='ruta'}
+  document.getElementById('tab-etapa').setAttribute('aria-selected',String(vista==='etapa'));
+  document.getElementById('tab-ruta').setAttribute('aria-selected',String(vista==='ruta'));
+  document.getElementById('vista-etapa').hidden=vista!=='etapa';
+  document.getElementById('vista-ruta').hidden=vista!=='ruta';
+  document.querySelectorAll('#seg-etapa button').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.e===etapaSel)));
+  document.querySelectorAll('#chips-ruta .chip').forEach(c=>c.setAttribute('aria-pressed',String(c.dataset.j===ordenSel)));
+  if(vista==='etapa')dibujarEtapa(); else dibujarRuta();
+}
+document.getElementById('tab-etapa').addEventListener('click',()=>{location.hash='etapa-'+etapaSel;sincronizar()});
+document.getElementById('tab-ruta').addEventListener('click',()=>{location.hash='ruta-'+ordenSel.toLowerCase();sincronizar()});
+addEventListener('hashchange',sincronizar);
+let rz; addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(sincronizar,150)});
+matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',sincronizar);
+new MutationObserver(sincronizar).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+document.addEventListener('touchstart',ev=>{if(!ev.target.closest('.bar')){ocultarTip();if(document.getElementById('chart-ruta').offsetParent)resaltarSublote(null)}},{passive:true});
+sincronizar();
+</script>
