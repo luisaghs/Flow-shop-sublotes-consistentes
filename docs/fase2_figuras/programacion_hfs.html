@@ -88,13 +88,13 @@ svg text{font-family:var(--f-body)}
       <span class="label">Etapa</span>
       <div class="seg" id="seg-etapa"></div>
     </div>
+    <div class="controls">
+      <span class="label">Resaltar orden</span>
+      <div class="chips" id="chips-etapa"></div>
+    </div>
     <p class="hint">Cada barra es un sublote (J04-3 es el sublote 3 de J04). Pasa el cursor o toca una barra para ver el detalle; los triángulos marcan los alistamientos de troquelado (4,98 min).</p>
     <div class="chart" id="chart-etapa"></div>
-    <div class="controls">
-      <span class="label">Órdenes</span>
-      <div class="chips" id="chips-etapa"></div>
-      <span class="hint">Haz clic en una orden para resaltarla en el Gantt.</span>
-    </div>
+    <div class="chips" id="leyenda-etapa" aria-label="Leyenda de órdenes"></div>
   </section>
 
   <section class="panel" id="vista-ruta" role="tabpanel" aria-labelledby="tab-ruta" hidden>
@@ -196,6 +196,7 @@ document.getElementById('seg-etapa').innerHTML=etapas.map(e=>`<button type="butt
 document.getElementById('seg-etapa').addEventListener('click',ev=>{const b=ev.target.closest('button');if(!b)return;etapaSel=+b.dataset.e;
   location.hash='etapa-'+etapaSel; sincronizar()});
 document.getElementById('chips-etapa').innerHTML=DATA.ordenes.map(o=>`<button type="button" class="chip" data-j="${o.id}" aria-pressed="false"><i style="background:${ord[o.id].color}"></i>${o.id} <span style="color:var(--ink-2)">${o.ref}</span></button>`).join('');
+document.getElementById('leyenda-etapa').innerHTML=DATA.ordenes.map(o=>`<span class="chip static"><i style="background:${ord[o.id].color}"></i>${o.id} <span style="color:var(--ink-2)">${o.ref}</span></span>`).join('');
 document.getElementById('chips-etapa').addEventListener('click',ev=>{const b=ev.target.closest('button');if(!b)return;
   resaltada=resaltada===b.dataset.j?null:b.dataset.j;
   document.querySelectorAll('#chips-etapa .chip').forEach(c=>c.setAttribute('aria-pressed',String(c.dataset.j===resaltada)));dibujarEtapa()});
