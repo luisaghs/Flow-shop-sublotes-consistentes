@@ -5,7 +5,7 @@ Figura de convergencia del algoritmo genético frente a la solución inicial EDD
   convergencia_edd.png : mejor tardanza total por generación en las 10 réplicas sembradas
                          con EDD y las 10 con población aleatoria (escala completa y detalle).
 
-Uso (desde la raíz del repositorio): python docs/fase2_figuras/convergencia_edd.py
+Uso (desde la carpeta principal del proyecto): python docs/fase2_figuras/convergencia_edd.py
 """
 import os
 import json

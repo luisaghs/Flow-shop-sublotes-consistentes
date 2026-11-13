@@ -4,7 +4,7 @@ Tardanza total y órdenes tardías de las reglas de despacho según el número d
 por orden (Tabla 9 del documento). Cada orden se divide en B sublotes iguales y se
 programa con el decodificador del modelo (sin algoritmo genético).
 
-Uso (desde la raíz del repositorio):
+Uso (desde la carpeta principal del proyecto):
   python fase2/reglas_por_sublotes.py [final_sc_hfsagls_S2_4.py] [BD_HFS.xlsx]
 Salida: fase2/salida_calibracion/reglas_por_sublotes.csv
 """

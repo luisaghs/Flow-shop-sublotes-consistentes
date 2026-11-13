@@ -8,7 +8,7 @@ Las figuras las dibuja el modelo (final_sc_hfsagls_S2_4.py, sección 13); este p
 solo carga la mejor solución guardada y las guarda sin título (el título va en la
 leyenda de la figura del documento).
 
-Uso (desde la raíz del repositorio): python docs/fase2_figuras/gantt_por_etapa.py [orden]
+Uso (desde la carpeta principal del proyecto): python docs/fase2_figuras/gantt_por_etapa.py [orden]
 """
 import os
 import sys
