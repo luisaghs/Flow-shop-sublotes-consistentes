@@ -22,7 +22,7 @@ CONTENIDO = {
     '2_Modelo': [('final_sc_hfsagls_S2_4.py', None)],
     '3_Verificacion': [('fase2/verificar_factibilidad.py', None)],
     '4_Calibracion': [('fase2/calibracion_ag.py', None), ('fase2/anova_excel.py', None),
-                      ('fase2/verificar_reproduccion.py', None),
+                      ('fase2/verificar_reproduccion.py', None), ('fase2/reglas_por_sublotes.py', None),
                       ('fase2/salida_calibracion', ('control',))],
     '5_Validacion': [('fase2/validacion_milp.py', None), ('fase2/salida_validacion', ('log_*',))],
     '6_Solucion_propuesta': [('fase2/solucion_final.py', None), ('fase2/salida_solucion', None),
@@ -60,7 +60,7 @@ editó a mano: cada archivo lo genera el programa de su carpeta.**
 | `1_Datos` | `BD_HFS.xlsx`: órdenes de trabajo, tiempos estándar por máquina y referencia, y calendario laboral | Caso de estudio y datos del modelo |
 | `2_Modelo` | `final_sc_hfsagls_S2_4.py`: lectura de datos, decodificador y algoritmo genético con los parámetros calibrados; al terminar muestra un diagrama de Gantt por etapa y la ruta de la orden de entrega más temprana | Modelo, algoritmo propuesto y diagramas de Gantt |
 | `3_Verificacion` | `verificar_factibilidad.py`: comprueba que las programaciones del algoritmo cumplen todas las restricciones del modelo matemático | Verificación del modelo |
-| `4_Calibracion` | `calibracion_ag.py`, `anova_excel.py`, `verificar_reproduccion.py` y `salida_calibracion/` (135 corridas del diseño factorial, 20 del criterio de parada, ANOVA, pruebas, figuras e informe; ver su `LEEME.md`) | Calibración de los parámetros |
+| `4_Calibracion` | `reglas_por_sublotes.py`, `calibracion_ag.py`, `anova_excel.py`, `verificar_reproduccion.py` y `salida_calibracion/` (reglas según el número de sublotes, 135 corridas del diseño factorial, 20 del criterio de parada, ANOVA, pruebas, figuras e informe; ver su `LEEME.md`) | Calibración de los parámetros |
 | `5_Validacion` | `validacion_milp.py` y `salida_validacion/`: seis instancias reducidas resueltas de forma exacta (HiGHS) y con el algoritmo | Validación del modelo |
 | `6_Solucion_propuesta` | `solucion_final.py` y `salida_solucion/`: 10 réplicas finales, la mejor solución (semilla 1203), su convergencia y su diagrama de Gantt. `experimentos_revision.py` y `salida_revision/`: el algoritmo con B̄ = 15 y con población inicial sin EDD (10 réplicas cada uno). `Gantt_en_Colab.ipynb`: cuaderno de Google Colab que genera los diagramas de Gantt a partir de la solución guardada | Programación propuesta, B̄ = 15 y mejora frente a EDD |
 | `7_Fase3_Comparacion` | `experimentos_fase3.py` y `salida_fase3/`: 120 corridas del algoritmo, sistema actual y reglas de despacho en cinco escenarios, informe y figura | Comparación con el sistema actual (Fase 3) |
@@ -69,7 +69,8 @@ editó a mano: cada archivo lo genera el programa de su carpeta.**
 
 | Carpeta | Archivo | Contenido |
 |---|---|---|
-| `4_Calibracion/salida_calibracion` | `corridas_diseno.csv` | Las 135 corridas del diseño factorial 3³ × 5 réplicas |
+| `4_Calibracion/salida_calibracion` | `reglas_por_sublotes.csv` | Tardanza y órdenes tardías de las reglas de despacho con 1, 2, 5, 10 y 15 sublotes por orden (Tabla 9) |
+| | `corridas_diseno.csv` | Las 135 corridas del diseño factorial 3³ × 5 réplicas |
 | | `anova.csv`, `anova_calibracion_excel.xlsx` | ANOVA de la tardanza total (el Excel lo calcula con fórmulas) |
 | | `corridas_parada.csv`, `resumen_parada.csv` | Criterio de parada: 50 frente a 100 generaciones sin mejora |
 | | `informe_calibracion.md` | Informe completo con las pruebas de supuestos y las decisiones |
@@ -93,6 +94,7 @@ editó a mano: cada archivo lo genera el programa de su carpeta.**
 |---|---|---|
 | Ejecutar el modelo (programación propuesta) | `python 2_Modelo/final_sc_hfsagls_S2_4.py 1_Datos/BD_HFS.xlsx` | 10 min |
 | Verificación | `python 3_Verificacion/verificar_factibilidad.py 2_Modelo/final_sc_hfsagls_S2_4.py 1_Datos/BD_HFS.xlsx` | segundos |
+| Número de sublotes: reglas de despacho | `python 4_Calibracion/reglas_por_sublotes.py 2_Modelo/final_sc_hfsagls_S2_4.py 1_Datos/BD_HFS.xlsx` | segundos |
 | Calibración: diseño factorial | `python 4_Calibracion/calibracion_ag.py diseno 2_Modelo/final_sc_hfsagls_S2_4.py 1_Datos/BD_HFS.xlsx --instancia real` | 1 h |
 | Calibración: criterio de parada | `python 4_Calibracion/calibracion_ag.py parada 2_Modelo/final_sc_hfsagls_S2_4.py 1_Datos/BD_HFS.xlsx --instancia real --config 150,0.9,0.5` | 35 min |
 | Calibración: ANOVA en Excel | `python 4_Calibracion/anova_excel.py` | segundos |
@@ -154,6 +156,7 @@ def _adaptar_leeme_calibracion():
     for a, b in [('desde la raíz del proyecto', 'desde la carpeta Anexos_digitales'),
                  ('fase2/calibracion_ag.py', '4_Calibracion/calibracion_ag.py'),
                  ('fase2/anova_excel.py', '4_Calibracion/anova_excel.py'),
+                 ('fase2/reglas_por_sublotes.py', '4_Calibracion/reglas_por_sublotes.py'),
                  ('final_sc_hfsagls_S2_4.py BD_HFS.xlsx', '2_Modelo/final_sc_hfsagls_S2_4.py 1_Datos/BD_HFS.xlsx'),
                  ('parada 2_Modelo/final_sc_hfsagls_S2_4.py 1_Datos/BD_HFS.xlsx --instancia real`',
                   'parada 2_Modelo/final_sc_hfsagls_S2_4.py 1_Datos/BD_HFS.xlsx --instancia real --config 150,0.9,0.5`')]:
