@@ -466,12 +466,37 @@ def validacion():
                   f"{int(round(v.loc[i_big, 'MILP s'] / 60))} minutos" if i_big else ''))
               + (f", y en {_lista(sin_f1)}, donde el solver no encontró ninguna, obtuvo programaciones con "
                  f"{_lista(sorted({r3(inf[i]['ag'][0]) for i in sin_f1}))} h de tardanza" if sin_f1 else '')
-              + f'. La instancia real, con {n_sub} sublotes y {n_maq} máquinas, implicaría {n(bin_real, 0)} '
+              + '.' + _texto_corrida_larga(r3)
+              + f' La instancia real, con {n_sub} sublotes y {n_maq} máquinas, implicaría {n(bin_real, 0)} '
               'variables binarias, muy por encima de lo que el método exacto puede resolver; por eso el caso '
               'de estudio se resuelve con el algoritmo genético.'),
         ('p', 'Por último, las instancias muestran el efecto de dividir las órdenes: '
               + '; '.join(efecto) + '.'),
     ]
+
+
+def _texto_corrida_larga(r3):
+    """Frase con la corrida de una hora del modelo exacto (corrida_60min.csv), si existe."""
+    import pandas as pd
+    ruta = os.path.join(G.SAL_VAL, 'corrida_60min.csv')
+    if not os.path.isfile(ruta):
+        return ''
+    c = pd.read_csv(ruta)
+    partes_con, sin = [], []
+    for inst, g in c.groupby('Instancia', sort=True):
+        g = g.dropna(subset=['ΣTj'])
+        if g.empty:
+            sin.append(inst)
+            continue
+        ini, fin = g.iloc[0], g.iloc[-1]
+        partes_con.append(f"para {inst} el modelo encontró su primera programación factible a los "
+                          f"{n(ini['Segundo'] / 60, 1)} minutos, con {r3(ini['ΣTj'])} h de tardanza, y terminó "
+                          f"con {r3(fin['ΣTj'])} h, sin demostrar que fuera la óptima")
+    txt = ' Con un límite de una hora, ' + '; '.join(partes_con) if partes_con else ''
+    if sin:
+        txt += (('; en ' + _lista(sin) + ' tampoco encontró ninguna') if txt else
+                (' Con un límite de una hora, en ' + _lista(sin) + ' el modelo no encontró ninguna'))
+    return txt + '.' if txt else ''
 
 
 def NUM_TXT(k):

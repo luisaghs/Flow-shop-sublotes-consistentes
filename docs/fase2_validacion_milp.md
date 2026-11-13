@@ -112,7 +112,9 @@ o menor que la solución exacta.
 
 Detalle por réplica: `fase2/salida_validacion/log_I*.txt` y
 `resultados_validacion_todas.csv`. Programación de la solución exacta:
-`programacion_milp_I*.csv` (I1 a I4). Figura: `gantt_milp_vs_ag_I3.png`.
+`programacion_milp_I*.csv` (I1 a I4). Figura: `gantt_milp_vs_ag_I3.png`. Corrida de una
+hora en I5 e I6: registros del solver `highs_60min_I5.log` y `highs_60min_I6.log`, y
+resumen de las soluciones encontradas en `corrida_60min.csv`.
 
 ## 5. Interpretación
 
@@ -126,7 +128,10 @@ Detalle por réplica: `fase2/salida_validacion/log_I*.txt` y
    límite sin demostrarlo y con 12 y 15 no encontró ninguna programación factible en
    10 minutos. El algoritmo resolvió cada instancia en menos de 6 s: en I4 igualó la
    mejor solución del solver (20 minutos) y en I5 e I6 obtuvo 1,214 h de tardanza.
-   La instancia real implicaría unas 363.600 variables binarias.
+   Con un límite de una hora (solo la fase de tardanza), el modelo encontró su primera
+   programación factible para I5 a los 17,6 minutos (15,234 h) y terminó con 4,092 h, sin
+   demostrar el óptimo; en I6 no encontró ninguna. La instancia real implicaría unas
+   363.600 variables binarias.
 4. **Efecto de los sublotes.** Con cuatro órdenes, la tardanza pasa de 28,19 h sin
    dividir (I1) a 5,93 h con dos sublotes (I4) y 1,21 h con tres (I5); con cinco
    órdenes, de 34,37 h (I2) a 1,21 h (I6).
@@ -138,6 +143,7 @@ pip install pulp highspy pandas openpyxl matplotlib
 python fase2/validacion_milp.py final_sc_hfsagls_S2_4.py BD_HFS.xlsx          # todas
 python fase2/validacion_milp.py final_sc_hfsagls_S2_4.py BD_HFS.xlsx I1,I2    # algunas
 python fase2/validacion_milp.py resumen                                       # une los resultados
+python fase2/validacion_milp.py largo final_sc_hfsagls_S2_4.py BD_HFS.xlsx I5,I6 3600  # corrida de una hora
 ```
 
 El script es compatible con PuLP 2.x (la versión usual en Colab) y con PuLP 4.x. Las

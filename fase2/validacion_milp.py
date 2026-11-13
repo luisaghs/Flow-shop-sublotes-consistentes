@@ -18,6 +18,8 @@ Uso:
   python validacion_milp.py ruta/final_sc_hfsagls_S2_4.py ruta/BD_HFS.xlsx [I1,I2,...]
   python validacion_milp.py resumen        # une los resultados de todas las instancias
   python validacion_milp.py ag ruta/final_sc_hfsagls_S2_4.py
+  python validacion_milp.py largo ruta/final_sc_hfsagls_S2_4.py ruta/BD_HFS.xlsx I5,I6 [3600]
+                                           # solo ΣTj con límite largo; guarda el registro de HiGHS
   python validacion_milp.py gantt ruta/final_sc_hfsagls_S2_4.py ruta/BD_HFS.xlsx [I3,I5]
                                            # repite solo el AG con los parámetros actuales
 
@@ -116,11 +118,12 @@ def _var(prob, nombre, low=None, up=None, cat='Continuous'):
     return pulp.LpVariable(nombre, lowBound=low, upBound=up, cat=cat)
 
 
-def _resolver(prob, limite, arranque=False):
-    """Resuelve con HiGHS (PuLP 2.x o 4.x).
+def _resolver(prob, limite, arranque=False, log=None):
+    """Resuelve con HiGHS (PuLP 2.x o 4.x). Con log, guarda el registro del solver.
     Retorna (hay solución, óptimo demostrado, cota inferior, segundos)."""
     t0 = time.time()
-    res = prob.solve(pulp.HiGHS(msg=False, timeLimit=limite, gapRel=0.0, warmStart=arranque))
+    extra = {'msg': True, 'logPath': log} if log else {'msg': False}
+    res = prob.solve(pulp.HiGHS(timeLimit=limite, gapRel=0.0, warmStart=arranque, **extra))
     seg = time.time() - t0
     obj = pulp.value(prob.objective)
     if hasattr(res, 'status'):                       # PuLP 4.x
@@ -136,12 +139,13 @@ def _resolver(prob, limite, arranque=False):
 
 
 def resolver_milp(ordenes, b_max, maquinas, t_min, etapas, cota_sum_t=None,
-                  limite=LIMITE_TIEMPO_S):
+                  limite=LIMITE_TIEMPO_S, log=None, solo_tardanza=False):
     """
     Formulación del documento (Gürsoy Yılmaz y Yılmaz, 2022), con variables de
     antecesor inmediato z_ii'sm.
     cota_sum_t: ΣTj de una solución factible conocida (regla de despacho).
     Sirve para acotar el horizonte: en el óptimo, todo C_j ≤ máx d_j + cota_sum_t.
+    log: archivo para el registro de HiGHS de la fase 1. solo_tardanza: omite la fase 2.
     """
     J = [o[0] for o in ordenes]
     ref = {o[0]: o[1] for o in ordenes}
@@ -238,7 +242,7 @@ def resolver_milp(ordenes, b_max, maquinas, t_min, etapas, cota_sum_t=None,
 
     # Objetivo lexicográfico: fase 1 ΣTj, fase 2 Cmax con ΣTj fijada
     prob.setObjective(pulp.lpSum(T.values()))
-    hay1, opt1, cota_t, seg1 = _resolver(prob, limite)
+    hay1, opt1, cota_t, seg1 = _resolver(prob, limite, log=log)
     base = {'J': J, 'ref': ref, 'Q': Q, 'r': r, 'd': d, 'B': B, 'N': N, 'Ms': Ms,
             'a': a, 'sigma': sigma, 'n_bin': n_bin, 'n_res': n_res}
     if not hay1:
@@ -246,6 +250,8 @@ def resolver_milp(ordenes, b_max, maquinas, t_min, etapas, cota_sum_t=None,
         return {**base, 'hay_solucion': False, 'sum_T': None, 'Cmax': None, 'seg': seg1,
                 'estado': f"Sin solución factible en {limite} s", 'x': {}, 'ops': {}}
     sum_t = pulp.value(prob.objective)
+    if solo_tardanza:
+        return {**base, 'hay_solucion': True, 'sum_T': sum_t, 'seg': seg1, 'optimo_t': opt1}
     prob += pulp.lpSum(T.values()) <= sum_t + 1e-4
     prob.setObjective(Cmax)
     hay2, opt2, cota_c, seg2 = _resolver(prob, limite, arranque=True)
@@ -594,6 +600,50 @@ def gantt_desde_resultados(ruta_modelo, ruta_bd, nombre):
     graficar_comparacion(M, sol, mejor[3], ruta)
     print(f"{nombre}: AG mejor ΣTj = {mejor[0]:.3f} | Cmax = {mejor[1]:.3f} → {ruta}")
 
+
+def corrida_larga(ruta_modelo, ruta_bd, nombres, limite):
+    """Resuelve solo la fase 1 (mín. ΣTj) de las instancias indicadas con un límite de tiempo
+    largo, guarda el registro de HiGHS y resume cuándo aparece cada solución mejorada."""
+    import re
+    M = cargar_modulo(ruta_modelo)
+    t_min, etapas = tiempos_reales(M, ruta_bd)
+    filas = []
+    for nombre, ordenes, b_max, maquinas in INSTANCIAS:
+        if nombre not in nombres:
+            continue
+        regla = pd.read_csv(os.path.join(DIR_SALIDA, f"resultados_validacion_{nombre}.csv")).iloc[0]['Regla ΣTj']
+        log = os.path.join(DIR_SALIDA, f"highs_{limite // 60}min_{nombre}.log")
+        print(f"=== {nombre}: fase 1 con límite de {limite} s ===", flush=True)
+        resolver_milp(ordenes, b_max, maquinas, t_min, etapas, cota_sum_t=regla, limite=limite,
+                      log=log, solo_tardanza=True)
+        filas.extend(resumir_log(nombre, log))
+    df = pd.DataFrame(filas)
+    ruta = os.path.join(DIR_SALIDA, f"corrida_{limite // 60}min.csv")
+    df.to_csv(ruta, index=False, encoding='utf-8-sig')
+    print(df.to_string(index=False))
+    return df
+
+
+def resumir_log(nombre, log):
+    """Soluciones mejoradas (segundo y ΣTj) que registra HiGHS en la búsqueda."""
+    import re
+    filas, ultimo = [], None
+    for linea in open(log, encoding='utf-8', errors='ignore'):
+        m = re.match(r'^\s*[A-Z]\s+\d+\s+\d+\s+\d+\s+\S+%\s+(\S+)\s+(\S+)\s+.*?([\d.]+)s\s*$', linea)
+        if m and m.group(2) != 'inf' and m.group(2) != ultimo:
+            ultimo = m.group(2)
+            filas.append({'Instancia': nombre, 'Segundo': float(m.group(3)), 'ΣTj': float(m.group(2)),
+                          'Cota inferior': float(m.group(1))})
+    if not filas:
+        filas.append({'Instancia': nombre, 'Segundo': None, 'ΣTj': None, 'Cota inferior': None})
+    return filas
+
+
+if __name__ == '__main__' and len(sys.argv) > 4 and sys.argv[1] == 'largo':
+    # python validacion_milp.py largo modelo.py BD_HFS.xlsx I5,I6 [segundos]
+    corrida_larga(sys.argv[2], sys.argv[3], sys.argv[4].split(','),
+                  int(sys.argv[5]) if len(sys.argv) > 5 else 3600)
+    sys.exit()
 
 if __name__ == '__main__' and len(sys.argv) > 3 and sys.argv[1] == 'gantt':
     for nom in (sys.argv[4].split(',') if len(sys.argv) > 4 else GRAFICAR):
