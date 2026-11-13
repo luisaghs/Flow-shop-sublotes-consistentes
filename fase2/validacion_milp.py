@@ -7,8 +7,7 @@ VALIDACIÓN DEL MODELO MATEMÁTICO (MILP) CON INSTANCIAS PEQUEÑAS
    liberaciones, alistamiento anticipatorio en troquelado, objetivo
    lexicográfico ΣTj → Cmax) para instancias pequeñas construidas con los
    tiempos reales de BD_HFS.xlsx. Solver: HiGHS (libre) a través de PuLP.
-   Se usan dos formulaciones: F1, la del documento (antecesor inmediato), y
-   F2, una equivalente de precedencia general con menos variables binarias.
+   Se usa la formulación del documento (variables de antecesor inmediato).
 2. Verifica que la solución del MILP cumple todas las restricciones.
 3. Corre el algoritmo genético sobre las mismas instancias (varias semillas)
    y mide la brecha frente al óptimo.
@@ -42,7 +41,8 @@ SETUP_MIN = 4.98                 # alistamiento en troquelado [min]
 LIMITE_TIEMPO_S = 600            # límite por fase del MILP [s]
 SEMILLAS_AG = list(range(1, 11)) # 10 réplicas del AG por instancia
 GRAFICAR = ['I3']                # instancia con Gantt MILP vs AG
-DIR_SALIDA = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'salida_validacion')
+DIR_SALIDA = os.environ.get('SALIDA_VALIDACION') or \
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), 'salida_validacion')
 
 # ---------------------------------------------------------------------------
 # Instancias de prueba (tiempos reales; cantidades y fechas reducidas)
@@ -136,13 +136,10 @@ def _resolver(prob, limite, arranque=False):
 
 
 def resolver_milp(ordenes, b_max, maquinas, t_min, etapas, cota_sum_t=None,
-                  limite=LIMITE_TIEMPO_S, formulacion='inmediata'):
+                  limite=LIMITE_TIEMPO_S):
     """
-    formulacion = 'inmediata' : formulación del documento (Gürsoy Yılmaz y Yılmaz,
-                                2022), con variables de antecesor inmediato z_ii'sm.
-                  'precedencia': formulación equivalente con variables de
-                                precedencia general u_ii's (menos binarias). Es exacta
-                                porque el alistamiento cumple la desigualdad triangular.
+    Formulación del documento (Gürsoy Yılmaz y Yılmaz, 2022), con variables de
+    antecesor inmediato z_ii'sm.
     cota_sum_t: ΣTj de una solución factible conocida (regla de despacho).
     Sirve para acotar el horizonte: en el óptimo, todo C_j ≤ máx d_j + cota_sum_t.
     """
@@ -177,13 +174,8 @@ def resolver_milp(ordenes, b_max, maquinas, t_min, etapas, cota_sum_t=None,
     y = {(i, s, m): _var(prob, f"y_{nom(i)}_{s}_{m}", cat='Binary')
          for i in N for s in S_ for m in Ms[s]}
     nodos0 = [0] + N
-    if formulacion == 'inmediata':
-        z = {(i, k, s, m): _var(prob, f"z_{nom(i)}_{nom(k)}_{s}_{m}", cat='Binary')
-             for s in S_ for m in Ms[s] for i in nodos0 for k in N if i != k}
-    else:
-        pares = [(N[p], N[q]) for p in range(len(N)) for q in range(p + 1, len(N))]
-        z = {(i, k, s): _var(prob, f"u_{nom(i)}_{nom(k)}_{s}", cat='Binary')
-             for s in S_ for (i, k) in pares}
+    z = {(i, k, s, m): _var(prob, f"z_{nom(i)}_{nom(k)}_{s}_{m}", cat='Binary')
+         for s in S_ for m in Ms[s] for i in nodos0 for k in N if i != k}
     St = {(i, s): _var(prob, f"S_{nom(i)}_{s}", 0) for i in N for s in S_}
     C = {(i, s): _var(prob, f"C_{nom(i)}_{s}", 0, horizonte) for i in N for s in S_}
     T = {j: _var(prob, f"T_{j}", 0) for j in J}
@@ -215,42 +207,26 @@ def resolver_milp(ordenes, b_max, maquinas, t_min, etapas, cota_sum_t=None,
         prob += St[((j, b), 1)] >= r[j]
         for s in S_[:-1]:
             prob += St[((j, b), s + 1)] >= C[((j, b), s)]
-    if formulacion == 'inmediata':
-        # (7)-(9) Secuencia en cada máquina
-        for s in S_:
-            for m in Ms[s]:
-                for k in N:   # un antecesor inmediato (puede ser el inicio 0)
-                    prob += pulp.lpSum(z[(i, k, s, m)] for i in nodos0 if i != k) == y[(k, s, m)]
-                for i in N:   # a lo sumo un sucesor
-                    prob += pulp.lpSum(z[(i, k, s, m)] for k in N if k != i) <= y[(i, s, m)]
-                prob += pulp.lpSum(z[(0, k, s, m)] for k in N) <= 1   # a lo sumo un primero
-        # (10)-(12) No solapamiento y alistamiento (anticipatorio) en troquelado
-        for s in S_:
-            for m in Ms[s]:
-                for i in N:
-                    for k in N:
-                        if i == k:
-                            continue
-                        su = setup(i, k) if s == 1 else 0.0
-                        prob += St[(k, s)] >= C[(i, s)] + su - H * (1 - z[(i, k, s, m)])
-                if s == 1:
-                    for k in N:
-                        prob += St[(k, 1)] >= sigma * z[(0, k, 1, m)]
-    else:
-        # Precedencia general: si i y k comparten máquina, u = 1 → i antes que k.
-        # Si i precede a k (aunque no sea inmediatamente) y cambian de referencia,
-        # entre ambos hay al menos un alistamiento, así que la restricción es exacta.
-        for (i, k, s), u in z.items():
-            su_ik = setup(i, k) if s == 1 else 0.0
-            su_ki = setup(k, i) if s == 1 else 0.0
-            for m in Ms[s]:
-                ambos = y[(i, s, m)] + y[(k, s, m)]
-                prob += St[(k, s)] >= C[(i, s)] + su_ik - H * (3 - u - ambos)
-                prob += St[(i, s)] >= C[(k, s)] + su_ki - H * (2 + u - ambos)
-        # Montaje inicial: todo sublote de troquelado empieza después de σ (el
-        # primero de cada máquina lo exige; los demás empiezan aún más tarde)
-        for k in N:
-            prob += St[(k, 1)] >= sigma
+    # (7)-(9) Secuencia en cada máquina
+    for s in S_:
+        for m in Ms[s]:
+            for k in N:   # un antecesor inmediato (puede ser el inicio 0)
+                prob += pulp.lpSum(z[(i, k, s, m)] for i in nodos0 if i != k) == y[(k, s, m)]
+            for i in N:   # a lo sumo un sucesor
+                prob += pulp.lpSum(z[(i, k, s, m)] for k in N if k != i) <= y[(i, s, m)]
+            prob += pulp.lpSum(z[(0, k, s, m)] for k in N) <= 1   # a lo sumo un primero
+    # (10)-(12) No solapamiento y alistamiento (anticipatorio) en troquelado
+    for s in S_:
+        for m in Ms[s]:
+            for i in N:
+                for k in N:
+                    if i == k:
+                        continue
+                    su = setup(i, k) if s == 1 else 0.0
+                    prob += St[(k, s)] >= C[(i, s)] + su - H * (1 - z[(i, k, s, m)])
+            if s == 1:
+                for k in N:
+                    prob += St[(k, 1)] >= sigma * z[(0, k, 1, m)]
     # (13)-(14) Tardanza y makespan
     s_ult = S_[-1]
     for (j, b) in N:
@@ -472,25 +448,17 @@ def main(ruta_modelo, ruta_bd, nombres=None):
         for sem, (t, c, sg, _) in zip(SEMILLAS_AG, res):
             print(f"    AG semilla {sem:>2}: ΣTj = {t:.4f} | Cmax = {c:.4f} | {sg:.1f} s")
 
-        # 2. MILP con las dos formulaciones
-        sols = {}
-        for form, etiqueta in [('inmediata', 'F1 antecesor inmediato (documento)'),
-                               ('precedencia', 'F2 precedencia general')]:
-            sol = resolver_milp(ordenes, b_max, maquinas, t_min, etapas,
-                                cota_sum_t=regla['suma_Ti'], formulacion=form)
-            sol['violaciones'] = len(verificar(sol, sol['ops'])) if sol['hay_solucion'] else None
-            sols[form] = sol
-            print(f"  MILP {etiqueta}: ΣTj = {_fmt(sol['sum_T'])} | Cmax = {_fmt(sol['Cmax'])} | "
-                  f"{sol['estado']} | {sol['seg']:.1f} s | {sol['n_bin']} binarias | "
-                  f"violaciones = {sol['violaciones']}", flush=True)
+        # 2. MILP (formulación del documento)
+        sol = resolver_milp(ordenes, b_max, maquinas, t_min, etapas, cota_sum_t=regla['suma_Ti'])
+        sol['violaciones'] = len(verificar(sol, sol['ops'])) if sol['hay_solucion'] else None
+        print(f"  MILP: ΣTj = {_fmt(sol['sum_T'])} | Cmax = {_fmt(sol['Cmax'])} | "
+              f"{sol['estado']} | {sol['seg']:.1f} s | {sol['n_bin']} binarias | "
+              f"violaciones = {sol['violaciones']}", flush=True)
 
-        # 3. Referencia: la mejor solución del MILP (lexicográfica)
-        con_sol = [sl for sl in sols.values() if sl['hay_solucion']]
-        ref = min(con_sol, key=lambda sl: (round(sl['sum_T'], 6), round(sl['Cmax'], 6))) \
-            if con_sol else None
-        optimo_t = any(sl['hay_solucion'] and sl.get('optimo_t') for sl in sols.values())
-        optimo_tc = any(sl['hay_solucion'] and sl.get('optimo_t') and sl.get('optimo_c')
-                        for sl in sols.values())
+        # 3. Referencia: la solución del MILP
+        ref = sol if sol['hay_solucion'] else None
+        optimo_t = bool(ref and sol.get('optimo_t'))
+        optimo_tc = bool(ref and sol.get('optimo_t') and sol.get('optimo_c'))
 
         if ref is not None:
             pd.DataFrame([{'Orden': j, 'Sublote': b, 'Docenas': ref['x'][(j, b)], 'Etapa': s,
@@ -516,14 +484,12 @@ def main(ruta_modelo, ruta_bd, nombres=None):
             igual_t = sum(1 for v in res if v[0] <= ref['sum_T'] + 1e-3)
             igual_tc = sum(1 for v in res if v[0] <= ref['sum_T'] + 1e-3
                            and v[1] <= ref['Cmax'] + 1e-3)
-        f1, f2 = sols['inmediata'], sols['precedencia']
         filas.append({
             'Instancia': nombre, 'Órdenes': len(ordenes), 'B̄': b_max,
-            'Sublotes': len(f1['N']), 'Máquinas': n_maq,
-            'F1 binarias': f1['n_bin'], 'F1 ΣTj': f1['sum_T'], 'F1 Cmax': f1['Cmax'],
-            'F1 estado': f1['estado'], 'F1 s': round(f1['seg'], 1), 'F1 violaciones': f1['violaciones'],
-            'F2 binarias': f2['n_bin'], 'F2 ΣTj': f2['sum_T'], 'F2 Cmax': f2['Cmax'],
-            'F2 estado': f2['estado'], 'F2 s': round(f2['seg'], 1), 'F2 violaciones': f2['violaciones'],
+            'Sublotes': len(sol['N']), 'Máquinas': n_maq,
+            'MILP binarias': sol['n_bin'], 'MILP ΣTj': sol['sum_T'], 'MILP Cmax': sol['Cmax'],
+            'MILP estado': sol['estado'], 'MILP s': round(sol['seg'], 1),
+            'MILP violaciones': sol['violaciones'],
             'ΣTj óptima demostrada': optimo_t, '(ΣTj, Cmax) óptimo demostrado': optimo_tc,
             'Decod. ΣTj': dec_t, 'Decod. Cmax': dec_c,
             'Regla': regla['regla'], 'Regla ΣTj': regla['suma_Ti'], 'Regla Cmax': regla['Cmax'],
@@ -558,15 +524,14 @@ def consolidar():
     def estado(e, sg):
         return 'óptimo' if e == 'Óptimo' else ('sin solución' if str(e).startswith('Sin') else 'límite')
 
-    lineas = ['| Inst. | Sublotes | Máq. | F1 ΣTj | F1 Cmax | F1 estado (s) | F2 ΣTj | F2 Cmax | '
-              'F2 estado (s) | Regla ΣTj | AG mejor ΣTj | AG mejor Cmax | AG prom ΣTj | '
-              'AG ≤ MILP (ΣTj) | AG s |',
-              '|' + '---|' * 15]
+    lineas = ['| Inst. | Sublotes | Máq. | Binarias | MILP ΣTj | MILP Cmax | MILP estado (s) | '
+              'Regla ΣTj | AG mejor ΣTj | AG mejor Cmax | AG prom ΣTj | AG ≤ MILP (ΣTj) | AG s |',
+              '|' + '---|' * 13]
     for _, r in df.iterrows():
         lineas.append(
             f"| {r['Instancia']} | {r['Sublotes']} (B̄={r['B̄']}) | {r['Máquinas']} | "
-            f"{f(r['F1 ΣTj'])} | {f(r['F1 Cmax'])} | {estado(r['F1 estado'], r['F1 s'])} ({r['F1 s']:.0f}) | "
-            f"{f(r['F2 ΣTj'])} | {f(r['F2 Cmax'])} | {estado(r['F2 estado'], r['F2 s'])} ({r['F2 s']:.0f}) | "
+            f"{r['MILP binarias']} | {f(r['MILP ΣTj'])} | {f(r['MILP Cmax'])} | "
+            f"{estado(r['MILP estado'], r['MILP s'])} ({r['MILP s']:.0f}) | "
             f"{f(r['Regla ΣTj'])} | {f(r['AG mejor ΣTj'])} | {f(r['AG mejor Cmax'])} | "
             f"{f(r['AG prom ΣTj'])} | {r['AG ≤ MILP en ΣTj']} | {r['AG s prom']:.1f} |")
     tabla = '\n'.join(lineas)
@@ -590,8 +555,7 @@ def solo_ag(ruta_modelo):
         ruta_csv = os.path.join(DIR_SALIDA, f"resultados_validacion_{nombre}.csv")
         df = pd.read_csv(ruta_csv)
         r = df.iloc[0]
-        cand = [(r[f'{f} ΣTj'], r[f'{f} Cmax']) for f in ('F1', 'F2') if not pd.isna(r[f'{f} ΣTj'])]
-        ref = min(cand, key=lambda v: (round(v[0], 6), round(v[1], 6))) if cand else None
+        ref = None if pd.isna(r['MILP ΣTj']) else (r['MILP ΣTj'], r['MILP Cmax'])
         regla, res = correr_ag(M, os.path.join(DIR_SALIDA, f"{nombre}.xlsx"), b_max, SEMILLAS_AG)
         mejor = min(res, key=lambda v: (round(v[0], 6), round(v[1], 6)))
         igual_t = sum(1 for v in res if ref and v[0] <= ref[0] + 1e-3)
