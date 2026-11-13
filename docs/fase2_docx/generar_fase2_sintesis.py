@@ -271,22 +271,23 @@ def _datos_validacion():
     v = pd.read_csv(os.path.join(G.SAL_VAL, 'resultados_validacion_todas.csv'))
     filas, info = [], []
     for _, r in v.iterrows():
-        cand = [(r[f'{f} ΣTj'], r[f'{f} Cmax']) for f in ('F1', 'F2') if not pd.isna(r[f'{f} ΣTj'])]
-        ref = min(cand, key=lambda c: (round(c[0], 6), round(c[1], 6)))
+        hay = not pd.isna(r['MILP ΣTj'])
         ag = (r['AG mejor ΣTj'], r['AG mejor Cmax'])
         # mismo valor con distinta precisión numérica del solver → se muestra igual
-        ref = tuple(g if abs(x - g) < 1e-4 else x for x, g in zip(ref, ag))
+        ref = tuple(g if abs(x - g) < 1e-4 else x for x, g in zip((r['MILP ΣTj'], r['MILP Cmax']), ag)) \
+            if hay else None
         opt = bool(r['ΣTj óptima demostrada'])
-        txt_ref = f"{n(ref[0], 3)} / {n(ref[1], 3)}"
+        txt_ref = f"{n(ref[0], 3)} / {n(ref[1], 3)}" if hay else '—'
         sub = f"{int(r['Sublotes'])}" + (' (sin división)' if int(r['B̄']) == 1 else '')
         filas.append([r['Instancia'], sub, txt_ref if opt else f'No demostrado ({txt_ref})',
                       n(r['Regla ΣTj'], 3), f"{n(r['AG mejor ΣTj'], 3)} / {n(r['AG mejor Cmax'], 3)}",
                       n(r['AG prom ΣTj'], 3), r['AG ≤ MILP en ΣTj'], n(r['AG s prom'], 1)])
         info.append({'inst': r['Instancia'], 'opt': opt, 'ref': ref, 'B': int(r['B̄']),
-                     'sub': int(r['Sublotes']), 'f1_sin': pd.isna(r['F1 ΣTj']),
+                     'sub': int(r['Sublotes']), 'hay': hay,
                      'ag': (r['AG mejor ΣTj'], r['AG mejor Cmax']),
-                     'hits': int(str(r['AG ≤ MILP en ΣTj']).split('/')[0]),
-                     'reps': int(str(r['AG ≤ MILP en ΣTj']).split('/')[1]), 'seg': r['AG s prom']})
+                     'hits': int(str(r['AG ≤ MILP en ΣTj']).split('/')[0]) if hay else None,
+                     'reps': int(str(r['AG ≤ MILP en ΣTj']).split('/')[1]) if hay else None,
+                     'seg': r['AG s prom']})
     return filas, info
 
 
@@ -323,21 +324,16 @@ def validacion():
     filas_res = []
     for nombre, r in v.iterrows():
         i = inf[nombre]
-        hay = not (pd.isna(r['F1 ΣTj']) and pd.isna(r['F2 ΣTj']))
+        hay = i['hay']
         estado = 'óptima' if i['opt'] else ('mejor encontrada' if hay else 'sin solución')
         filas_res.append([nombre, str(int(r['Sublotes'])),
                           f"{r3(i['ref'][0])} / {r3(i['ref'][1])}" if hay else '—', estado,
                           r3(r['Regla ΣTj']), f"{r3(i['ag'][0])} / {r3(i['ag'][1])}",
-                          n(r['AG prom ΣTj'], 3), r['AG ≤ MILP en ΣTj'], n(r['AG s prom'], 1)])
+                          n(r['AG prom ΣTj'], 3), r['AG ≤ MILP en ΣTj'] if hay else '—',
+                          n(r['AG s prom'], 1)])
 
     # --- Cifras para las respuestas
-    ambos = [i for i, r in v.iterrows() if opt(r['F1 estado']) and opt(r['F2 estado'])
-             and abs(r['F1 ΣTj'] - r['F2 ΣTj']) < 1e-3 and abs(r['F1 Cmax'] - r['F2 Cmax']) < 1e-3]
-    solo_f2 = [i for i, r in v.iterrows() if opt(r['F2 estado']) and not opt(r['F1 estado'])
-               and not pd.isna(r['F1 ΣTj']) and abs(r['F1 ΣTj'] - r['F2 ΣTj']) < 1e-3
-               and abs(r['F1 Cmax'] - r['F2 Cmax']) < 1e-3]
-    viol = int(v['F1 violaciones'].fillna(0).sum() + v['F2 violaciones'].fillna(0).sum())
-    rat = v['F2 binarias'] / v['F1 binarias']
+    viol = int(v['MILP violaciones'].fillna(0).sum())
     con_opt = [i['inst'] for i in info if i['opt']]
     hits = sum(inf[i]['hits'] for i in con_opt)
     reps = sum(inf[i]['reps'] for i in con_opt)
@@ -345,14 +341,14 @@ def validacion():
     i_br = max(brecha, key=brecha.get)
     dif_c = [i for i in con_opt if inf[i]['ag'][0] <= inf[i]['ref'][0] + 1e-3
              and inf[i]['ag'][1] > inf[i]['ref'][1] + 1e-3]
-    f1_opt_max = max(int(v.loc[i, 'Sublotes']) for i, r in v.iterrows() if opt(r['F1 estado']))
-    sin_f1 = [i for i, r in v.iterrows() if pd.isna(r['F1 ΣTj'])]
-    no_dem = [i for i in v.index if not inf[i]['opt']]
+    f1_opt_max = max(int(v.loc[i, 'Sublotes']) for i, r in v.iterrows() if opt(r['MILP estado']))
+    sin_f1 = [i for i, r in v.iterrows() if pd.isna(r['MILP ΣTj'])]
+    no_dem = [i for i in v.index if not inf[i]['opt'] and inf[i]['hay']]
     t_ag = v['AG s prom'].max()
-    i_big = no_dem[-1] if no_dem else v.index[-1]
+    i_big = no_dem[-1] if no_dem else None
     n_sub, n_maq = 100, 36
     bin_real = n_sub * n_maq + n_sub ** 2 * n_maq
-    mejor_t = {i: min(inf[i]['ref'][0], inf[i]['ag'][0]) for i in inf}
+    mejor_t = {i: min(inf[i]['ref'][0], inf[i]['ag'][0]) if inf[i]['hay'] else inf[i]['ag'][0] for i in inf}
     ig = V.GRAFICAR[0]
     g5 = os.path.join(G.SAL_VAL, f'gantt_milp_vs_ag_{ig}.png')
     igual_i5 = (abs(inf[ig]['ag'][0] - inf[ig]['ref'][0]) < 1e-3
@@ -432,20 +428,16 @@ def validacion():
               'demostrarlo' + ('; «sin solución», que no encontró ninguna programación factible' if any(
                   f[3] == 'sin solución' for f in filas_res) else '') + '. La columna '
               '«Réplicas AG ≤ exacta» indica en cuántas de las 10 réplicas el algoritmo obtuvo una tardanza '
-              'igual o menor que la solución exacta.'),
+              'igual o menor que la solución exacta' + (' (no aplica cuando el solver no encontró solución)'
+                                                         if any(f[3] == 'sin solución' for f in filas_res)
+                                                         else '') + '.'),
 
         ('p', '**¿El modelo matemático está bien formulado? Sí.** '
-              + ('Ninguna solución del modelo exacto presentó violaciones de las restricciones. ' if viol == 0
-                 else '')
-              + 'Además, para confirmar los óptimos, se resolvió una segunda versión del modelo escrita de otra '
-              'forma (Naderi et al., 2014): en lugar de decidir qué sublote va inmediatamente antes de otro en '
-              'cada máquina, solo decide cuál de cada par de sublotes va primero, con lo que usa entre el '
-              f'{n(100 * rat.min(), 0)} % y el {n(100 * rat.max(), 0)} % de las variables binarias. Si dos '
-              'modelos escritos de manera distinta llegan al mismo óptimo, es muy poco probable que ambos '
-              'tengan el mismo error. '
-              + (f"Las dos versiones llegaron exactamente al mismo óptimo en {_lista(ambos)}" if ambos else '')
-              + (f", y en {_lista(solo_f2)} la segunda demostró el óptimo y el modelo del documento encontró "
-                 'esa misma solución' if solo_f2 else '') + '.'),
+              + ('Ninguna solución del modelo exacto presentó violaciones de las restricciones al pasarla por '
+                 'el verificador. ' if viol == 0 else '')
+              + 'Además, el algoritmo genético, que no comparte código con el modelo matemático, llegó a los '
+              f"mismos valores óptimos en {_lista(con_opt)}: si el modelo tuviera un error en una restricción, "
+              'su óptimo no coincidiría con programaciones construidas de forma independiente.'),
         ('p', '**¿El algoritmo genético encuentra el óptimo? Sí.** En las '
               f"{NUM_TXT(len(con_opt))} instancias con óptimo demostrado, la mejor de las 10 réplicas alcanzó "
               f"la tardanza óptima en todos los casos, y {hits} de {reps} réplicas ({100 * hits / reps:.0f} %) "
@@ -461,15 +453,16 @@ def validacion():
         ('figura', 'Programación óptima del modelo exacto (arriba) y mejor programación del algoritmo '
                    f'genético (abajo) en la instancia {ig}', g5, 15.5, 'gantt_val'),
         ('p', '**¿Hasta qué tamaño sirve el método exacto?** Solo para instancias muy pequeñas. El modelo '
-              f"del documento demostró la optimalidad hasta {f1_opt_max} sublotes"
-              + (f" y no encontró ninguna programación factible con "
-                 f"{_lista([str(int(v.loc[i, 'Sublotes'])) for i in sin_f1])} sublotes en 10 minutos "
-                 f"(las soluciones de {_lista(sin_f1)} en la Tabla {{T:validacion}} son de la segunda versión, "
-                 'que tampoco pudo demostrar su optimalidad)' if sin_f1 else '')
-              + f'. El algoritmo, en cambio, resolvió cada instancia en menos de {int(t_ag) + 1} segundos y, '
-              'en las instancias más grandes, superó a la mejor solución del solver: en '
-              f"{i_big} obtuvo {r3(inf[i_big]['ag'][0])} h de tardanza frente a {r3(inf[i_big]['ref'][0])} h. "
-              f'La instancia real, con {n_sub} sublotes y {n_maq} máquinas, implicaría {n(bin_real, 0)} '
+              f"demostró la optimalidad hasta {f1_opt_max} sublotes"
+              + (f"; con {_lista([str(int(v.loc[i, 'Sublotes'])) for i in no_dem])} sublotes ({_lista(no_dem)}) "
+                 'alcanzó el límite de tiempo sin demostrarla' if no_dem else '')
+              + (f", y con {_lista([str(int(v.loc[i, 'Sublotes'])) for i in sin_f1])} sublotes "
+                 f"({_lista(sin_f1)}) no encontró ninguna programación factible en 10 minutos" if sin_f1 else '')
+              + f'. El algoritmo, en cambio, resolvió cada instancia en menos de {int(t_ag) + 1} segundos'
+              + (f" y, en {i_big}, superó a la mejor solución del solver: obtuvo {r3(inf[i_big]['ag'][0])} h de "
+                 f"tardanza frente a {r3(inf[i_big]['ref'][0])} h"
+                 if i_big and inf[i_big]['ag'][0] < inf[i_big]['ref'][0] - 1e-3 else '')
+              + f'. La instancia real, con {n_sub} sublotes y {n_maq} máquinas, implicaría {n(bin_real, 0)} '
               'variables binarias, muy por encima de lo que el método exacto puede resolver; por eso el caso '
               'de estudio se resuelve con el algoritmo genético.'),
         ('p', 'Por último, las instancias muestran el efecto de dividir las órdenes: '
