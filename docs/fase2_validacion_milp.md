@@ -119,8 +119,9 @@ resumen de las soluciones encontradas en `corrida_60min.csv`.
 ## 5. Interpretación
 
 1. **El modelo está bien formulado.** Ninguna solución del modelo exacto violó las
-   restricciones al pasarla por el verificador, y el algoritmo genético, que no comparte
-   código con el modelo, llegó a los mismos óptimos en I1, I2 e I3.
+   restricciones al pasarla por el verificador, y el algoritmo genético, que evalúa sus
+   programaciones con una simulación del sistema y no con las ecuaciones del modelo, llegó
+   a los mismos óptimos en I1, I2 e I3.
 2. **El algoritmo genético encuentra el óptimo.** En las tres instancias con óptimo
    demostrado, la mejor réplica alcanzó la tardanza óptima, y 26 de 30 réplicas la
    alcanzaron; la mayor diferencia promedio fue de 0,12 h (I1).

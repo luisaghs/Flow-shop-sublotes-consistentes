@@ -435,9 +435,10 @@ def validacion():
         ('p', '**¿El modelo matemático está bien formulado? Sí.** '
               + ('Ninguna solución del modelo exacto presentó violaciones de las restricciones al pasarla por '
                  'el verificador. ' if viol == 0 else '')
-              + 'Además, el algoritmo genético, que no comparte código con el modelo matemático, llegó a los '
-              f"mismos valores óptimos en {_lista(con_opt)}: si el modelo tuviera un error en una restricción, "
-              'su óptimo no coincidiría con programaciones construidas de forma independiente.'),
+              + 'Además, el algoritmo genético, que construye y evalúa sus programaciones mediante una '
+              'simulación del sistema y no con las ecuaciones del modelo, llegó a los mismos valores óptimos en '
+              f"{_lista(con_opt)}: si el modelo tuviera un error en una restricción, su óptimo no coincidiría "
+              'con el de programaciones obtenidas de forma independiente.'),
         ('p', '**¿El algoritmo genético encuentra el óptimo? Sí.** En las '
               f"{NUM_TXT(len(con_opt))} instancias con óptimo demostrado, la mejor de las 10 réplicas alcanzó "
               f"la tardanza óptima en todos los casos, y {hits} de {reps} réplicas ({100 * hits / reps:.0f} %) "
