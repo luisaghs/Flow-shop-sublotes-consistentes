@@ -461,7 +461,11 @@ def validacion():
               + f'. El algoritmo, en cambio, resolvió cada instancia en menos de {int(t_ag) + 1} segundos'
               + (f" y, en {i_big}, superó a la mejor solución del solver: obtuvo {r3(inf[i_big]['ag'][0])} h de "
                  f"tardanza frente a {r3(inf[i_big]['ref'][0])} h"
-                 if i_big and inf[i_big]['ag'][0] < inf[i_big]['ref'][0] - 1e-3 else '')
+                 if i_big and inf[i_big]['ag'][0] < inf[i_big]['ref'][0] - 1e-3 else
+                 (f"; en {i_big} igualó la mejor solución que el solver obtuvo en "
+                  f"{int(round(v.loc[i_big, 'MILP s'] / 60))} minutos" if i_big else ''))
+              + (f", y en {_lista(sin_f1)}, donde el solver no encontró ninguna, obtuvo programaciones con "
+                 f"{_lista(sorted({r3(inf[i]['ag'][0]) for i in sin_f1}))} h de tardanza" if sin_f1 else '')
               + f'. La instancia real, con {n_sub} sublotes y {n_maq} máquinas, implicaría {n(bin_real, 0)} '
               'variables binarias, muy por encima de lo que el método exacto puede resolver; por eso el caso '
               'de estudio se resuelve con el algoritmo genético.'),

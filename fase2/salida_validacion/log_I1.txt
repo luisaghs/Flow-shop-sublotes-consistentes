@@ -1,28 +1,27 @@
-  Datos cargados desde: /root/.claude/uploads/d99e466a-538d-59ce-9926-6932ba470cd4/72029ef0-BD_HFS.xlsx
+  Datos cargados desde: BD_HFS.xlsx
     Órdenes: 10 | Etapas: Troquelado (4 máq.), Ensamble (15 máq.), Costura (9 máq.), Volteado (8 máq.)
 
 
-=== Instancia I1: 3 órdenes, B̄ = 2, máquinas por etapa 2-2-1-1 ===
-  Datos cargados desde: /home/user/Flow-shop-sublotes-consistentes/fase2/salida_validacion/I1.xlsx
-    Órdenes: 3 | Etapas: Troquelado (2 máq.), Ensamble (2 máq.), Costura (1 máq.), Volteado (1 máq.)
+=== Instancia I1: 4 órdenes, B̄ = 1, máquinas por etapa 2-3-2-1 ===
+  Datos cargados desde: /tmp/claude-0/-home-user-Flow-shop-sublotes-consistentes/d99e466a-538d-59ce-9926-6932ba470cd4/scratchpad/val1/I1.xlsx
+    Órdenes: 4 | Etapas: Troquelado (2 máq.), Ensamble (3 máq.), Costura (2 máq.), Volteado (1 máq.)
 
-    MILP fase 1 (ΣTj): 35.4 s | fase 2 (Cmax): 87.4 s
-  MILP: ΣTj = 0.9547 h | Cmax = 15.9547 h | Óptimo | 122.7 s | 252 binarias, 396 restricciones
-  Verificación de la solución MILP: 0 violaciones (ΣTj recalculada = 0.9547, Cmax = 15.9547)
-  Solución MILP en el decodificador del AG: ΣTj = 1.2793 | Cmax = 16.2793
-  Mejor regla (EDD): ΣTj = 2.0675 | Cmax = 17.0675
-    AG semilla  1: ΣTj = 0.9547 | Cmax = 15.9547 | 1.3 s
-    AG semilla  2: ΣTj = 1.4237 | Cmax = 16.4237 | 1.3 s
-    AG semilla  3: ΣTj = 0.9547 | Cmax = 15.9547 | 1.5 s
-    AG semilla  4: ΣTj = 0.9678 | Cmax = 15.9678 | 1.4 s
-    AG semilla  5: ΣTj = 1.4088 | Cmax = 16.4088 | 1.2 s
-    AG semilla  6: ΣTj = 1.4237 | Cmax = 16.4237 | 1.4 s
-    AG semilla  7: ΣTj = 1.2407 | Cmax = 16.2407 | 1.4 s
-    AG semilla  8: ΣTj = 0.9547 | Cmax = 15.9547 | 1.8 s
-    AG semilla  9: ΣTj = 0.9547 | Cmax = 15.9547 | 1.6 s
-    AG semilla 10: ΣTj = 1.4088 | Cmax = 16.4088 | 2.2 s
+  Mejor regla (EDD): ΣTj = 30.4393 | Cmax = 20.9602
+    AG semilla  1: ΣTj = 28.5782 | Cmax = 20.6407 | 1.3 s
+    AG semilla  2: ΣTj = 28.1900 | Cmax = 19.8355 | 1.4 s
+    AG semilla  3: ΣTj = 28.1900 | Cmax = 19.8355 | 1.3 s
+    AG semilla  4: ΣTj = 28.1900 | Cmax = 19.8355 | 1.4 s
+    AG semilla  5: ΣTj = 28.1900 | Cmax = 19.8355 | 1.4 s
+    AG semilla  6: ΣTj = 28.5782 | Cmax = 20.6407 | 1.4 s
+    AG semilla  7: ΣTj = 28.1900 | Cmax = 19.8355 | 1.5 s
+    AG semilla  8: ΣTj = 28.5782 | Cmax = 20.6407 | 1.4 s
+    AG semilla  9: ΣTj = 28.1900 | Cmax = 19.8355 | 1.6 s
+    AG semilla 10: ΣTj = 28.1900 | Cmax = 19.8355 | 1.4 s
+    MILP fase 1 (ΣTj): 0.4 s | fase 2 (Cmax): 0.4 s
+  MILP: ΣTj = 28.1900 | Cmax = 19.8355 | Óptimo | 0.8 s | 160 binarias | violaciones = 0
+  Solución MILP en el decodificador del AG: ΣTj = 28.1900 | Cmax = 19.8355
 
-Instancia  Órdenes  B̄  Sublotes Máquinas  Binarias  Restricciones  MILP ΣTj  MILP Cmax MILP estado     MILP s  Violaciones MILP  Decod. ΣTj  Decod. Cmax Regla  Regla ΣTj  Regla Cmax  AG mejor ΣTj  AG mejor Cmax  AG prom ΣTj  AG prom Cmax AG = óptimo ΣTj AG = óptimo (ΣTj, Cmax)  AG s prom
-       I1        3   2         6  2-2-1-1       252            396  0.954667  15.954667      Óptimo 122.728525                 0    1.279333    16.279333   EDD     2.0675     17.0675      0.954667      15.954667     1.169217     16.169217            4/10                    4/10   1.504378
+Instancia  Órdenes  B̄  Sublotes Máquinas  MILP binarias  MILP ΣTj  MILP Cmax MILP estado  MILP s  MILP violaciones  ΣTj óptima demostrada  (ΣTj, Cmax) óptimo demostrado  Decod. ΣTj  Decod. Cmax Regla  Regla ΣTj  Regla Cmax  AG mejor ΣTj  AG mejor Cmax  AG prom ΣTj  AG prom Cmax AG ≤ MILP en ΣTj AG ≤ MILP en (ΣTj, Cmax)  AG s prom
+       I1        4   1         4  2-3-2-1            160 28.189999  19.835499      Óptimo     0.8                 0                   True                           True       28.19      19.8355   EDD  30.439333   20.960167         28.19        19.8355     28.30645      20.07705             7/10                     7/10        1.4
 
-Resultados guardados en /home/user/Flow-shop-sublotes-consistentes/fase2/salida_validacion/resultados_validacion_I1.csv
+Resultados guardados en /tmp/claude-0/-home-user-Flow-shop-sublotes-consistentes/d99e466a-538d-59ce-9926-6932ba470cd4/scratchpad/val1/resultados_validacion_I1.csv

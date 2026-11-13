@@ -39,9 +39,6 @@ cada referencia (año, volumen, páginas) antes de incluirla en la lista final.*
 - Law, A. M. (2015). *Simulation modeling and analysis* (5.ª ed.). McGraw-Hill.
   (Citado en la Fase 3.)
 - Montgomery, D. C. (2017). *Design and analysis of experiments* (9.ª ed.). Wiley.
-- Naderi, B., Gohari, S., & Yazdani, M. (2014). Hybrid flexible flowshop problems:
-  Models and solution methods. *Applied Mathematical Modelling, 38*(24), 5767–5780.
-  https://doi.org/10.1016/j.apm.2014.04.012
 - Ruiz, R., & Maroto, C. (2006). A genetic algorithm for hybrid flowshops with
   sequence dependent setup times and machine eligibility. *European Journal of
   Operational Research, 169*(3), 781–800. https://doi.org/10.1016/j.ejor.2004.06.038
